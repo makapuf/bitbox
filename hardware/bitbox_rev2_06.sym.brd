@@ -12,7 +12,7 @@
 <layer number="16" name="Bottom" color="1" fill="1" visible="yes" active="yes"/>
 <layer number="17" name="Pads" color="2" fill="1" visible="yes" active="yes"/>
 <layer number="18" name="Vias" color="2" fill="1" visible="yes" active="yes"/>
-<layer number="19" name="Unrouted" color="12" fill="1" visible="no" active="yes"/>
+<layer number="19" name="Unrouted" color="12" fill="1" visible="yes" active="yes"/>
 <layer number="20" name="Dimension" color="15" fill="1" visible="yes" active="yes"/>
 <layer number="21" name="tPlace" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="22" name="bPlace" color="7" fill="1" visible="yes" active="yes"/>
@@ -2480,7 +2480,7 @@ design rules under a new name.</description>
 <attribute name="NAME" x="45.349140625" y="50.59970625" size="0.8128" layer="25" rot="R180"/>
 <attribute name="VALUE" x="43.64" y="68.785" size="1.27" layer="27" rot="R180"/>
 </element>
-<element name="R28" library="resistor" package="R0603" value="300k" x="29.131928125" y="29.558684375" smashed="yes">
+<element name="R28" library="resistor" package="R0603" value="47k" x="29.131928125" y="29.558684375" smashed="yes">
 <attribute name="NAME" x="29.975159375" y="29.161828125" size="0.8128" layer="25"/>
 <attribute name="VALUE" x="28.242928125" y="27.526684375" size="1.27" layer="27"/>
 </element>
@@ -2504,7 +2504,7 @@ design rules under a new name.</description>
 <attribute name="NAME" x="55.48886875" y="9.863540625" size="0.8128" layer="25" font="vector" rot="R270"/>
 <attribute name="VALUE" x="53.848" y="11.684" size="1.27" layer="27" rot="R270"/>
 </element>
-<element name="R13" library="resistor" package="R0603" value="300k" x="51.435" y="29.21" smashed="yes" rot="R270">
+<element name="R13" library="resistor" package="R0603" value="47k" x="51.435" y="29.21" smashed="yes" rot="R270">
 <attribute name="NAME" x="50.513665625" y="27.347171875" size="0.8128" layer="25"/>
 <attribute name="VALUE" x="49.403" y="30.099" size="1.27" layer="27" rot="R270"/>
 </element>
@@ -2512,19 +2512,19 @@ design rules under a new name.</description>
 <attribute name="NAME" x="28.575" y="34.036" size="0.8128" layer="25" ratio="10"/>
 <attribute name="VALUE" x="24.384" y="30.48" size="1.27" layer="28" ratio="10" rot="MR90"/>
 </element>
-<element name="R14" library="resistor" package="R0603" value="300k" x="41.91" y="43.815" smashed="yes">
+<element name="R14" library="resistor" package="R0603" value="47k" x="41.91" y="43.815" smashed="yes">
 <attribute name="NAME" x="40.810365625" y="44.41811875" size="0.8128" layer="25"/>
 <attribute name="VALUE" x="41.021" y="41.783" size="1.27" layer="27"/>
 </element>
-<element name="R29" library="resistor" package="R0603" value="300k" x="49.38169375" y="40.738865625" smashed="yes" rot="R180">
+<element name="R29" library="resistor" package="R0603" value="47k" x="49.38169375" y="40.738865625" smashed="yes" rot="R180">
 <attribute name="NAME" x="50.27069375" y="39.849865625" size="0.8128" layer="25" rot="R180"/>
 <attribute name="VALUE" x="50.27069375" y="42.770865625" size="1.27" layer="27" rot="R180"/>
 </element>
-<element name="R30" library="resistor" package="R0603" value="300k" x="29.845" y="36.195" smashed="yes" rot="R90">
+<element name="R30" library="resistor" package="R0603" value="47k" x="29.845" y="36.195" smashed="yes" rot="R90">
 <attribute name="NAME" x="31.496" y="35.306" size="0.8128" layer="25" rot="R90"/>
 <attribute name="VALUE" x="31.877" y="35.306" size="1.27" layer="27" rot="R90"/>
 </element>
-<element name="R31" library="resistor" package="R0603" value="300k" x="29.845" y="32.385" smashed="yes" rot="R270">
+<element name="R31" library="resistor" package="R0603" value="47k" x="29.845" y="32.385" smashed="yes" rot="R270">
 <attribute name="NAME" x="31.345546875" y="31.42076875" size="0.8128" layer="25" rot="R90"/>
 <attribute name="VALUE" x="27.813" y="33.274" size="1.27" layer="27" rot="R270"/>
 </element>

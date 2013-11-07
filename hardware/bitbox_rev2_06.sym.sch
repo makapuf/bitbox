@@ -16655,22 +16655,22 @@ Source: 3M</description>
 <part name="GND5" library="supply1" deviceset="GND" device=""/>
 <part name="GND20" library="supply1" deviceset="GND" device=""/>
 <part name="GND26" library="supply1" deviceset="GND" device=""/>
-<part name="R28" library="resistor" deviceset="R-EU_" device="R0603" value="300k"/>
+<part name="R28" library="resistor" deviceset="R-EU_" device="R0603" value="47k"/>
 <part name="GND22" library="supply1" deviceset="GND" device=""/>
 <part name="P+7" library="supply1" deviceset="VCC" device=""/>
 <part name="SJ2" library="jumper" deviceset="SJ" device=""/>
 <part name="SJ1" library="jumper" deviceset="SJ" device=""/>
 <part name="X2" library="con-3m" deviceset="2510-" device=""/>
 <part name="C1" library="resistor" deviceset="C-EU" device="C0603" value=".1u"/>
-<part name="R13" library="resistor" deviceset="R-EU_" device="R0603" value="300k"/>
+<part name="R13" library="resistor" deviceset="R-EU_" device="R0603" value="47k"/>
 <part name="GND6" library="supply1" deviceset="GND" device=""/>
 <part name="P+3" library="supply1" deviceset="VCC" device=""/>
 <part name="JP1" library="jumper" deviceset="JP1E" device=""/>
 <part name="GND8" library="supply1" deviceset="GND" device=""/>
-<part name="R14" library="resistor" deviceset="R-EU_" device="R0603" value="300k"/>
-<part name="R29" library="resistor" deviceset="R-EU_" device="R0603" value="300k"/>
-<part name="R30" library="resistor" deviceset="R-EU_" device="R0603" value="300k"/>
-<part name="R31" library="resistor" deviceset="R-EU_" device="R0603" value="300k"/>
+<part name="R14" library="resistor" deviceset="R-EU_" device="R0603" value="47k"/>
+<part name="R29" library="resistor" deviceset="R-EU_" device="R0603" value="47k"/>
+<part name="R30" library="resistor" deviceset="R-EU_" device="R0603" value="47k"/>
+<part name="R31" library="resistor" deviceset="R-EU_" device="R0603" value="47k"/>
 </parts>
 <sheets>
 <sheet>
@@ -16678,10 +16678,6 @@ Source: 3M</description>
 <text x="167.894" y="232.41" size="1.778" layer="91">Red</text>
 <text x="157.226" y="206.756" size="1.778" layer="91">Green</text>
 <text x="153.924" y="179.07" size="1.778" layer="91">Blue</text>
-<text x="170.18" y="114.3" size="1.778" layer="91">fuses</text>
-<text x="170.18" y="111.76" size="1.778" layer="91">second usb</text>
-<text x="170.18" y="109.22" size="1.778" layer="91">change regulator</text>
-<text x="170.18" y="106.68" size="1.778" layer="91">SPI out</text>
 <text x="147.32" y="86.36" size="1.778" layer="91">UEXT connector</text>
 <text x="-10.16" y="203.2" size="1.778" layer="91">OTG_FS_VBUS</text>
 <text x="-87.884" y="254.254" size="6.4516" layer="91">BitBox Rev2</text>
