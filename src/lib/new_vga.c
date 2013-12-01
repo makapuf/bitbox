@@ -34,7 +34,7 @@
 #include "../lib/kernel.h"
 
 #ifdef GAMEPAD
-#include "gamepad.h"
+// #include "gamepad.h"
 #endif 
 
 #ifdef AUDIO
@@ -70,13 +70,15 @@ static inline void output_black()
 {
 	//GPIOB->BSRRH=0x0fff; // Set signal to black. 
 	// GPIOB->BSRRH is at 0x4002 041A
-
+        /*
 	__asm__ volatile( // force do it NOW
 	"   movw	r1,#0\n"
 	"	movt	r1,#0x4002\n"
 	"	movw 	r0,#0x0fff\n"
 	"	strh	r0,[r1,#0x41A]\n"
 	:::"r0","r1");
+        */
+        GPIOE->BSRRH=0x0fff; // Set signal to black. 
 } 
 
 
@@ -93,37 +95,39 @@ void vga640_setup()
 	// init vga gpio ports A0 vsync, A1 hsync B0-11 dac
 	// XXX here port PC11 is used for vsync !!!  
 
-	// GPIO A pins 0 (vsync- not bitbox prototype) & 1 (hsync) and GPIO B for pixel DAC
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN; // enable gpioB
+	// GPIO A pins 0 (vsync- not bitbox prototype) & 1 (hsync) and GPIO E for pixel DAC
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; // enable gpioB
 
 	// - Configure DAC pins in GPIOB 0-11
-	SetGPIOOutputMode(GPIOB,0x0fff); 
-	SetGPIOPushPullOutput(GPIOB,0x0fff);
-	SetGPIOSpeed50MHz(GPIOB,0x0fff); 
-	SetGPIOPullDownResistor(GPIOB,0x0fff);
+	SetGPIOOutputMode(GPIOE,0x0fff); 
+	SetGPIOPushPullOutput(GPIOE,0x0fff);
+	SetGPIOSpeed50MHz(GPIOE,0x0fff); 
+	SetGPIOPullDownResistor(GPIOE,0x0fff);
 
 	output_black();
 
-	// - Configure sync pins as GPIOA 0 (vsync) , 1 (hsync)
+	// - Configure sync pins as GPIOA 15 (vsync) , 1 (hsync)
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA
 	SetGPIOAlternateFunctionMode(GPIOA,0b10); // PA1 as alternate
 	SelectAlternateFunctionForGPIOPin(GPIOA,1,2); // TIM 5 CH 2, see Table9 of datasheet, p60 : alt func 2 is PA1
 
-	SetGPIOOutputMode(GPIOA, 0b1); // PA0 as ouput
+	SetGPIOOutputMode(GPIOA, (1<<15)); // PA15 as ouput
 
-	SetGPIOPushPullOutput(GPIOA,0b11);
-	SetGPIOSpeed50MHz(GPIOA,0b11);
-	SetGPIOPullUpResistor(GPIOA,0b11);
+	SetGPIOPushPullOutput(GPIOA, (1<<1) | (1<<15));
+	SetGPIOSpeed50MHz(GPIOA, (1<<1) | (1<<15));
+	SetGPIOPullUpResistor(GPIOA, (1<<1) | (1<<15));
 
 	// Also set GPIOC as current bitbox has it 
+        /*
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // enable gpioC
 	SetGPIOOutputMode(GPIOC, 1<<11); // PC11 as ouput
 	SetGPIOPushPullOutput(GPIOC,1<<11);
 	SetGPIOSpeed50MHz(GPIOC,1<<11);
 	SetGPIOPullUpResistor(GPIOC,1<<11);
+        */
 
 	// drive them high
-	GPIOA->BSRRL=0b11;
+	GPIOA->BSRRL=(1<<1) | (1<<15);
 
 	// --- TIMERS ---------------------------------------------------------------------------------------
 	
@@ -143,7 +147,8 @@ void vga640_setup()
 	TIM5->CR1=TIM_CR1_ARPE; // autoreload preload enable, no other function on
 	TIM5->DIER=TIM_DIER_UIE; // Enable update interrupt.
 	TIM5->CCER=0; // Disable CC, so we can program it.
-	TIM5->ARR=2796-1; // 88 MHz (OC) / 31.46875 kHz = 2796.42502483 (88 = 176MHz / 2 )
+	// TIM5->ARR=2796-1; // 88 MHz (OC) / 31.46875 kHz = 2796.42502483 (88 = 176MHz / 2 )
+	TIM5->ARR=3050-1; // 96 MHz (OC) / 31.46875 kHz = 3 050.64548 (96 = 192MHz / 2 )
 
 	// -- Channel 2  : Hsync pulse
 
@@ -153,7 +158,9 @@ void vga640_setup()
 	// output enabled, reversed polarity (active low).
 	TIM5->CCER=TIM_CCER_CC2E|TIM_CCER_CC2P; 
 	// 88 MHz * 3.813 microseconds = 335.544 - sync pulse end
-	TIM5->CCR2=336; 
+	// TIM5->CCR2=336; 
+        // 96 MHz * 3.813 microseconds = 366.048 - sync pulse end
+	TIM5->CCR2=366; 
 
 	// -- Channel 3 : Trigger signal for TIM1 - will start on ITR1
 
@@ -165,14 +172,21 @@ void vga640_setup()
 
 	// 88 MHz * (3.813 + 1.907) microseconds = 503.36 - back porch end, start pixel clock
     // -14 is a kludge to account for slow start of timer.
-	TIM5->CCR3=503-14;
+	// TIM5->CCR3=503-14;
+
+	// 96 MHz * (3.813 + 1.907) microseconds = 549.12 - back porch end, start pixel clock
+    // -14 is a kludge to account for slow start of timer.
+	TIM5->CCR3=549-14;
 
 	// Enable HSync timer.
 
 	// -- Channel 4 : software Hsync interrupt
 	// 88 MHz * (3.813 + 1.907) microseconds = 503.36 - back porch end, start pixel clock
 	//TIM5->CCER=TIM_CCER_CC4E|TIM_CCER_CC4P; // Channel 4 enabled, reversed polarity (active low).
-	TIM5->CCR4=503;
+	// TIM5->CCR4=503;
+	// 96 MHz * (3.813 + 1.907) microseconds = 549.12 - back porch end, start pixel clock
+	//TIM5->CCER=TIM_CCER_CC4E|TIM_CCER_CC4P; // Channel 4 enabled, reversed polarity (active low).
+	TIM5->CCR4=549;
 	// wait for last line ? 
 
 	// Enable HSync timer interrupt and set highest priority.
@@ -237,7 +251,7 @@ static void prepare_pixel_DMA()
 	(1*DMA_SxCR_MBURST_0); // burst on the memory-side
 
 	DMA2_Stream5->NDTR=LINE_LENGTH+1; // transfer N pixels + one last _black_ pixel
-	DMA2_Stream5->PAR=((uint32_t)&(GPIOB->ODR));
+	DMA2_Stream5->PAR=((uint32_t)&(GPIOE->ODR));
 	DMA2_Stream5->M0AR=(uint32_t)display_buffer; // XXX +MARGIN*2;
 
 	// Enable FIFO (see p190 of ref manual)
@@ -268,10 +282,10 @@ static void HSYNCHandler()
 	:::"r0","r1");
 
 	line++;
-	if(line<480)
-	{
+        // starting from line #1, line #0 already in drawbuffer
+	if (line <= 480) {
 
-		// swap display & draw buffers
+		// swap display & draw buffers, effectively draws line-1
 		pixel_t *t;
 		t=display_buffer;
 		display_buffer = draw_buffer;
@@ -282,43 +296,41 @@ static void HSYNCHandler()
 		#ifdef PROFILE
 		line_time = DWT->CYCCNT; // reset the perf counter
 		#endif 
+		if (line==480) { // just to draw last line, frame done!
+                  frame++;
+                  // TODO : VBlank interrupt. waiting for frame can be enough
+                } else { 
+		  game_line(); // generate next line
+                }
 		
-		game_line(); // Game callback !
-		
-		#ifdef PROFILE
+                #ifdef PROFILE
 		line_time = DWT->CYCCNT - line_time; // read the counter
 		if (line_time>max_line_time) {
 			max_line_time=line_time;
 			max_line =line;
 		}
 		#endif
-	}
-	else {
-		if (line<=480+33)
+	}  else {
+		if (line<=480+1+33)
 		{
 			#ifdef GAMEPAD
-			gamepad_readstep();
+			// gamepad_readstep();
 			#endif
 		}
-
-		if(line==480)
-		{
-			frame++; 
-			// TODO : VBlank interrupt. waiting for frame can be enough.
-		}
-		else if(line==490)
+		if(line==491)
 		{
 			//GPIOA->BSRRH|=(1<<0); // lower VSync line
-			GPIOC->BSRRH|=(1<<11); // lower VSync line // THIS IS NOT REAL BITBOX !! only prototype
+			GPIOA->BSRRH|=(1<<15); // lower VSync line // THIS IS NOT REAL BITBOX !! only prototype
 		}
-		else if(line==492)
+		else if(line==493)
 		{
 			//GPIOA->BSRRL|=(1<<0); // raise VSync line
-			GPIOC->BSRRL|=(1<<11); // raise VSync line
+			GPIOA->BSRRL|=(1<<15); // raise VSync line
 		}
-		else if(line==524)
+		else if(line==525)
 		{
-			line=-1;
+			line=0;
+                        game_line();  // first line next frame!
 		}
 	}
 
