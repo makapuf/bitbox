@@ -1,11 +1,11 @@
 #include "system.h"
 
 // PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N
-#define PLL_M 8
 #ifdef OVERCLOCK
-#define PLL_N 352
-// overclock a bit 168->176 to have 25.15 MHz
+#define PLL_M 4
+#define PLL_N 192
 #else
+#define PLL_M 8
 #define PLL_N 336
 #endif
 
@@ -13,11 +13,13 @@
 #define PLL_P 2
 
 // USB OTG FS, SDIO and RNG Clock =  PLL_VCO / PLLQ
-#define PLL_Q 7
+// #define PLL_Q 7
+#define PLL_Q 8
 
 // PLLI2S_VCO = (HSE_VALUE Or HSI_VALUE / PLL_M) * PLLI2S_N
 // I2SCLK = PLLI2S_VCO / PLLI2S_R
-#define PLLI2S_N 192
+// #define PLLI2S_N 192
+#define PLLI2S_N 96
 #define PLLI2S_R 5
 
 static void InitializeClocks();
