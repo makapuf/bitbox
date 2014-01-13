@@ -1,0 +1,146 @@
+bitbox
+
+bbox v2
+	pins VSYNC !
+
+	plus de carte, par usb/dfu ? en mémoire : image du jeu ? titre au moins, a place fixe
+	Cout : faire une BOM propre, mais on peu jouer sur les connecteurs SD, embase vga direct
+	boot1 (bootloader) : pins + jumper pr config(pas bouton)
+
+
+	x vga 15 bits
+	x onboard VGA (pas de capot, moins cher) - CMS ?
+	x wrong usb
+	x dual usb ? (alim+usb ou 1 seule avec hub ?)
+	x microsd oui
+	fuses
+
+	supercap ?
+
+son (loops simples : 8bits alaw 8khz : 8ko/s 160k de musique = 20s de loops)
+	loops (4s), 2 levels (attn reprendre ?)
+	mixer pistes : bass+batt,  + loop id/pattern
+	sons : saut (4) , $$ (4), passage 1000, 
+	4 voies : 2loop+2sons
+	8 loops (4+4), 8 sons
+
+
+
+tester/intégrer : 
+	video (sur N ecrans differents)
+	USB <= OUI, flash (dfu-util, de base ss ubuntu) & autre <== !!!!
+	audio, 
+	KB,
+
+	faire un sampler (micro) : attack / release, loops
+		fx : delay, bitcrusher, chorus/phaser
+		input midi 
+		dsssi
+
+
+	souris : tester ? autosense/hotplug ? protéger static ?
+	lecteur de carte (bof)
+
+	MULTIJOUEUR : serie. 
+
+v1 :
+	x output video propre
+	x gamepad snes DIN
+	jumper (avec son / sprites)
+	usb firmware upload (bootloader?) 
+	site
+		upload, dev, ..
+		screenshots jeux / photos
+		devkit ubuntu 
+
+
+HA : 
+	DX : adapters micro OTG (male, femelle)
+	gamepad ?
+	
+
+text adventure ? bof, graph adventure
+	dessins au trait
+	
+
+
+mode texte ? (vrai mode texte, 800x600, 2 DMA pump char+line)
+
+craft 
+
+terrains : 
+	creuse ds une mine.
+	une mine : ds le ss sol d'une montagne, ss monde
+	2 levels : mine (souterrain) et up. tt n'est pas minable.
+
+lapin : 
+	carottes : graine de carotte, pousse + fait des graines. mange : force.
+	pousser des carottes
+	pierres
+	magie : force +, 
+	aventure / craft
+	outils avec du craft
+
+	os pour le chien
+	niche pour le chien
+
+
+
+
+
+ennemi : 
+	renards
+	chiens (alliances, eux sont contre les chats, alliance aussi avec les souris mais au debut competition souris )
+
+
+
+points forts de la pf : pas chere, jouet de programmeur (attirer des progs), permet de filer son jeu avec les autres (usb only)
+
+
+écran + tactile
+
+
+DMA memory to mem : 
+	- pile de blits + 0, nb en cours (permet de dépiler)
+	- 1 blit : type, addr, nb Hwords
+	- FILL avec DMA : aussi possible
+	- finished interrupt : depiler & lancer suivant
+
+FLASH as EEPROM
+	- 32 bytes
+	- 2B id block
+	- 2B info
+	- 28 byte data
+compactage eeprom au boot si gain suffisant.
+	(ie effacement+rewrite c qui est utile)
+	
+2*16k flash : 
+	1x16 pr data 
+	1x16 pr writes.
+
+
+bootloader : 
+	check sd
+	check clef usb
+	transfer to flash
+	presentation a l'ecran
+	tiles 8x8 en 2 couleurs (decompress en RAM)
+
+	miniz/fatfs ds kernel
+	kernel en flash (vga, 1 bouton select ?)
+
+
+sinon DFU pr device
+
+
+lire : lire depuis la fin (le + récent)
+ecrire : 
+	garder un ptr sur le premier libre
+	si plus de place, load en RAM, compacter & ecrire. (1024 writes) (ou ecrire sur l'autre 16k)
+
+blit RLE palette (?)
+	zip2ram miniz : ok
+
+
+
+0xfffffffff : libre	(libre)
