@@ -8,10 +8,12 @@ void game_init() {}
 
 void game_frame()
 {
+
     if (PRESSED(up) && y>-240) y--;
     if (PRESSED(down) && y<240) y++;
     if (PRESSED(left) && x>-320) x--;
     if (PRESSED(right) && x<320) x++;
+
 } 
 
 void game_line()
@@ -38,10 +40,21 @@ void game_line()
 		draw_buffer[640-line-i] = (i/4)<<8;
 
 	// display gamepad state as an inverse video point
-	if (line==200+y)
+       
+        if (line == 200) {
+        for (int i=0; i<16; i++)
+          if (gamepad1 & (1 << i)) draw_buffer[320+i]^=0xfff;
+        }
+        	
+        if (line==200+y)
 	{
 		draw_buffer[320+x]^=0xfff;
 	}
+        
+        // if (line == 0) {
+        //  for (int i=0;i<640;i++)
+        //        draw_buffer[i]=0xf0f;
+        // }
 }
 
 void game_sample() {}
