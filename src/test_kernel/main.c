@@ -19,42 +19,37 @@ void game_frame()
 void game_line()
 // called from VGA kernel
 {	
-	// clear the line with a repeating red/black gradient
-	for (int i=0;i<640;i++)
-		draw_buffer[i]=line%0x0f; 
+	// clear the line with a repeating gradient
+	for (int i=0;i<LINE_LENGTH;i++)
+		draw_buffer[i]=(vga_line&0x1f)<<(5*((vga_line/32)&3)); 
 	
 	// force pixel after screen to black.
-	draw_buffer[640]=0; 
+	draw_buffer[LINE_LENGTH]=0; 
 	
 	// first oblique line (behind)
 	for (int i=0;i<128;i++)
-		draw_buffer[line+i] = (i/8)<<4;
+		draw_buffer[vga_line+i] = (i/8)<<4;
 
 	// square "effect"
-	if ((line-frame*2)%128 <64)
-		for (int i=200;i<200+256;i++) 
-			draw_buffer[i]|=0x777; // you can also modify the buffer
+	if ((vga_line-vga_frame*2)%128 <64)
+		for (int i=200;i<200+128;i++) 
+			draw_buffer[i]|=((vga_frame/4)%16)*0x421; // you can also modify the buffer
 
 	// second oblique line (front)
 	for (int i=0;i<64;i++)
-		draw_buffer[640-line-i] = (i/4)<<8;
+		draw_buffer[LINE_LENGTH-vga_line-i] = (i/4)<<8;
 
-	// display gamepad state as an inverse video point
-       
-        if (line == 200) {
-        for (int i=0; i<16; i++)
-          if (gamepad1 & (1 << i)) draw_buffer[320+i]^=0xfff;
-        }
-        	
-        if (line==200+y)
+    // display gamepad state as an inverse video point
+   
+    if (vga_line == 200) {
+    for (int i=0; i<16; i++)
+      if (gamepad1 & (1 << i)) draw_buffer[320+i]^=0x7fff;
+    }
+    	
+    if (vga_line==200+y)
 	{
-		draw_buffer[320+x]^=0xfff;
+		draw_buffer[320+x]^=0x7fff;
 	}
-        
-        // if (line == 0) {
-        //  for (int i=0;i<640;i++)
-        //        draw_buffer[i]=0xf0f;
-        // }
 }
 
-void game_sample() {}
+void game_snd_buffer(uint8_t *buffer, int len) {};

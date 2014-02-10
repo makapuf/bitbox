@@ -1,16 +1,24 @@
 /*
 
-640 x 480 mode, 12 bits
-- output is on PORTB, lower 12 bits
+640 x 480 mode, 15 bits
+- output is on PORT E, lower 15 bits
 - sync is on PORT A, pin0 (vsync), pin1 (hsync)
 
+*/
+
+
+/*
+  TODO : audio, exclude headers, ...
+  soft reflash doesnt enable output
+  gamepad
+  pixelclock
 */
 
 /* 
 	PA1 (HSYNC) output is driven by Timer5 with CC 2 (see Table9 of datasheet, p60) using pwm mode
 	Timer 1 (PIXEL DMA) is started as a slave of Timer5 CC1 via ITR1 (see config options table 76, p463 of refman)
    	TIM1_UP drives the DMA2 on stream 5 channel 6 (ref manual p164)
-	DMA2 outputs to gpio PB0-15 ( refman p48 - DMA1 cannot drive AHB1 )
+	DMA2 outputs to gpio PE0-15 ( refman p48 - DMA1 cannot drive AHB1 )
 */
 
 
@@ -22,6 +30,7 @@
 */
 
 #include "kernel.h" // base 
+#include "../lib/kernel.h"
 
 #include <stdint.h>
 
@@ -31,7 +40,6 @@
 #include "GPIO.h"
 #include "RCC.h"
 
-#include "../lib/kernel.h"
 
 #ifdef GAMEPAD
 // #include "gamepad.h"
@@ -44,16 +52,19 @@
 
 #ifdef PROFILE
 // from http://forums.arm.com/index.php?/topic/13949-cycle-count-in-cortex-m3/
+// also average ?
 uint32_t line_time,max_line_time, max_line; // maximum time of line 
 #endif 
 
 #define PIXELCLOCK 7
+//#define PIXELCLOCK 7
+
 #define MIN(x,y) ((x)<(y)?x:y) 
 
 
 // public interface
-uint32_t line;
-volatile uint32_t frame; 
+uint32_t vga_line;
+volatile uint32_t vga_frame; 
 
 // aligned on a 1kb boundary , see http://blog.frankvh.com/2011/08/18/stm32f2xx-dma-controllers/
 static pixel_t *LineBuffer1=(pixel_t *)0x20000000; // LineBuffer1[LINE_LENGTH]; <-- NO ?, would be in CCM so out of reach of DMA !
@@ -78,7 +89,7 @@ static inline void output_black()
 	"	strh	r0,[r1,#0x41A]\n"
 	:::"r0","r1");
         */
-        GPIOE->BSRRH=0x0fff; // Set signal to black. 
+        GPIOE->BSRRH=0x7fff; // Set signal to black. 
 } 
 
 
@@ -87,7 +98,7 @@ void vga640_setup()
 	//EnableAPB2PeripheralClock(RCC_APB2ENR_SYSCFGEN); // ??? useful ?
 
 	// initialize software state.
-	line=0;	frame=0;
+	vga_line=0;	vga_frame=0;
 	display_buffer=LineBuffer1;
 	draw_buffer=LineBuffer2;
 
@@ -99,23 +110,23 @@ void vga640_setup()
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; // enable gpioB
 
 	// - Configure DAC pins in GPIOB 0-11
-	SetGPIOOutputMode(GPIOE,0x0fff); 
-	SetGPIOPushPullOutput(GPIOE,0x0fff);
-	SetGPIOSpeed50MHz(GPIOE,0x0fff); 
-	SetGPIOPullDownResistor(GPIOE,0x0fff);
+	SetGPIOOutputMode(GPIOE,0x7fff); 
+	SetGPIOPushPullOutput(GPIOE,0x7fff);
+	SetGPIOSpeed50MHz(GPIOE,0x7fff); 
+	SetGPIOPullDownResistor(GPIOE,0x7fff);
 
 	output_black();
 
-	// - Configure sync pins as GPIOA 15 (vsync) , 1 (hsync)
+	// - Configure sync pins as GPIOA 0 (vsync) , 1 (hsync)
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA
 	SetGPIOAlternateFunctionMode(GPIOA,0b10); // PA1 as alternate
 	SelectAlternateFunctionForGPIOPin(GPIOA,1,2); // TIM 5 CH 2, see Table9 of datasheet, p60 : alt func 2 is PA1
 
-	SetGPIOOutputMode(GPIOA, (1<<15)); // PA15 as ouput
+	SetGPIOOutputMode(GPIOA, (1<<0)); // PA15 as ouput
 
-	SetGPIOPushPullOutput(GPIOA, (1<<1) | (1<<15));
-	SetGPIOSpeed50MHz(GPIOA, (1<<1) | (1<<15));
-	SetGPIOPullUpResistor(GPIOA, (1<<1) | (1<<15));
+	SetGPIOPushPullOutput(GPIOA, (1<<1) | (1<<0));
+	SetGPIOSpeed50MHz(GPIOA, (1<<1) | (1<<0));
+	SetGPIOPullUpResistor(GPIOA, (1<<1) | (1<<0));
 
 	// Also set GPIOC as current bitbox has it 
         /*
@@ -127,7 +138,7 @@ void vga640_setup()
         */
 
 	// drive them high
-	GPIOA->BSRRL=(1<<1) | (1<<15);
+	GPIOA->BSRRL=(1<<1) | (1<<0);
 
 	// --- TIMERS ---------------------------------------------------------------------------------------
 	
@@ -159,7 +170,8 @@ void vga640_setup()
 	TIM5->CCER=TIM_CCER_CC2E|TIM_CCER_CC2P; 
 	// 88 MHz * 3.813 microseconds = 335.544 - sync pulse end
 	// TIM5->CCR2=336; 
-        // 96 MHz * 3.813 microseconds = 366.048 - sync pulse end
+    // 96 MHz * 3.813 microseconds = 366.048 - sync pulse end
+
 	TIM5->CCR2=366; 
 
 	// -- Channel 3 : Trigger signal for TIM1 - will start on ITR1
@@ -258,9 +270,6 @@ static void prepare_pixel_DMA()
 	// XXX DMA FIFO (as MBURST/ref p236) ?
 	DMA2_Stream5->FCR |= DMA_SxFCR_DMDIS; 
 
-	// Enable pixel clock. Clock will only start once TIM5 allows it.
-	
-
 	// Enable pixel clock. Clock will only start once TIM2 allows it.
 
 	TIM1->DIER=0; // Update DMA request has to be disabled while zeroing the counter.
@@ -281,9 +290,9 @@ static void HSYNCHandler()
 	"	strh	r0,[r1,#0xC10]\n"
 	:::"r0","r1");
 
-	line++;
+	vga_line++;
         // starting from line #1, line #0 already in drawbuffer
-	if (line <= 480) {
+	if (vga_line <= 480) {
 
 		// swap display & draw buffers, effectively draws line-1
 		pixel_t *t;
@@ -296,8 +305,8 @@ static void HSYNCHandler()
 		#ifdef PROFILE
 		line_time = DWT->CYCCNT; // reset the perf counter
 		#endif 
-		if (line==480) { // just to draw last line, frame done!
-                  frame++;
+		if (vga_line==480) { // just to draw last line, vga_frame done!
+                  vga_frame++;
                   // TODO : VBlank interrupt. waiting for frame can be enough
                 } else { 
 		  game_line(); // generate next line
@@ -307,35 +316,33 @@ static void HSYNCHandler()
 		line_time = DWT->CYCCNT - line_time; // read the counter
 		if (line_time>max_line_time) {
 			max_line_time=line_time;
-			max_line =line;
+			max_line =vga_line;
 		}
 		#endif
 	}  else {
-		if (line<=480+1+33)
+		if (vga_line<=480+1+33)
 		{
 			#ifdef GAMEPAD
 			// gamepad_readstep();
 			#endif
 		}
-		if(line==491)
+		if(vga_line==491)
 		{
-			//GPIOA->BSRRH|=(1<<0); // lower VSync line
-			GPIOA->BSRRH|=(1<<15); // lower VSync line // THIS IS NOT REAL BITBOX !! only prototype
+			GPIOA->BSRRH|=(1<<0); // lower VSync line
 		}
-		else if(line==493)
+		else if(vga_line==493)
 		{
-			//GPIOA->BSRRL|=(1<<0); // raise VSync line
-			GPIOA->BSRRL|=(1<<15); // raise VSync line
+			GPIOA->BSRRL|=(1<<0); // raise VSync line
 		}
-		else if(line==525)
+		else if(vga_line==525)
 		{
-			line=0;
-                        game_line();  // first line next frame!
+			vga_line=0;
+            game_line();  // first line next frame!
 		}
 	}
 
 	#ifdef AUDIO
-	game_sample(); 
+	audio_line(); 
 	#endif
 }
 

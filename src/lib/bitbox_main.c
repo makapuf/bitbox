@@ -48,13 +48,13 @@ __ALIGN_BEGIN USBH_HOST                     USB_FS_Host __ALIGN_END ;
 
 void init_led()
 {
-//	RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN; // enable gpioA
-//    GPIOD->MODER |= (1 << 24) ; // set pin 8 to be general purpose output
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA
+    GPIOA->MODER |= (1 << 4) ; // set pin 2 to be general purpose output
 }
 
 void toggle_led()
 {
-//	GPIOD->ODR ^= 1<<12; // led on/off
+	GPIOA->ODR ^= 1<<2; // led on/off
 }
 
 
@@ -66,7 +66,7 @@ void main()
 	#ifdef GAMEPAD
   /* Init Host Library */
 #ifdef USE_USB_OTG_HS
-  USBH_Init(&USB_OTG_Core, 
+    USBH_Init(&USB_OTG_Core, 
             USB_OTG_HS_CORE_ID,
             &USB_Host,
             &HID_cb, 
@@ -75,7 +75,7 @@ void main()
 
   /* Init FS Core */
 #ifdef USE_USB_OTG_FS
-  USBH_Init(&USB_OTG_FS_Core, 
+    USBH_Init(&USB_OTG_FS_Core, 
             USB_OTG_FS_CORE_ID,
             &USB_FS_Host,
             &HID_cb, 
@@ -109,25 +109,27 @@ void main()
 		game_frame();
 		
 		// wait next frame
-                gamepad1 = 0;
-		oframe=frame;
-                #ifdef GAMEPAD
-		do {
-                 oline = line;
-	         #ifdef USE_USB_OTG_HS
+    gamepad1 = 0;
+		oframe=vga_frame;
+
+        do 
+        {
+        #ifdef GAMEPAD
+            oline = vga_line;
+            #ifdef USE_USB_OTG_HS
                  USBH_Process(&USB_OTG_Core, &USB_Host);
                  gamepad1 |= HID_GAMEPAD_Data[0].button;
-                 #endif
-                 #ifdef USE_USB_OTG_FS
+            #endif
+            #ifdef USE_USB_OTG_FS
                  USBH_Process(&USB_OTG_FS_Core, &USB_FS_Host);
                  gamepad1 |= HID_GAMEPAD_Data[1].button;
-                 #endif
-		 // while (oline == line); 
+            #endif
+		        // while (oline == line); 
                 // } while (line < 450);
-                #endif
-		} while (oframe==frame);
+        #endif
+		} while (oframe==vga_frame);
 
-		if (frame%32 == 0) toggle_led(); // each second
+		if (vga_frame%32 == 0) toggle_led(); // each second
 
 	}; // all work done inside interrupts
 }

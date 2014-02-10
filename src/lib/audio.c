@@ -3,8 +3,17 @@
 #include "stm32f4xx.h"
 #include "audio.h"
 
+
+// XXX use double buffering ? DMA ?
+uint8_t audio_buffer[BITBOX_SNDBUF_LEN]; // one sample per line
+uint8_t *audio_ptr; // current sample to play 
+uint8_t audio_on;
+
+
 void audio_init()
 {
+	audio_on = 0;
+	
 	// enable DAC clock on APB1
 	RCC->APB1ENR |= RCC_APB1ENR_DACEN;
 	// enable GPIOA clock on APB2
@@ -22,16 +31,30 @@ void audio_init()
 	// enables DAC out. Automatically setup pin to DAC output
 	DAC->CR = DAC_CR_EN1; 
 	// clear TEN1 for immediate value change
+
+	audio_ptr = audio_buffer; 
+
 }
 
-int sample_id=0;
-Sample *sample;
 
+void audio_frame()
+{
+	if (audio_on) {
+		// XXX switch buffers
+		audio_ptr = audio_buffer;
+		game_snd_buffer(audio_buffer,BITBOX_SNDBUF_LEN); 
+	}
+}
 void audio_out8(uint8_t value)
 {
 	// outputs value to DAC, value 0-255
 	DAC->DHR8R1 = (uint32_t) value;
 }
+
+/*
+int sample_id=0;
+Sample *sample;
+
 
 
 // ultra simple 1-voice, non tuned, non looped sampler
@@ -59,3 +82,4 @@ void audio_tri1k()
 	audio_out8(8*(sample_id++)&31);
 }
 
+*/

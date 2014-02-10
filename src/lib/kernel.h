@@ -3,11 +3,11 @@
 #include "gamepad.h"
 #include "audio.h"
 
-// 0000RRRRGGGGBBBB
+// 0RRRRRGGGGGBBBBB
+// todo : sound, sd, user_led, user_button
 
-#define LINE_LENGTH 640 // attn this is not the size of the buffer since margins are added (easier to handle deltas)
-#define MARGIN  32
-#define MAX_SCREEN_WIDTH 1024-2*MARGIN // inpixels
+#define LINE_LENGTH 640 
+
 #define TILEDATA_ALIGN 16
 
 typedef uint16_t  pixel_t;
@@ -21,7 +21,9 @@ void game_init(void);
 void game_frame(void);
 void game_line(void);
 
-void game_sample(void); // this callback is called each time we need a new audio sample  ! <-- XXX put in line ??
+void game_snd_buffer(uint8_t *buffer, int len); // this callback is called each time we need to fill the buffer
+
+
 void die(char *msg);
 
 
@@ -29,8 +31,8 @@ void die(char *msg);
 // tile data is aligned as (and indices represents N bytes) - XXX to shoot_data
 
 extern pixel_t *draw_buffer;
-extern uint32_t line;
-extern volatile uint32_t frame;
+extern uint32_t vga_line;
+extern volatile uint32_t vga_frame;
 
 void vga640_setup();
 
