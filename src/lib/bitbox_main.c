@@ -49,7 +49,7 @@ __ALIGN_BEGIN USBH_HOST                     USB_FS_Host __ALIGN_END ;
 void init_led()
 {
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA
-    GPIOA->MODER |= (1 << 4) ; // set pin 2 to be general purpose output
+  GPIOA->MODER |= (1 << 4) ; // set pin 2 to be general purpose output
 }
 
 void toggle_led()
@@ -57,11 +57,44 @@ void toggle_led()
 	GPIOA->ODR ^= 1<<2; // led on/off
 }
 
+void set_led(int value)
+{
+  if (value)
+    GPIOA->BSRRL |= 1<<2;
+  else
+    GPIOA->BSRRH |= 1<<2;
+}
+
+void button_init()
+{
+  // button is PE15
+  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; // enable GPIO 
+  GPIOE->PUPDR |= GPIO_PUPDR_PUPDR15_0; // set input / pullup 
+}
+
+int button_state()
+{
+  return GPIOE->IDR & GPIO_IDR_IDR_15;
+}
+
+void sdio_sense_init()
+{
+  // SDIO sense is PC7
+  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // enable GPIO 
+  GPIOC->PUPDR |= GPIO_PUPDR_PUPDR7_0; // set input / pullup 
+}
+
+int sdio_sense_state()
+{
+  return GPIOC->IDR & GPIO_IDR_IDR_7;
+}
 
 void main()
 {
 	InitializeSystem();
 	init_led();
+  button_init();
+  sdio_sense_init();
 
 	#ifdef GAMEPAD
   /* Init Host Library */
@@ -129,7 +162,9 @@ void main()
         #endif
 		} while (oframe==vga_frame);
 
-		if (vga_frame%32 == 0) toggle_led(); // each second
+		//if (vga_frame%32 == 0) toggle_led(); // each second
+
+    set_led(button_state()); // led along SDIO sense.
 
 	}; // all work done inside interrupts
 }

@@ -1,3 +1,9 @@
+/* This is the (old) SNES controller. 
+probably not working now but could work quite easily by 
+- replacing pins tp UEXT port 
+- porting it to new Gamepad API - whatever this is.
+*/
+
 #include "gamepad.h"
 #include "stm32f4xx.h"
 

@@ -322,8 +322,8 @@ static void HSYNCHandler()
 	}  else {
 		if (vga_line<=480+1+33)
 		{
-			#ifdef GAMEPAD
-			// gamepad_readstep();
+			#ifdef SNES_GAMEPAD
+			gamepad_readstep();
 			#endif
 		}
 		if(vga_line==491)
