@@ -266,8 +266,6 @@
 #define SDIO_STATIC_FLAGS               ((uint32_t)0x000005FF)
 #define SDIO_CMD0TIMEOUT                ((uint32_t)0x00010000)
 
-//#define WIDE
-
 /**
   * @brief  Mask for errors Card Status R1 (OCR Register)
   */
@@ -449,12 +447,10 @@ SD_Error SD_Init(void)
     errorstatus = SD_SelectDeselect((uint32_t) (SDCardInfo.RCA << 16));
   }
 
-  #ifdef WIDE
   if (errorstatus == SD_OK)
   {
     errorstatus = SD_EnableWideBusOperation(SDIO_BusWide_4b);
   }
-  #endif
 
   return(errorstatus);
 }

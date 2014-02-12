@@ -9,12 +9,7 @@
 #include "stm32f4xx.h"
 #include "stm32f4_discovery_sdio_sd.h"
 
-#include "stm32f4xx_gpio.h"
-#include "stm32f4xx_rcc.h"
-#include "stm32f4xx_usart.h"
-#include "misc.h"
-
-#define noDBG
+#define DBG
 
 //******************************************************************************
 
@@ -109,6 +104,7 @@ int main(void)
 		{
 			BYTE Buffer[512];
 			UINT BytesRead;
+			UINT i;
 
 			res = f_read(&fil, Buffer, sizeof(Buffer), &BytesRead);
 
@@ -132,7 +128,6 @@ int main(void)
 		}
 
 		res = f_close(&fil); // MESSAGE.TXT
-#ifdef WRITE
 
 #ifdef DBG
 		if (res != FR_OK)
@@ -165,11 +160,7 @@ int main(void)
 	  		printf("res = %d f_close LENGTH.TXT\n", res);
 #endif			
     }
-// WRITE
-#endif 
 	}
-
-#ifdef WRITE
 
   res = f_open(&fil, "DIR.TXT", FA_CREATE_ALWAYS | FA_WRITE);
 
@@ -260,11 +251,8 @@ int main(void)
 #ifdef DBG		
  		if (res != FR_OK)
   		printf("res = %d f_close DIR.TXT\n", res);
-#endif
+#endif		
   }
-  
-// WRITE		
-#endif 
 
   while(1); /* Infinite loop */
 }
@@ -314,8 +302,6 @@ void GPIO_Configuration(void)
   /* Connect USART pins to AF */
   GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_USART2);  // USART2_TX
   GPIO_PinAFConfig(GPIOA, GPIO_PinSource3, GPIO_AF_USART2);  // USART2_RX
-
-
 }
 
 /**************************************************************************************/
@@ -350,8 +336,9 @@ void USART2_Configuration(void)
 // Hosting of stdio functionality through USART2
 //******************************************************************************
 
-// #include <rt_misc.h>
+#include <rt_misc.h>
 
+#pragma import(__use_no_semihosting_swi)
 
 struct __FILE { int handle; /* Add whatever you need here */ };
 FILE __stdout;
@@ -390,13 +377,12 @@ int fgetc(FILE *f)
   return((int)ch);
 }
 
-/*
 int ferror(FILE *f)
 {
-  // Your implementation of ferror 
+  /* Your implementation of ferror */
   return EOF;
 }
-*/
+
 void _ttywrch(int ch)
 {
 	static int last;

@@ -86,8 +86,7 @@ DRESULT disk_read (
 	if (SD_Detect() != SD_PRESENT)
 		return(RES_NOTRDY);
 
-	if ((DWORD)buff & 3) 
-	// DMA Alignment failure, do single up to aligned buffer
+	if ((DWORD)buff & 3) // DMA Alignment failure, do single up to aligned buffer
 	{
 		DRESULT res = RES_OK;
 		DWORD scratch[BLOCK_SIZE / 4]; // Alignment assured, you'll need a sufficiently big stack
@@ -106,8 +105,7 @@ DRESULT disk_read (
 
 		return(res);
 	}
-	
-	// USE POLLING MODE !
+
   Status = SD_ReadMultiBlocksFIXED(buff, sector, BLOCK_SIZE, count); // 4GB Compliant
 
 	if (Status == SD_OK)

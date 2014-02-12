@@ -26,7 +26,7 @@
 /  f_truncate and useless f_getfree. */
 
 
-#define _FS_MINIMIZE	1	/* 0 to 3 */
+#define _FS_MINIMIZE	0	/* 0 to 3 */
 /* The _FS_MINIMIZE option defines minimization level to remove some functions.
 /
 /   0: Full function.
@@ -57,8 +57,7 @@
 / Locale and Namespace Configurations
 /----------------------------------------------------------------------------*/
 
-//#define _CODE_PAGE	932
-#define _CODE_PAGE	1252
+#define _CODE_PAGE	932
 /* The _CODE_PAGE specifies the OEM code page to be used on the target system.
 /  Incorrect setting of the code page can cause a file open failure.
 /
