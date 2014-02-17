@@ -3,8 +3,6 @@
 // STM32F4 Discovery SDCard + FatFs Test - CLIVE - SOURCER32@GMAIL.COM
 // using fatfs from chan. Config is set to almost minimum.
 
-#include "ff.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,6 +55,9 @@ char *dec32(unsigned long i)
 
 int main(void)
 {
+
+  SystemInit(); // because we're using startup.c !
+
   /*!< At this stage the microcontroller clock setting is already configured,
        this is done through SystemInit() function which is called from startup
        file (startup_stm32f4xx.s) before to branch to application main.
@@ -64,11 +65,9 @@ int main(void)
        system_stm32f4xx.c file
      */
 
+
 	NVIC_Configuration(); /* Interrupt Config */
     
-    // wait a little
-    for (volatile int i=0;i<1680000;i++);
-
 	memset(&fs32, 0, sizeof(FATFS));
 	res = f_mount(&fs32,"",1); //mount now
 

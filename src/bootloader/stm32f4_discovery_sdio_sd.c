@@ -349,7 +349,7 @@
 
 static uint32_t CardType =  SDIO_STD_CAPACITY_SD_CARD_V1_1;
 static uint32_t CSD_Tab[4], CID_Tab[4], RCA = 0;
-static uint8_t SDSTATUS_Tab[16];
+static uint8_t SDSTATUS_Tab[64];
 __IO uint32_t StopCondition = 0;
 __IO SD_Error TransferError = SD_OK;
 __IO uint32_t TransferEnd = 0, DMAEndOfTransfer = 0;
