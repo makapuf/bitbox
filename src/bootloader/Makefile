@@ -5,7 +5,7 @@ C_FILES += stm32fxxx_it.c stm32f4xx_dma.c system_stm32f4xx.c stm32f4xx_gpio.c st
 
 MCU = cortex-m4
 FPU = -mfloat-abi=hard -mfpu=fpv4-sp-d16 -D__FPU_USED=1
-OPT = -O3 -falign-functions=16 -fno-inline -fomit-frame-pointer
+OPT = -Os -falign-functions=16 -fno-inline -fomit-frame-pointer
 
 CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
@@ -27,16 +27,17 @@ C_OPTS = -std=c99 \
 		-I../lib/ \
 		-g \
 		-Werror \
-        -O3 \
+        -Os \
         -mlittle-endian 
 #                 -funroll-loops \
 #                -fplan9-extensions
 
 CFLAGS = -ffunction-sections -fdata-sections
+#LINKER_SCRIPT = stm32f4xx.ld
+LINKER_SCRIPT =../Linker.ld
 
 ALL_CFLAGS = $(C_OPTS) $(DEFINES) $(CFLAGS)
-#ALL_LDFLAGS = $(LD_FLAGS) -mthumb -mcpu=cortex-m4 -nostartfiles -Wl,-T,../Linker.ld,--gc-sections
-ALL_LDFLAGS = $(LD_FLAGS) -mthumb -mcpu=cortex-m4 -nostartfiles -Wl,-T,stm32f4xx.ld,--gc-sections
+ALL_LDFLAGS = $(LD_FLAGS) -mthumb -mcpu=cortex-m4 -nostartfiles -Wl,-T,$(LINKER_SCRIPT),--gc-sections
 
 LIBS =	-lm
 

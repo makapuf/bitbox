@@ -53,6 +53,24 @@ char *dec32(unsigned long i)
 
 //******************************************************************************
 
+// bitbox LED
+void led_on() 
+{
+    GPIOA->ODR |= 1<<2; 
+}
+
+void led_off() 
+{
+    GPIOA->ODR &= ~(1<<2); 
+}
+void led_init() {
+  // init LED GPIO
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // assumes AHB1 init
+    GPIOA->MODER |= (1 << 4) ; // set pin 8 to be general purpose output
+}
+
+BYTE Buffer[8*1024];
+
 int main(void)
 {
 
@@ -67,12 +85,15 @@ int main(void)
 
 
 	NVIC_Configuration(); /* Interrupt Config */
-    
+  
+  led_init(); 
+  led_on();
+
 	memset(&fs32, 0, sizeof(FATFS));
 	res = f_mount(&fs32,"",1); //mount now
 
 	memset(&fil, 0, sizeof(FIL));
-	res = f_open(&fil, "MESSAGE.TXT", FA_READ);
+	res = f_open(&fil, "bean.mkv", FA_READ); // eh.
 
 	if (res == FR_OK)
 	{
@@ -80,7 +101,6 @@ int main(void)
 
 		while(1)
 		{
-			BYTE Buffer[512];
 			UINT BytesRead;
 			UINT i;
 
@@ -96,22 +116,27 @@ int main(void)
 
 		res = f_close(&fil); // MESSAGE.TXT
 
+    #ifndef _FS_READONLY
+
     res = f_open(&fil, "LENGTH.TXT", FA_CREATE_ALWAYS | FA_WRITE);
 
     if (res == FR_OK)
     {
-      	UINT BytesWritten;
-      	char crlf[] = "\r\n";
-      	char *s = dec32(Total);
+        UINT BytesWritten;
+        char crlf[] = "\r\n";
+        char *s = dec32(Total);
 
-      	res = f_write(&fil, s, strlen(s), &BytesWritten);
-      	res = f_write(&fil, crlf, strlen(crlf), &BytesWritten);
-  		res = f_close(&fil); // LENGTH.TXT
+        res = f_write(&fil, s, strlen(s), &BytesWritten);
+        res = f_write(&fil, crlf, strlen(crlf), &BytesWritten);
+      res = f_close(&fil); // LENGTH.TXT
     }
-	}
+    #endif 
+  }
 
+  led_off();
+
+  #ifndef _FS_READONLY
   res = f_open(&fil, "DIR.TXT", FA_CREATE_ALWAYS | FA_WRITE);
-
 
   if (res == FR_OK)
   {
@@ -166,6 +191,8 @@ int main(void)
   	res = f_close(&fil); // DIR.TXT
 
   }
+
+  #endif
 
   while(1); /* Infinite loop */
 }

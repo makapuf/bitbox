@@ -1,11 +1,11 @@
 /*---------------------------------------------------------------------------/
-/  FatFs - FAT file system module include file  R0.10     (C)ChaN, 2013
+/  FatFs - FAT file system module include file  R0.10a    (C)ChaN, 2014
 /----------------------------------------------------------------------------/
 / FatFs module is a generic FAT file system module for small embedded systems.
 / This is a free software that opened for education, research and commercial
 / developments under license policy of following terms.
 /
-/  Copyright (C) 2013, ChaN, all right reserved.
+/  Copyright (C) 2014, ChaN, all right reserved.
 /
 / * The FatFs module is a free software and there is NO WARRANTY.
 / * No restriction on use. You can use, modify and redistribute it for
@@ -15,7 +15,7 @@
 /----------------------------------------------------------------------------*/
 
 #ifndef _FATFS
-#define _FATFS	80960	/* Revision ID */
+#define _FATFS	29000	/* Revision ID */
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,7 +83,7 @@ typedef struct {
 	BYTE	fsi_flag;		/* FSINFO flags (b7:disabled, b0:dirty) */
 	WORD	id;				/* File system mount ID */
 	WORD	n_rootdir;		/* Number of root directory entries (FAT12/16) */
-#if _MAX_SS != 512
+#if _MAX_SS != _MIN_SS
 	WORD	ssize;			/* Bytes per sector (512, 1024, 2048 or 4096) */
 #endif
 #if _FS_REENTRANT

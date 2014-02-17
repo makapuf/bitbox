@@ -26,12 +26,17 @@ void die(int where, int cause);
 
 void led_on() 
 {
-    GPIOA->ODR |= 1<<8; 
+    GPIOA->ODR |= 1<<2; 
 }
 
 void led_off() 
 {
-    GPIOA->ODR &= ~(1<<8); 
+    GPIOA->ODR &= ~(1<<2); 
+}
+void led_init() {
+	// init LED GPIO
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA (+)
+    GPIOA->MODER |= (1 << 4) ; // set pin 8 to be general purpose output
 }
 
 
@@ -41,10 +46,7 @@ FIL bootfile;
 
 void init()
 {
-	// init LED GPIO
-    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA
-    GPIOA->MODER |= (1 << 16) ; // set pin 8 to be general purpose output
-
+	led_init();
     // init FatFS
 	FRESULT r=init_ff();
 	if (r != E_OK) die(INIT,r); 

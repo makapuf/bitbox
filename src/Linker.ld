@@ -8,33 +8,42 @@ MEMORY
     sram2 (rwx)     : ORIGIN = 0x2001C000, LENGTH = 16K
 }
 
-__isr_vector_sram = 0x20020000-0x200;
+
+__isr_vector_sram = 0x2001C000-0x200;
 
 SECTIONS
 {
     .text :
     {
+        . = ALIGN(4);
         _text = .;
         __isr_vector_start = .;
         KEEP(*(.isr_vector))
         __isr_vector_end = .;
+        . = ALIGN(4);
         *(.text*)
         *(.rodata*)
         _etext = .;
-        _idata = .;
+        _sidata = .;
     } > flash
-    .data : AT(ADDR(.text) + SIZEOF(.text))
+
+    .data : AT(_sidata)
     {
-        _data = .;
+        . = ALIGN(4);
+        _sdata = .;
         *(vtable)
+        . = ALIGN(4);
         *(.data*)
         _edata = .;
-    } > ccmram
+    } > sram
+
     .bss :
     {
-        _bss = .;
+        . = ALIGN(4);
+        _sbss = .;
         *(.bss*)
+        . = ALIGN(4);
         *(COMMON)
         _ebss = .;
-    } > ccmram
+    } > sram
 }

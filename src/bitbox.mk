@@ -19,7 +19,7 @@ LD = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 
 DEFINES =	-DARM_MATH_CM4 -DOVERCLOCK -DAUDIO  -DGAMEPAD 
-
+# -DSNES_GAMEPAD 
 # USB defines
 DEFINES += -DUSE_USB_OTG_HS -DUSE_STDPERIPH_DRIVER -DUSE_EMBEDDED_PHY -DUSE_USB_OTG_FS
 
@@ -42,25 +42,26 @@ LIB_SOURCE_DIR =../lib
 BUILD_DIR =build
 #LIB_FILES = ../lib/object.c
 
-KERNEL_FILES = startup.c system.c new_vga.c bitbox_main.c gamepad.c audio.c \
- stm32fxxx_it.c \
- stm32f4xx_gpio.c \
- stm32f4xx_rcc.c \
- stm32f4xx_tim.c \
- misc.c \
- usb_bsp.c \
- usbh_usr.c \
- usb_core.c \
- usb_hcd.c \
- usb_hcd_int.c \
- usbh_core.c \
- usbh_hcs.c \
- usbh_hid_core.c \
- usbh_hid_keybd.c \
- usbh_hid_mouse.c \
- usbh_hid_gamepad.c \
- usbh_ioreq.c \
- usbh_stdreq.c 
+KERNEL_FILES = startup.c system.c \
+	new_vga.c snes_gamepad.c bitbox_main.c audio.c \
+	stm32fxxx_it.c \
+	stm32f4xx_gpio.c \
+	stm32f4xx_rcc.c \
+	stm32f4xx_tim.c \
+	misc.c \
+	usb_bsp.c \
+	usbh_usr.c \
+	usb_core.c \
+	usb_hcd.c \
+	usb_hcd_int.c \
+	usbh_core.c \
+	usbh_hcs.c \
+	usbh_hid_core.c \
+	usbh_hid_keybd.c \
+	usbh_hid_mouse.c \
+	usbh_hid_gamepad.c \
+	usbh_ioreq.c \
+	usbh_stdreq.c 
 
 
 C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES)
@@ -85,7 +86,7 @@ upload: $(NAME).bin
 	-c "reset run" -c shutdown
 
 debug: $(NAME).elf
-	arm-none-eabi-gdb $(NAME).elf \
+	arm-none-eabi-gdbtui $(NAME).elf \
 	--eval-command="target extended-remote :4242"
 
 stlink: $(NAME).bin
