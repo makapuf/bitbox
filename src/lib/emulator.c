@@ -41,8 +41,8 @@ uint32_t vga_line;
 volatile uint32_t vga_frame;
 
 // sound
-uint8_t audio_buffer[BITBOX_SNDBUF_LEN]; // mono, 31khz 1frame
-uint8_t audio_on;
+uint16_t audio_buffer[BITBOX_SNDBUF_LEN]; // stereo, 31khz 1frame
+int audio_on;
 
 // joystick handling.
 static int sdl_joy_num;
@@ -93,7 +93,7 @@ static void mixaudio(void * userdata, Uint8 * stream, int len)
 // this callback is called each time we need to fill the buffer
 {
     if (audio_on)
-        game_snd_buffer(stream,len); 
+        game_snd_buffer((uint16_t *)stream,len/2); 
 }
 
 void audio_init(void)
@@ -102,7 +102,7 @@ void audio_init(void)
 
    desired.freq = BITBOX_SAMPLERATE;
    desired.format = AUDIO_U8;
-   desired.channels = 1; 
+   desired.channels = 2; 
 
    /* Le tampon audio contiendra at least one vga_frame worth samples */
    desired.samples = BITBOX_SNDBUF_LEN*2; // XXX WHY is it halved ??
@@ -370,6 +370,8 @@ int main ( int argc, char** argv )
     if (init()) return 1;
     game_init();
 
+    // now start sound
+    SDL_PauseAudio(0);
 
     // program main loop
     bool done = false;
@@ -404,17 +406,6 @@ void die(char *str)
     printf("ERROR : %s - dying.",str);
     exit(0);
 }
-
-Sample *sample;
-int sample_id;
-
-void audio_start_sample(Sample *s)
-{
-    sample=s;
-    sample_id=0;
-}
-void audio_play_sample() {}
-
 
 /*
 void displaylist_print(void)

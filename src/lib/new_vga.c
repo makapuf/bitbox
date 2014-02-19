@@ -30,7 +30,6 @@
 */
 
 #include "kernel.h" // base 
-#include "../lib/kernel.h"
 
 #include <stdint.h>
 
@@ -47,6 +46,8 @@
 
 #ifdef AUDIO
 #include "audio.h"
+void audio_out8(uint16_t value); 
+extern uint16_t *audio_ptr; // only used through this inline
 #endif 
 
 
@@ -54,6 +55,7 @@
 // from http://forums.arm.com/index.php?/topic/13949-cycle-count-in-cortex-m3/
 // also average ?
 uint32_t line_time,max_line_time, max_line; // maximum time of line 
+// gdb : disp *(uint32_t *)0xE0001004
 #endif 
 
 #define PIXELCLOCK 7
@@ -67,11 +69,12 @@ uint32_t vga_line;
 volatile uint32_t vga_frame; 
 
 // aligned on a 1kb boundary , see http://blog.frankvh.com/2011/08/18/stm32f2xx-dma-controllers/
-static pixel_t *LineBuffer1=(pixel_t *)0x20000000; // LineBuffer1[LINE_LENGTH]; <-- NO ?, would be in CCM so out of reach of DMA !
-static pixel_t *LineBuffer2=(pixel_t *)0x20000000+1024;//!pixels !  +LINE_LENGTH*sizeof(pixel_t)+2*MARGIN; // LineBuffer2[LINE_LENGTH];
 
-pixel_t *display_buffer; // will be sent to display 
-pixel_t *draw_buffer; // will be drawn (bg already drawn)
+uint16_t LineBuffer1[1024] __attribute__((aligned (1024))); // __attribute__ ((section (".sram")))
+uint16_t LineBuffer2[1024] __attribute__((aligned (1024)));
+
+uint16_t *display_buffer; // will be sent to display 
+uint16_t *draw_buffer; // will be drawn (bg already drawn)
 
 static void HSYNCHandler();
 static void DMACompleteHandler();
@@ -95,6 +98,11 @@ static inline void output_black()
 
 void vga640_setup()
 {
+	for (int i=0;i<1024;i++)
+	{
+		LineBuffer1[i]=0;
+		LineBuffer2[i]=0;
+	}
 	//EnableAPB2PeripheralClock(RCC_APB2ENR_SYSCFGEN); // ??? useful ?
 
 	// initialize software state.
@@ -107,7 +115,7 @@ void vga640_setup()
 	// XXX here port PC11 is used for vsync !!!  
 
 	// GPIO A pins 0 (vsync- not bitbox prototype) & 1 (hsync) and GPIO E for pixel DAC
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; // enable gpioB
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; // enable gpio E
 
 	// - Configure DAC pins in GPIOB 0-11
 	SetGPIOOutputMode(GPIOE,0x7fff); 
@@ -122,7 +130,7 @@ void vga640_setup()
 	SetGPIOAlternateFunctionMode(GPIOA,0b10); // PA1 as alternate
 	SelectAlternateFunctionForGPIOPin(GPIOA,1,2); // TIM 5 CH 2, see Table9 of datasheet, p60 : alt func 2 is PA1
 
-	SetGPIOOutputMode(GPIOA, (1<<0)); // PA15 as ouput
+	SetGPIOOutputMode(GPIOA, (1<<0)); // PA01 as ouput
 
 	SetGPIOPushPullOutput(GPIOA, (1<<1) | (1<<0));
 	SetGPIOSpeed50MHz(GPIOA, (1<<1) | (1<<0));
@@ -305,12 +313,7 @@ static void HSYNCHandler()
 		#ifdef PROFILE
 		line_time = DWT->CYCCNT; // reset the perf counter
 		#endif 
-		if (vga_line==480) { // just to draw last line, vga_frame done!
-                  vga_frame++;
-                  // TODO : VBlank interrupt. waiting for frame can be enough
-                } else { 
-		  game_line(); // generate next line
-                }
+		game_line(); // Game callback !
 		
                 #ifdef PROFILE
 		line_time = DWT->CYCCNT - line_time; // read the counter
@@ -320,14 +323,20 @@ static void HSYNCHandler()
 		}
 		#endif
 	}  else {
+		if (vga_line==481) vga_frame++; // new frame sync now
+
+		#ifdef SNES_GAMEPAD
 		if (vga_line<=480+1+33)
 		{
-			#ifdef SNES_GAMEPAD
 			gamepad_readstep();
-			#endif
 		}
+		#endif
+
 		if(vga_line==491)
 		{
+		    #ifdef AUDIO
+    		audio_frame();
+    		#endif 
 			GPIOA->BSRRH|=(1<<0); // lower VSync line
 		}
 		else if(vga_line==493)
@@ -342,7 +351,7 @@ static void HSYNCHandler()
 	}
 
 	#ifdef AUDIO
-	audio_line(); 
+	if (audio_on) audio_out8(*audio_ptr++);
 	#endif
 }
 

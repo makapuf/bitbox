@@ -21,7 +21,7 @@ void game_init(void);
 void game_frame(void);
 void game_line(void);
 
-void game_snd_buffer(uint8_t *buffer, int len); // this callback is called each time we need to fill the buffer
+void game_snd_buffer(uint16_t *buffer, int len); // this callback is called each time we need to fill the buffer
 
 
 void die(char *msg);

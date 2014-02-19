@@ -18,7 +18,7 @@ CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 
-DEFINES =	-DARM_MATH_CM4 -DOVERCLOCK -DAUDIO  -DGAMEPAD 
+DEFINES =	-DARM_MATH_CM4 -DOVERCLOCK -DAUDIO -DGAMEPAD 
 # -DSNES_GAMEPAD 
 # USB defines
 DEFINES += -DUSE_USB_OTG_HS -DUSE_STDPERIPH_DRIVER -DUSE_EMBEDDED_PHY -DUSE_USB_OTG_FS
@@ -30,8 +30,8 @@ C_OPTS = -std=c99 \
 		-I../lib/ \
 		-g \
 		-Werror \
-                -O3 \
-                -mlittle-endian 
+        -O3 \
+        -mlittle-endian 
 #                 -funroll-loops \
 #                -fplan9-extensions
 

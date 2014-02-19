@@ -4,7 +4,9 @@ volatile int x,y;
 // x and y  should be volatile since the vga thread must see the changes to x and y 
 // which are runnin in the main thread 
 
-void game_init() {}
+void game_init() {
+	audio_on=1;
+}
 
 void game_frame()
 {
@@ -52,4 +54,17 @@ void game_line()
 	}
 }
 
-void game_snd_buffer(uint8_t *buffer, int len) {};
+void game_snd_buffer(uint16_t *buffer, int len) 
+/* generates a 500Hz sound alternatibng between left & right */
+{
+	for (int i=0;i<len;i++)
+	{
+		if ((i/64)&1) 
+		{
+			*buffer++ = (vga_frame/8)&1 ?  0x4000 : 0x0040;
+		} else {
+			*buffer++ = 0;
+		}
+
+	}
+};

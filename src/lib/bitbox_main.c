@@ -139,6 +139,8 @@ void main()
 
 	while (1)
 	{
+
+
 		game_frame();
 		
 		// wait next frame
@@ -164,7 +166,8 @@ void main()
 
 		//if (vga_frame%32 == 0) toggle_led(); // each second
 
-    set_led(button_state()); // led along SDIO sense.
+
+    set_led(button_state());
 
 	}; // all work done inside interrupts
 }
