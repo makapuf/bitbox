@@ -46,4 +46,10 @@ SECTIONS
         *(COMMON)
         _ebss = .;
     } > sram
+
+    
+    .ccm (NOLOAD) :
+    {
+      *(.ccm)
+    } > ccmram
 }

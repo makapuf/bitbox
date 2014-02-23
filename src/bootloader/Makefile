@@ -1,7 +1,9 @@
 NAME=sdtest
 
 C_FILES = stm32f4_lowlevel.c stm32f4_discovery_sdio_sd.c ff.c diskio.c main.c 
-C_FILES += stm32fxxx_it.c stm32f4xx_dma.c system_stm32f4xx.c stm32f4xx_gpio.c stm32f4xx_sdio.c  stm32f4xx_rcc.c misc.c startup.c
+#C_FILES += system_stm32f4xx.c
+C_FILES += system.c
+C_FILES += stm32fxxx_it.c stm32f4xx_dma.c  stm32f4xx_gpio.c stm32f4xx_sdio.c  stm32f4xx_rcc.c misc.c startup.c
 
 MCU = cortex-m4
 FPU = -mfloat-abi=hard -mfpu=fpv4-sp-d16 -D__FPU_USED=1

@@ -9,6 +9,7 @@
 
 #include "stm32f4xx.h"
 #include "stm32f4_discovery_sdio_sd.h"
+#include "system.h"
 
 //******************************************************************************
 
@@ -74,7 +75,9 @@ BYTE Buffer[8*1024];
 int main(void)
 {
 
-  SystemInit(); // because we're using startup.c !
+  // because we're using startup.c !
+  //SystemInit(); 
+  InitializeSystem(); // now we're using system.c 
 
   /*!< At this stage the microcontroller clock setting is already configured,
        this is done through SystemInit() function which is called from startup
@@ -93,7 +96,7 @@ int main(void)
 	res = f_mount(&fs32,"",1); //mount now
 
 	memset(&fil, 0, sizeof(FIL));
-	res = f_open(&fil, "bean.mkv", FA_READ); // eh.
+	res = f_open(&fil, "anim.bin", FA_READ); // eh.
 
 	if (res == FR_OK)
 	{

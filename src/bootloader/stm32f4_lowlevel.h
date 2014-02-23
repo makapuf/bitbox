@@ -1,5 +1,6 @@
 /**
   * taken from  stm32f4_discovery.h PATCHED BY CLIVE SOURCER32@GMAIL.COM TO SDIO
+  * removed all discovery (LED, GPIO) & only kept SDIO code 
   */
 
 #pragma once
