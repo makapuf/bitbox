@@ -1,14 +1,12 @@
 #pragma once
 
 #include <stdint.h>
+#include <kernel.h>
 
-#define MAX_BLITS 32 // max blits per line
+#define MAX_BLITS 32 // max blits per line (note that blits can be coalesced by engine)
 #define MAX_TRANSP 16 // max nb obj transparent objects
 #define MAX_OBJECTS 32 // max objects present at the same time
 
-#define MAXINT 32767
-#define MININT -32767
-#define SCREEN_WIDTH 640
 #define OPAQUE 1
 #define TRANSPARENT 0
 
@@ -22,7 +20,7 @@ typedef struct object
 	void (*line)(struct object *o); // calls make_opaque, which will call blit
 	void (*blit)(struct object *o, int16_t x1,int16_t x2);
 
-	int a,b,c; // various 32b uses 
+	intptr_t a,b,c,d; // various 32b uses 
 
 	// inline single linked lists
 	struct object *activelist_next;
@@ -39,16 +37,24 @@ void blitter_remove(int i);
 void blitter_frame(); // callback for frames.
 void blitter_line();
 
+int new_opaquerect (object *o, int16_t x, int16_t y, int16_t w, int16_t h,int16_t z, uint16_t color);
+int new_checkerrect(object *o, int16_t x, int16_t y, int16_t w, int16_t h,int16_t z, uint16_t color1, uint16_t color2);
 
-/*
- * declare opaque for this line . predraw will call the blitting on this object as necessary
- */	
-void pre_draw (object *o, int16_t x1, int16_t x2,char is_opaque) ;
+// --------- packbit structure
 
+typedef struct 
+{
+    uint16_t w,h; // height is the height of one frame. can be smaller than image height if several frames.
+    uint16_t *palette; // u16 color used by indices.
+    uint16_t const *idx16; // index to data offset for each 16 lines. length = h/16
+    uint8_t const *data; // header+ data bytes + header ...
+} packbit_rom;
 
+#define PB_DATA(x) ((packbit_rom*)(x->a))->data   // start of blit data
+#define PB_PAL(x) ((packbit_rom*)(x->a))->palette // start of palette
+#define PB_IDX16(x) ((packbit_rom*)(x->a))->idx16 // start of offsets of each 16lines
 
-void opaquerect_line (object *o);
-void transprect_line (object *o);
-void colorfill_blit(object *o, int16_t x1, int16_t x2);
-
+#define PB_OFS(x) ((x)->b) // line offset (start blitting at line X )
+#define PB_PTR(x) ((x)->c) // current blit data ptr
+int packbit_new (object *o, int16_t x, int16_t y, int16_t z, int line_ofs, const packbit_rom *pb);
 
