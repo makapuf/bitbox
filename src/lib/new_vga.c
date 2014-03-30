@@ -10,7 +10,6 @@
 /*
   TODO : audio, exclude headers, ...
   soft reflash doesnt enable output
-  gamepad
   pixelclock
 */
 
@@ -23,6 +22,9 @@
 
 
 /* debug with gdb : use 
+
+	disp *(uint32_t *)0xE0001004 - line_time
+
 	*(DMA_Stream_TypeDef*)0x40026488 (DMA2stream5 )
 	*(DMA_TypeDef *)0x40026400  DMA2 status
 	*(TIM_TypeDef*) 0x40010000 TIM1

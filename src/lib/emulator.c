@@ -1,13 +1,17 @@
 #include <stdlib.h>
 #include <SDL/SDL.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdint.h>
 
+// emulated interfaces
 #include "kernel.h"
+#include "fatfs/ff.h"
 
 //#include "object.h"
 
 // gerer SLOW et FULLSCREEN comme commandes de l'emulateur
-//#define SLOW
+//#define SLOW ou PAUSE 
 // ----------------------------- kernel ----------------------------------
 /* The only funcion of the kernel is
 - calling game_init and game_frame
@@ -23,16 +27,15 @@
 int screen_width;
 int screen_height;
 
-#ifndef SLOW
 #define TICK_INTERVAL 1000/60
-#else
-#define TICK_INTERVAL 1000/6
-#endif
 
+int slow; // parameter : run slower ?
 
 static uint32_t next_time;
 
 // Video
+int fullscreen; // shall run fullscreen
+
 SDL_Surface* screen;
 uint16_t mybuffer[LINE_LENGTH];
 pixel_t *draw_buffer = mybuffer; // volatile ?
@@ -130,7 +133,7 @@ void set_mode(int width, int height)
 {
     screen_width = width;
     screen_height = height;
-    screen = SDL_SetVideoMode(width,height, 16, SDL_HWSURFACE|SDL_DOUBLEBUF);
+    screen = SDL_SetVideoMode(width,height, 16, SDL_HWSURFACE|SDL_DOUBLEBUF|(fullscreen?SDL_FULLSCREEN:0));
     if ( !screen )
     {
         printf("%s\n",SDL_GetError());
@@ -196,7 +199,6 @@ int init(void)
 
 void instructions ()
 {
-    printf("Invoke with FULLSCREEN argument to run fullscreen.\n");
     printf("Use joystick or following keys : \n");
     printf("    ESC (quit), \n");
     printf("    D (A button),\n");
@@ -362,8 +364,63 @@ static bool handle_gamepad()
         return false; // don't exit  now
 }
 
+// -------------------------------------------------
+// limited fatfs-related functions.
+// XXX add non readonly features 
+FRESULT f_mount (FATFS* fs, const TCHAR* path, BYTE opt)
+{
+    return FR_OK;
+}
+
+FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode)
+{
+    fp->fs = (FATFS*) fopen ((const char*)path,"r"); // now ignores mode.
+    return fp->fs ? FR_OK : FR_DISK_ERR; // XXX duh.
+}
+
+FRESULT f_close (FIL* fp)
+{
+    int res = fclose( (FILE*) fp->fs);
+    fp->fs=NULL;
+    return res?FR_DISK_ERR:FR_OK; // FIXME handle reasons ?
+}               
+
+FRESULT f_read (FIL* fp, void* buff, UINT btr, UINT* br)
+{
+    *br = fread ( buff, 1, btr, (FILE *)fp->fs);
+    return FR_OK; // XXX handle ferror
+}          
+
+
+FRESULT f_lseek (FIL* fp, DWORD ofs)
+{
+    int res = fseek ( (FILE *)fp->fs, ofs, SEEK_SET);
+    return res ? FR_DISK_ERR : FR_OK; // always from start
+}
+
+
+// ------------- datacopy
+void *memcpy2(void *dst, void*src, size_t size) 
+{
+    return memcpy(dst,src,size);
+}
+
+
 int main ( int argc, char** argv )
 {
+
+    fullscreen = (argc>1 && !strcmp(argv[1],"--fullscreen"));
+    if (fullscreen) 
+        printf("Running fullscreen.\n");
+    else 
+        printf("Invoke with --fullscreen argument to run fullscreen.\n");
+
+    slow = (argc>1 && !strcmp(argv[1],"--slow"));
+    if (slow) 
+        printf("Running slow.\n");
+    else 
+        printf("Invoke with --slow argument to run slower (fullscreen not supported).\n");
+
     instructions();
 
     gamepad1 = 0; // all up
@@ -381,16 +438,15 @@ int main ( int argc, char** argv )
         // message processing loop
         done = handle_gamepad();
         // update game
+        game_frame();
 
         // update time
         vga_frame++;
-        
-        game_frame();
 
         refresh_screen(screen);
 
         SDL_Delay(time_left());
-        next_time += TICK_INTERVAL;
+        next_time += slow ? TICK_INTERVAL*10:TICK_INTERVAL;
 
         SDL_Flip(screen);
     } // end main loop
@@ -406,16 +462,3 @@ void die(char *str)
     printf("ERROR : %s - dying.",str);
     exit(0);
 }
-
-/*
-void displaylist_print(void)
-// debug function
-{
-    printf("alive objects :");
-
-    for (Object *o=displaylist_top;o;o=o->displaylist_next)
-        printf("  %p (%s) z=%3d,x=%3d,y=%3d\n",o,o->type->name,o->type->zlevel,o->x,o->y);
-
-    printf("\n");
-}
-*/
