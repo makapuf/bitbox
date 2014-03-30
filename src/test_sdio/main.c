@@ -77,17 +77,21 @@ void game_line()
 	if (im_current->header==IMGHEADER && vga_line > POS_IMG && vga_line<POS_IMG+im_current->y)
 	{
 		uint8_t *src = &(im_current->data[(vga_line-POS_IMG)*im_current->x]);
-		uint16_t *dst = draw_buffer;
+		uint32_t *dst = (uint32_t*) draw_buffer;
 
 		for (i=0;i<im_current->x;i++)
-			*dst++ = im_current->palette[*src++];
-		// finish line		
+		{
+			uint32_t pixels = im_current->palette[*src++];// blits 2 pixels at a time	
+			pixels = (im_current->palette[*src++])<<16|pixels; 
+			*dst++ = pixels;
+		}
 	} 
 
 	// clear the line / end of line with a repeating gradient
-	unsigned int fr = vga_frame;
-	for (;i<LINE_LENGTH;i++)
-		draw_buffer[i]=(vga_line&0x1f)<<(5*(((fr+vga_line)/32)&3)); 
+
+	// i is not reset to zero, ie for lines where we displayed the video, we just continue
+	for (;i<LINE_LENGTH;i++) 
+		draw_buffer[i]=(vga_line&0x1f)<<(5*(((vga_line+vga_line)/32)&3)); 
 
 
 	// first oblique line (behind)

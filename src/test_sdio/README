@@ -1,0 +1,4 @@
+This is an example of loading a file from SD while displaying it (effectivemy streaming)
+Some test drawings are done just to show them.
+
+The emulator works, "SD" files should be located in the current directory.
