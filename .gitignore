@@ -5,13 +5,13 @@
 *.lib
 *.a
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+# Binaries
+*.elf
+*.bin
 
-# Executables
-*.exe
-*.out
-*.app
+# emulation of current game
+*_emu
+# build subdirectories
+*/build
+# build dependencies
+*.d
