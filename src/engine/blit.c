@@ -28,18 +28,6 @@ make a font element (avec sub packbits : array de chars = packbits independants,
 
  */
 
-
-
-typedef struct transpblit{
-    int16_t x1, x2;
-    object *o;
-} transpblit;
-
-typedef struct {
-    int16_t x1, x2;
-} blit;
-
-
 typedef struct {
     // ** long standing variables
 
@@ -55,51 +43,44 @@ typedef struct {
     // an object is not active if the displayed line is before its topmost line, or after the bounding box.
     object *activelist_head; // top of the active list
     int next_to_activate; // next object to put in active list
-        
 
-    // ** line-lived variables
-    // list of x1,x2 opaque blits on the line. The list is non overlapping and has growing x. 
-    blit opaque_list[MAX_BLITS]; 
-    int opaque_list_nb; // number of active elements in the list. 
-
-    transpblit transparent_stack[MAX_TRANSP]; // (x1,x2,b) fifo, filled top to bottom
-    int transparent_stack_top; // stack top next free index, 0 == empty fifo
 } Blitter;
 
-// global localvariable
+// global local variable
 static Blitter blt;
 
 void blitter_init()
 {   
-    for (int i=0;i<MAX_OBJECTS;i++) blt.objects[i]=0; // empty objects array
-    blt.nb_objects = 0;
+    // initialize empty objects array
+    for (int i=0;i<MAX_OBJECTS;i++) 
+    {
+        blt.objects[i]=&real_objects[i]; 
+        real_objects[i].y=INT16_MAX;
+    }
+    blt.nb_objects = 0; // first unused is first.
 }
 
-int blitter_insert(object *o)
-// return blitter index for new object, negative if none found
+// return new object pointer
 // append to end of list ; list ends up unsorted now
 // DON'T insert something twice !
 {
     if (blt.nb_objects<MAX_OBJECTS)
-    {
-        blt.objects[blt.nb_objects++] = o;
-        return blt.nb_objects;
-    }
+        return blt.objects[blt.nb_objects++]; // index of free object IN !
     else 
-        return -1;
+        return 0;
 }
 
-void blitter_remove(int i)
+void blitter_remove(object *o)
 {
     // ! Should do that between frames (only frame-based variables will be updated)
-    blt.objects[i]=0;   
+    o->y = INT16_MAX;   
 }
 
 // http://en.wikipedia.org/wiki/Insertion_sort
 // insertion sort objects array by Y. Simplest form, just sorting
 void blitter_sort_objects_y()
 {
-    // consider empty values as bigger than anything
+    // consider empty values as bigger than anything (Y = INT16_MAX)
 
     object *valueToInsert; 
     int holePos;
@@ -112,8 +93,6 @@ void blitter_sort_objects_y()
         // this iteration will insert blt.objects[i] into that sorted order
         // save blt.objects[i], the value that will be inserted into the array on this iteration
         valueToInsert = blt.objects[i];
-
-        if (!valueToInsert) continue; // skip empty places, no need to sort them.
 
         // now mark position i as the hole; blt.objects[i]=blt.objects[holePos] is now considered empty
         holePos=i;
@@ -134,6 +113,7 @@ void blitter_sort_objects_y()
 
         // blt.objects[0..i] are now in sorted order
     }
+    blt.nb_objects=real_nbobjects;
 }
 
 
@@ -157,18 +137,9 @@ void blitter_frame()
     }
 }
 
-void transparent_push(int16_t x1, int16_t x2, object *o)
-{
-    if (blt.transparent_stack_top<MAX_BLITS) 
-    {
-        blt.transparent_stack_top+=1;
-        blt.transparent_stack[blt.transparent_stack_top] = (transpblit){.x1=x1, .x2=x2, .o=o};
-    } 
-}
-
 
 void activelist_add(object *o)
-// insert sorted
+// insert sorted by Z
 {
     object **head = &blt.activelist_head;
     // find insertion point
@@ -181,79 +152,8 @@ void activelist_add(object *o)
 } 
 
 
-
-/*
-void print_objects()
-{
-    printf(" -- object list\n");
-    object *o;
-    for (int i=0;i<blt.nb_objects;i++)
-    {
-        o=blt.objects[i];
-        if (o) {
-            printf ("%d - x=%d y=%d w=%d h=%d z=%d a=%d\n",i ,o->x,o->y, o->w,o->h,o->z,o->a);
-        } else {
-            printf ("<empty>\n");
-        }
-    }
-    printf(" --\n");
-}
-
-void print_opaquelist(void) 
-{
-    printf("[");
-    for (int i=0;i<blt.opaque_list_nb;i++)
-    {
-        printf ("%3d.%3d,",blt.opaque_list[i].x1, blt.opaque_list[i].x2);
-    }
-    printf("]\n");
-}
-
-void print_active()
-{
-    for (object *o=blt.activelist_head;o;o=o->activelist_next)
-        printf (" x=%d y=%d w=%d h=%d z=%d a=%d\n",o->x,o->y, o->w,o->h,o->z,o->a); 
-}
-
-
-void print_frame(object *o,int line) 
-{
-    printf("- frame for x=%d, starting at %d\n",o->x,line);
-}
-
-void print_blit(object *o, int16_t x1, int16_t x2) 
-{
-    printf(" * blitting %d-%d\n",x1,x2);
-}
-
-void test(void)
-{
-    int posobj[][2] = {{0,10},{5,15},{25,30},{24,26},{12,32},{8,35},{0,640}}; // x1,x2 sorted by low to high, same y
-    object objs[7];
-
-    blitter_init();
-    for (int z=0;z<7;z++) // XXX put with different negative y
-    {
-        objs[z] = (object) {
-            .z=z, .x=posobj[z][0],.y=0,
-            .h=10,.w=posobj[z][1]-posobj[z][0],
-            .frame=print_frame, 
-            .line=opaquerect_line, 
-            .blit=print_blit 
-        };
-
-        blitter_insert(&objs[z]);
-        printf("%d-%d\n",posobj[z][0],posobj[z][1]);
-    }
-    print_objects();
-    blitter_frame();
-    blitter_line();
-}
-*/
 void blitter_line()
 {
-    // XXX optimize : combine three loops in one ?
-
     // drop past objects from active list. not sorted by Y
     object *prev=NULL;
     for (object *o=blt.activelist_head;o;o=o->activelist_next)
@@ -281,122 +181,14 @@ void blitter_line()
     }
 
 
-    // reset opaque list to screen coordinates
-    blt.opaque_list_nb = 2;
-    blt.opaque_list[0] = (blit){.x1=INT16_MIN, .x2=0};
-    blt.opaque_list[1] = (blit){.x1=LINE_LENGTH, .x2=INT16_MAX};
-    //print_opaquelist();
-
-
     // now trigger each activelist, in Z descending order
     for (object *o=blt.activelist_head;o;o=o->activelist_next)
     {
-        //printf("* line for object z= %d x=%d\n",o->z, o->x);
-        o->line(o); // will call pre_draw and blit opaques
-    }
-
-
-    // finally, apply in ascending Z (bottom to front) the transparent blits
-    transpblit t;
-    for (int i=blt.transparent_stack_top-1;i>=0;i--)
-    {
-        t=blt.transparent_stack[i]; // shortcut
-        t.o->blit(t.o, t.x1, t.x2);
+        o->line(o); 
     }
 
     // next line
     blt.current_line++;
-}
-
-
-void pre_draw (object *o, int16_t x1, int16_t x2,char is_opaque) 
-{
-    /*
-        declare opaque for this line & call blitting'
-        args : x1,x2,is_opaque  : declares span. '
-        b : reference for callback to blit'
-
-     there will always be a blit after x2, since screen boundaries is an "infinite" blit
-     transparent = push a masked line to the draw FIFO, which will be emptied after the make opaque
-    */
-
-    //printf("-- predraw %d - %d (%s)\n",x1,x2,is_opaque?"opaque":"transp");
-
-    // skip all past indices in the list. (ie indices completely before.)
-    // XXX optimize : cache index ?
-    int bltindex = 0; 
-    while (x1>=blt.opaque_list[bltindex].x2) bltindex +=1;
-    //printf("skipped to bltindex=%d\n",bltindex);
-
-    while (1) 
-    {
-        //print_opaquelist();
-        //printf("  bltidx : %d ; range : %d-%d\n",bltindex,x1,x2);
-
-        // are we starting within a blit ? 
-        if (blt.opaque_list[bltindex].x1<=x1)
-        {
-            x1 = blt.opaque_list[bltindex].x2; // skip to the blit end
-            bltindex += 1; // next blit
-        }
-
-        // ok now we passed, we're sure to be after a blit and not inside it. 
-        // we're also sure to have a preceding one
-
-        // blit up to the next obstacle or the end
-
-
-        if (x1>=x2) break; // already finished ? (includes end of line)
-
-
-        // there is a next blit here since x1 would have been MAXINT if it was the last
-        if (x2<blt.opaque_list[bltindex].x1)  // do we finish before or at the start of the next opaque ? if yes we can finish the blit here
-        {
-            //printf("finishing\n");
-            // blit all ; blit start is end of preceding blit ?
-            if (is_opaque) 
-            { 
-                o->blit(o,x1,x2); // blit effectively
-
-                // mark opaque
-                if (x1==blt.opaque_list[bltindex-1].x2) 
-                {
-                    // extend the current blit
-                    blt.opaque_list[bltindex-1].x2=x2;
-                }
-                else 
-                { 
-                    // insert a new one up to end (if there is room)
-                    if (blt.opaque_list_nb<MAX_BLITS)
-                    {
-                        // move the existing ones to the end, creating a hole
-                        for (int i=blt.opaque_list_nb;i>=bltindex;i--)
-                            blt.opaque_list[i+1]=blt.opaque_list[i];
-                        blt.opaque_list_nb++;
-                        // put the new one in the hole
-                        blt.opaque_list[bltindex].x1=x1;
-                        blt.opaque_list[bltindex].x2=x2;                    
-                    }
-                }
-            } else { // transparent
-                transparent_push(x1,x2,o);
-            }
-            break;
-        } else { // not finishing
-            if (is_opaque) 
-            { 
-                o->blit(o, x1,blt.opaque_list[bltindex].x1-1); // blit up to start of next
-                // mark opaque : extend on the left the next one 
-                // (we ARE in line with preceding here, so we extend)
-                blt.opaque_list[bltindex].x1=x1;
-            } else {
-                transparent_push(x1,  blt.opaque_list[bltindex].x1, o);
-            }
-            x1 = blt.opaque_list[bltindex].x2; // skip current
-            //bltindex += 1; // XXX not always, we're extending preceding.
-        }
-    } // break
-    //printf("finally:");print_opaquelist();
 }
 
 
