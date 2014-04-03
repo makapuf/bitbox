@@ -1,126 +1,82 @@
 #include <kernel.h>
 #include <stdint.h>
+#include <string.h> // memcpy, even if memcpy reaallly is improved in future version of newlib
 #include "fatfs/ff.h"
 
-volatile int x,y;
-// x and y  should be volatile since the vga thread must see the changes to x and y 
-// which are runnin in the main thread 
 
-#define POS_IMG (200+y) // pos of image 
-#define IMGHEADER 0xfaceb0b0
+#define IMGHEADER 0xb71b
 typedef struct {
-	uint32_t header;
-	uint16_t x,y;
-	uint16_t palette[256]; 
-	uint8_t data[320*200];
-	uint32_t footer;
+	uint16_t header;
+	uint16_t w,h;
+	uint16_t data[]; // depends on the video !
 } my_image;
 
+const uint16_t result_colors[] = { 
+	31<<10,            // red : init
+	31<<10|31<<5,      // yellow : ok mount
+	       31<<5,      // green : file opened
+	       31<<5 | 31, // cyan : read data
+	               31 , // blue : header OK
+	31<<10       | 31  // pink : last header OK
+};
 
-my_image image1;
-my_image image2 __attribute__ ((section (".ccm")));
-
-my_image *im_current = &image1, *im_other = &image2;
+uint16_t data[32768];
+my_image *img=(my_image *)&data[0];
 
 FATFS fatfs;
-FIL anim_file;
-FRESULT file_opened;
+FIL img_file;
+FRESULT result;
 
+int state=0; // from 0 to 5 according to step
 
 void game_init() {
-	audio_on=1;
-	// open file & testif present & OK (dimensions, ...)
+	audio_on=0;
+	UINT BytesRead;
 
-	file_opened = f_mount(&fatfs,"",1); //mount now
-	if (file_opened==FR_OK)
-		file_opened = f_open (&anim_file, "anim.bin",FA_READ); // open file		
+	// open file , load raw u16 frame from frame.bin
+	state=0;
+	result = f_mount(&fatfs,"",1); //mount now
+	if (result==FR_OK)
+	{
+		state=1; // mount OK
+		result = f_open (&img_file,"image.bin",FA_READ); // open file		
+		if (result==FR_OK)
+		{
+			state=2; // opened
+			// read all file, might not read all.
+			result = f_read (&img_file, &data, 65536, &BytesRead);
+			if (result) state=3; // read
+			if (img->header == IMGHEADER) state=4; // header OK
+			if (img->data[img->w*img->h] == IMGHEADER) state=5; // last header OK (error?)
+		}		
+	}
 }
 
 void game_frame()
 {
-	UINT BytesRead;
-
-	// receive events
-    if (PRESSED(up) && y>-240) y--;
-    if (PRESSED(down) && y<240) y++;
-    if (PRESSED(left) && x>-320) x--;
-    if (PRESSED(right) && x<320) x++;
-
-    
-    // at 20FPS = each 3 frames, read an image from disk
-    if (file_opened==FR_OK && vga_frame%3 == 0 )
-    {
-	    // swap loading and displaying images
-	    my_image *tmp;
-	    tmp=im_other;
-	    im_other=im_current; 
-	    im_current=tmp;
-
-	    // start loading frame from SD (XX check file)
-		f_read (&anim_file, im_other, sizeof(my_image), &BytesRead);
-		if (BytesRead != sizeof(my_image))
-		{
-	    	// if last_frame :rewind & retry	    	
-			f_lseek (&anim_file,0);			
-			f_read (&anim_file, im_other, sizeof(my_image), &BytesRead);
-		}
-    }
-    
+	// blink "result" times ...
 } 
 
 void game_line()
 // called from VGA kernel
 {	
-	int i=0;
-
-	// display current frame at (0,y) if loaded
-	if (im_current->header==IMGHEADER && vga_line > POS_IMG && vga_line<POS_IMG+im_current->y)
+	// display image at (0,0) if loaded
+	if (state==5 && vga_line<img->h)
 	{
-		uint8_t *src = &(im_current->data[(vga_line-POS_IMG)*im_current->x]);
-		uint32_t *dst = (uint32_t*) draw_buffer;
-
-		for (i=0;i<im_current->x;i++)
-		{
-			uint32_t pixels = im_current->palette[*src++];// blits 2 pixels at a time	
-			pixels = (im_current->palette[*src++])<<16|pixels; 
-			*dst++ = pixels;
-		}
+		memcpy(draw_buffer, &img->data[vga_line*img->w],img->w*2);
 	} 
+	if (vga_line/2==img->h/2) memset(draw_buffer,0,640*2);
 
-	// clear the line / end of line with a repeating gradient
-
-	// i is not reset to zero, ie for lines where we displayed the video, we just continue
-	for (;i<LINE_LENGTH;i++) 
-		draw_buffer[i]=(vga_line&0x1f)<<(5*(((vga_line+vga_line)/32)&3)); 
-
-
-	// first oblique line (behind)
-	for (int i=0;i<128;i++)
-		draw_buffer[vga_line+i] = (i/8)<<4;
-
-    // display gamepad state as an inverse video point
-    if (vga_line == 200) {
-    for (int i=0; i<16; i++)
-      if (gamepad1 & (1 << i)) draw_buffer[320+i]^=0x7fff;
-    }
-    	
-    if (vga_line==200+y)
+	// fills color code in lower part of screen
+	if (vga_line>360 && vga_line<420)
 	{
-		draw_buffer[320+x]^=0x7fff;
+		for (int i=0;i<640;i++) draw_buffer[i]=result_colors[state];
 	}
+	if (vga_line/2==420/2) memset(draw_buffer,0,640*2);
+
 }
 
 void game_snd_buffer(uint16_t *buffer, int len) 
 /* generates a 500Hz sound alternating between left & right */
 {
-	for (int i=0;i<len;i++)
-	{
-		if ((i/64)&1) 
-		{
-			*buffer++ = (vga_frame/8)&1 ?  0x4000 : 0x0040;
-		} else {
-			*buffer++ = 0;
-		}
-
-	}
 };

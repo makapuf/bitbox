@@ -1,4 +1,7 @@
-This is an example of loading a file from SD while displaying it (effectivemy streaming)
-Some test drawings are done just to show them.
+This is an example of loading a file from SD while displaying it (effectivemy streaming) 
+
+Some additional test drawings on screen on top.
+
+Move movie vertically with joystick, ugly sound played for test.
 
 The emulator works, "SD" files should be located in the current directory.
