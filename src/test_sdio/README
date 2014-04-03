@@ -1,7 +1,12 @@
-This is an example of loading a file from SD while displaying it (effectivemy streaming) 
+This is an example of loading an image file from SD then displaying it (effectivemy streaming) 
 
-Some additional test drawings on screen on top.
+The lower color band has the following meaning : 
 
-Move movie vertically with joystick, ugly sound played for test.
+red : initial value
+yellow : ok mount fat fs
+green : file opened
+cyan : read data
+blue : header OK
+pink : last header OK
 
 The emulator works, "SD" files should be located in the current directory.
