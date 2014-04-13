@@ -27,11 +27,10 @@ FATFS fatfs;
 FIL img_file;
 FRESULT result;
 
-int state=0; // from 0 to 5 according to step
+volatile int state=0; // from 0 to 5 according to step
 
 void game_init() {
 	audio_on=0;
-	UINT BytesRead;
 
 	// open file , load raw u16 frame from frame.bin
 	state=0;
@@ -39,6 +38,16 @@ void game_init() {
 	if (result==FR_OK)
 	{
 		state=1; // mount OK
+		
+	}
+}
+
+void game_frame()
+{
+	UINT BytesRead;
+	// blink "result" times ...
+	if (state==1)
+	{
 		result = f_open (&img_file,"image.bin",FA_READ); // open file		
 		if (result==FR_OK)
 		{
@@ -48,23 +57,19 @@ void game_init() {
 			if (result) state=3; // read
 			if (img->header == IMGHEADER) state=4; // header OK
 			if (img->data[img->w*img->h] == IMGHEADER) state=5; // last header OK (error?)
-		}		
+		} 
 	}
-}
-
-void game_frame()
-{
-	// blink "result" times ...
 } 
 
 void game_line()
 // called from VGA kernel
 {	
 	// display image at (0,0) if loaded
-	if (state==5 && vga_line<img->h)
+	if (state>=4 && vga_line<img->h)
 	{
 		memcpy(draw_buffer, &img->data[vga_line*img->w],img->w*2);
 	} 
+	// black line after
 	if (vga_line/2==img->h/2) memset(draw_buffer,0,640*2);
 
 	// fills color code in lower part of screen
