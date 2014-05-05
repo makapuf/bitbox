@@ -15,64 +15,101 @@
 //config for ff_conf : no long filenames, no dirs, only read (minimal)
 
 
+/*
+BITBOX Memories / stages 
+
+
+
+
+ */
+
 #define BOOTFILE "bitbox.bin"
-#define START_RAM 0x2000000 // standard SRMA, not CCRAM, which is at 0x1000 0000
-#define MAX_FILESIZE (128*1024) // 128k
+
+
+#define START_RAM 0x20000000 // standard SRAM2, second - not CCRAM (see bitbox memories spreadsheet)
+#define MAX_FILESIZE (112*1024) // 112k MAX !
+
+#include <string.h>
+#include "stm32f4xx.h"
+#include "stm32f4_discovery_sdio_sd.h"
+#include "system.h"
 
 #include "ff.h"
 
-enum {INIT, OPEN, READ}; // where we died
+enum {INIT =0, MOUNT=1, OPEN=2, READ=3}; // where we died
 void die(int where, int cause);
 
 void led_on() 
 {
-    GPIOA->ODR |= 1<<2; 
+    GPIOA->BSRRL = 1<<2; 
 }
 
 void led_off() 
 {
-    GPIOA->ODR &= ~(1<<2); 
+    GPIOA->BSRRH = 1<<2; 
 }
+
 void led_init() {
 	// init LED GPIO
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA (+)
     GPIOA->MODER |= (1 << 4) ; // set pin 8 to be general purpose output
 }
 
+void blink(int times, int speed);
 
-FIL bootfile;
+FATFS fs32;
 // load from sd to RAM
 // flash LED, boot
 
+void NVIC_Configuration(void)
+{
+  NVIC_InitTypeDef NVIC_InitStructure;
+
+  /* Configure the NVIC Preemption Priority Bits */
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+
+  NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+}
+
 void init()
 {
+	InitializeSystem(); // now we're using system.c 
+	NVIC_Configuration(); /* Interrupt Config */
 	led_init();
+    
     // init FatFS
-	FRESULT r=init_ff();
-	if (r != E_OK) die(INIT,r); 
+	/*
+	memset(&fs32, 0, sizeof(FATFS));
+	FRESULT r = f_mount(&fs32,"",1); //mount now
+	if (r != FR_OK) die(MOUNT,r); 
+	*/
 }
 
 
 void load(void)
 {
+	FIL bootfile;
+	memset(&bootfile, 0, sizeof(FIL));
 	int bytes_read;
 
 	// check presence & size of file or die
-	FRESULT r=f_open (&bootfile,BOOTFILE,FA_OPEN_EXISTING);
+	FRESULT r=f_open (&bootfile,BOOTFILE,FA_READ | FA_OPEN_EXISTING);
 	// check result
-	if (r != F_OK) die(OPEN,r);
+	if (r != FR_OK) die(OPEN,r);
 
-	// Ack blink OK : 2 times
-	blink(2,2);
+	// Ack : blink OK : 2 quick times
+	blink(2,1);
 
 	// read 128k max to RAM ! 
-
 	r=f_read (&bootfile, (void*)START_RAM, MAX_FILESIZE, &bytes_read);
-	if (r != F_OK) die(READ,r);
+	if (r != FR_OK) die(READ,r);
 
 	// check file content ? checksum =4last bytes ?
-
-);
+}
 
 // Code stolen from "matis"
 // http://forum.chibios.org/phpbb/viewtopic.php?f=2&t=338
@@ -95,8 +132,8 @@ void jump(uint32_t address)
     // reset all interrupts to default
     // chSysDisable();
 
-    // Clear pending interrupts just to be on the save side
-    SCB_ICSR = ICSR_PENDSVCLR;
+    // Clear pending interrupts just to be on the safe side
+    //SCB_ICSR = ICSR_PENDSVCLR;
 
     // Disable all interrupts
     int i;
@@ -109,27 +146,20 @@ void jump(uint32_t address)
 }
 
 
-void main(void) {
-	init();
-	load();
-	jump(START_RAM);
-}
-
-
 // ---------------- die
 
-#define WAIT_TIME 168000000/4 // 1/4s ticks 
+#define WAIT_TIME 168000000/128 // quick ticks 
 void wait(int k) {
 
-	for (int i=0;i<k*WAIT_TIME;i++) {};
+	for (volatile int i=0;i<k*WAIT_TIME;i++) {};
 }
 
 void blink(int times, int speed)
 {
 	for (int i=0;i<times;i++) 
 		{
-			led_on();wait(1);
-			led_off();wait(1);
+			led_on();wait(speed);
+			led_off();wait(speed);
 		}
 }
 
@@ -138,7 +168,24 @@ void die(int where, int cause)
 	for (;;)
 	{
 		blink(where,2);
+		wait(4);
 		blink(cause,1);
 		wait(4);
 	}
+}
+
+
+
+
+
+void main(void) {
+	init();
+	while(1) {
+		wait(4);
+		blink(16,1);
+	}
+	/*
+	load();
+	jump(START_RAM);
+	*/
 }
