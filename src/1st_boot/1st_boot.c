@@ -15,16 +15,9 @@
 //config for ff_conf : no long filenames, no dirs, only read (minimal)
 
 
-/*
-BITBOX Memories / stages 
+/* See Bitbox memories to see what happens ! */
 
-
-
-
- */
-
-#define BOOTFILE "bitbox.bin"
-
+#define BOOTFILE "2nd_boot.bin" // this is the standard filename of the firmware, to be located on the uSD root.
 
 #define START_RAM 0x20000000 // standard SRAM2, second - not CCRAM (see bitbox memories spreadsheet)
 #define MAX_FILESIZE (112*1024) // 112k MAX !
