@@ -197,8 +197,9 @@ void window (int x1, int y1, int x2, int y2 )
 }
 
 void game_init() {
-	window(2,2,60,5);
+	window(2,2,58,5);
 	print_at(10,3, "\x01 Bonjour, amis de la Bitbox !");
+	
     // init FatFS
 	/*
 	memset(&fs32, 0, sizeof(FATFS));
@@ -213,7 +214,7 @@ void game_frame() {
 	// do something each ~ 1/4 seconds
 
 	vram_char[y][x]=' ';
-	if (x==79) dir_x = -1;
+	if (x==59) dir_x = -1;
 	if (x==0)  dir_x = 1;
 
 	if (y==6)  dir_y = 1;
@@ -232,7 +233,8 @@ void game_line()
 
 	uint16_t *dst = draw_buffer;
 	char c;
-	for (int i=0;i<80;i++) // column char
+	// XXX FIXME 60->80 ! use 32 words / unroll manually (access from sram no more cached) / put data to sram ?
+	for (int i=0;i<60;i++) // column char
 	{
 		c = font_data[vram_char[vga_line / 16][i]][vga_line%16];
 		// draw a character on this line
