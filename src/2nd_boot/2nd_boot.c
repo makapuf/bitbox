@@ -1,23 +1,20 @@
 // bootloader
 
-// auto load+startup from RAM, no GUI given 
-// check if sdcard present, if not run from flash sector 2
-// beware : boot.box must be compiled to run from ram !
-
-// 1 - load bootloader from SD to RAM. Ultra minimal, always the same name, boot from it.
-// first stage boootloader MUST be compiled & linked to be located in SRAM
-
 // 2 - second stage bootloader from SD can load a larger bootloader 
 // with customizable menu, UI, USB, whatever.
 
-// maybe defrag EEPROM DATA there.
-
-//config for ff_conf : no long filenames, no dirs, only read (minimal)
-
 
 /*
-BITBOX Memories / stages 
+TODO
 
+Share as many possible files/libs with other projects (included button)
+
+Include full kernel: video & USB
+star demo/logo ?
+read SD card data, text funcs / menu  : from engine
+display image / text as selected when button pushed
+
+write to Flash & jump to it.
 
 
 
@@ -30,13 +27,14 @@ BITBOX Memories / stages
 #define MAX_FILESIZE (112*1024) // 112k MAX !
 
 #include <string.h>
-#include "stm32f4xx.h"
-#include "stm32f4_discovery_sdio_sd.h"
-#include "system.h"
-
-#include "ff.h"
+#include "stm32f4xx.h" 
+#include "fatfs/ff.h"
+//#include "fatfs/stm32f4_discovery_sdio_sd.h"
+#include "system.h" // InitializeSystem
+#include "kernel.h"
 
 enum {INIT =0, MOUNT=1, OPEN=2, READ=3}; // where we died
+
 void die(int where, int cause);
 
 void led_on() 
@@ -81,12 +79,7 @@ void init()
 	NVIC_Configuration(); /* Interrupt Config */
 	led_init();
     
-    // init FatFS
-	/*
-	memset(&fs32, 0, sizeof(FATFS));
-	FRESULT r = f_mount(&fs32,"",1); //mount now
-	if (r != FR_OK) die(MOUNT,r); 
-	*/
+
 }
 
 
@@ -146,7 +139,7 @@ void jump(uint32_t address)
 }
 
 
-// ---------------- die
+// ---------------- die : should be integrated to kerne + emulator (as window title by example)
 
 #define WAIT_TIME 168000000/128 // quick ticks 
 void wait(int k) {
@@ -174,18 +167,93 @@ void die(int where, int cause)
 	}
 }
 
+extern uint8_t font_data [256][16];
+char vram_char  [30][80];
+char vram_attrs [30][80];
+
+void print_at(int column, int line, const char *msg)
+{
+	strcpy(&vram_char[line][column],msg); 
+}
+
+// draws an empty window at this position, asserts x1<x2 && y1<y2
+void window (int x1, int y1, int x2, int y2 )
+{
+	for (int i=x1+1;i<x2;i++) 
+	{
+		vram_char[y1][i]='\xCD';
+		vram_char[y2][i]='\xCD';
+	}
+	for (int i=y1+1;i<y2;i++) 
+	{
+		vram_char[i][x1]='\xBA';
+		vram_char[i][x2]='\xBA';
+	}
+	vram_char[y1][x1] ='\xC9';
+	vram_char[y1][x2] ='\xBB'; 
+	vram_char[y2][x1] ='\xC8'; 
+	vram_char[y2][x2] ='\xBC'; 
+
+}
+
+void game_init() {
+	window(2,2,60,5);
+	print_at(10,3, "\x01 Bonjour, amis de la Bitbox !");
+    // init FatFS
+	/*
+	memset(&fs32, 0, sizeof(FATFS));
+	FRESULT r = f_mount(&fs32,"",1); //mount now
+	if (r != FR_OK) die(MOUNT,r); 
+	*/
+}
+
+int x =5,y=10 , dir_x=1, dir_y=1;
+void game_frame() {
+	if (vga_frame%2 != 0 ) return;
+	// do something each ~ 1/4 seconds
+
+	vram_char[y][x]=' ';
+	if (x==79) dir_x = -1;
+	if (x==0)  dir_x = 1;
+
+	if (y==6)  dir_y = 1;
+	if (y==29) dir_y = -1;
+
+	x += dir_x;
+	y += dir_y;
+	vram_char[y][x] = '\x02';
+}
 
 
+void game_line() 
+{
 
+	// text mode
 
+	uint16_t *dst = draw_buffer;
+	char c;
+	for (int i=0;i<80;i++) // column char
+	{
+		c = font_data[vram_char[vga_line / 16][i]][vga_line%16];
+		// draw a character on this line
+		for (int j=0x80;j>0;j>>=1)
+		{
+			// FIXME : attrs ?
+			*dst++ = (c & j) ? 0x7fff:0; // attrs ...
+		}
+	}
+}
+
+void game_snd_buffer(uint16_t *buffer, int len) {}
+
+/*
 void main(void) {
 	init();
 	while(1) {
 		wait(4);
 		blink(16,1);
 	}
-	/*
 	load();
 	jump(START_RAM);
-	*/
 }
+*/

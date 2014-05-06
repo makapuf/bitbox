@@ -8,7 +8,6 @@ MEMORY
     sram2 (rwx)     : ORIGIN = 0x2001C000, LENGTH = 16K
 }
 
-
 __isr_vector_sram = 0x2001C000-0x200;
 
 SECTIONS

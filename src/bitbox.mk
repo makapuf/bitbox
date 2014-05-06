@@ -6,8 +6,10 @@
 #   DEFINES with whatever defines are needed with -DXYZ
 #   CFLAGS
 
+# specific flags : use audio, use USB, use uSD, ... (?)
+
 #NAME = shoot
-#GAME_C_FILES = test_data.c object.c test_game.c
+#GAME_C_FILES = test_data.c object.c test_game.c $(NAME)
 #GAME_H_FILES = test_data.h kernel.h object.h test_object.h
 
 #MCU  = cortex-m4
@@ -20,6 +22,7 @@ OBJCOPY = arm-none-eabi-objcopy
 
 DEFINES =	-DARM_MATH_CM4 -DOVERCLOCK -DAUDIO -DGAMEPAD -DPROFILE
 # -DSNES_GAMEPAD 
+
 # USB defines
 DEFINES += -DUSE_USB_OTG_HS -DUSE_STDPERIPH_DRIVER -DUSE_EMBEDDED_PHY -DUSE_USB_OTG_FS
 
@@ -30,7 +33,7 @@ C_OPTS = -std=c99 \
 		-I../lib/ \
 		-I../engine/ \
 		-Werror \
-        -Ofast \
+        -O3 \
         -mlittle-endian \
         -g \
         -fomit-frame-pointer 
@@ -43,6 +46,9 @@ DATA_DIR=data
 LIB_SOURCE_DIR =../lib
 BUILD_DIR =build
 #LIB_FILES = ../lib/object.c
+LINKER_SCRIPT = ../Linker.ld
+
+
 
 KERNEL_FILES = startup.c system.c \
 	new_vga.c snes_gamepad.c bitbox_main.c audio.c \
@@ -65,23 +71,23 @@ KERNEL_FILES = startup.c system.c \
 	usbh_ioreq.c \
 	usbh_stdreq.c 
 
-# fatfs related functions
+# fatfs related files
 KERNEL_FILES += fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c stm32f4xx_sdio.c stm32f4xx_dma.c fatfs/ff.c fatfs/diskio.c
 
 # engine related
 ifdef USE_ENGINE
-ENGINE_FILES = blit.c packbit.c  btc4.c
+ENGINE_FILES = blitter.c 
 endif
 
 C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES) $(ENGINE_FILES)
 S_FILES = memcpy-armv7m.S
 
 
-OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.S=$(BUILD_DIR)/%.o) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.o) 
+OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.S=$(BUILD_DIR)/%.o) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%_dat.o) 
 
 
 ALL_CFLAGS = $(C_OPTS) $(DEFINES) $(CFLAGS)
-ALL_LDFLAGS = $(LD_FLAGS) -mthumb -mcpu=cortex-m4 -nostartfiles -Wl,-T,../Linker.ld,--gc-sections
+ALL_LDFLAGS = $(LD_FLAGS) -mthumb -mcpu=cortex-m4 -nostartfiles -Wl,-T,$(LINKER_SCRIPT),--gc-sections
 #-specs Terrible.specs
 
 AUTODEPENDENCY_CFLAGS=-MMD -MF$(@:.o=.d) -MT$@
@@ -121,13 +127,20 @@ $(BUILD_DIR)/%.o: ../engine/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: $(DATA_DIR)/%
+# ---------- data embedding 
+
+$(BUILD_DIR)/%_dat.o: $(SOURCE_DIR)/%
 	@mkdir -p $(dir $@)
 	xxd -i $< | sed "s/unsigned/const unsigned/" > $(BUILD_DIR)/$*.c
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c build/$*.c -o $@
 
-$(DATA_DIR)/%.btc: $(DATA_DIR)/%_btc.png
+$(SOURCE_DIR)/%.btc: $(SOURCE_DIR)/%.png
 	python ../engine/btc4.py $<
+
+$(SOURCE_DIR)/%.spr: $(SOURCE_DIR)/%.png
+	python ../engine/sprite_encode1.py $< $@
+
+
 
 $(BUILD_DIR)/%.o: $(LIB_SOURCE_DIR)/%.S
 	@mkdir -p $(dir $@)

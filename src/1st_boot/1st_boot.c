@@ -14,6 +14,7 @@
 
 //config for ff_conf : no long filenames, no dirs, only read (minimal)
 
+// TODO : check CRC ; if no card, boot from flash ... 
 
 /* See Bitbox memories to see what happens ! */
 

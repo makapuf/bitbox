@@ -24,7 +24,7 @@ void game_line(void);
 void game_snd_buffer(uint16_t *buffer, int len); // this callback is called each time we need to fill the buffer
 
 
-void die(char *msg);
+void die(int where, int cause);
 
 
 // more pixels to allow over blitting XXX put too enemies_data : define as tile size max !
