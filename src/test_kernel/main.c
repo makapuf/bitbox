@@ -1,8 +1,11 @@
 #include <kernel.h>
 
 volatile int x,y;
-// x and y  should be volatile since the vga thread must see the changes to x and y 
+// x and y  should be volatile since the vga thread calling line must see the changes to x and y 
 // which are runnin in the main thread 
+
+extern volatile int data_mouse_x , data_mouse_y;
+extern volatile uint8_t data_mouse_buttons;
 
 void game_init() {
 	audio_on=1;
@@ -42,16 +45,26 @@ void game_line()
 		draw_buffer[LINE_LENGTH-vga_line-i] = (i/4)<<8;
 
     // display gamepad state as an inverse video point
-   
     if (vga_line == 200) {
     for (int i=0; i<16; i++)
       if (gamepad1 & (1 << i)) draw_buffer[320+i]^=0x7fff;
     }
-    	
+
     if (vga_line==200+y)
 	{
 		draw_buffer[320+x]^=0x7fff;
 	}
+
+	// display mouse state as crosshair
+	if (vga_line==data_mouse_y) {
+		for (int i=-2;i<=2;i++)	draw_buffer[data_mouse_x+i] ^= 0x7fff; 
+	}
+	if (vga_line >= data_mouse_y-2 && vga_line<=2+data_mouse_y) {
+		draw_buffer[data_mouse_x] ^= 0x7fff; 
+	}
+
+
+
 }
 
 void game_snd_buffer(uint16_t *buffer, int len) 

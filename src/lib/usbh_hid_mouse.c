@@ -97,8 +97,8 @@ static void  MOUSE_Decode(uint8_t, uint8_t *data);
  
     
 /////////////////////////////////
-volatile uint8_t data_mouse_x = 0;
-volatile uint8_t  data_mouse_y = 0;
+volatile int data_mouse_x;
+volatile int data_mouse_y;
 volatile uint8_t  data_mouse_buttons = 0;
 /////////////////////////////////    
  
@@ -148,15 +148,20 @@ static void  MOUSE_Decode(uint8_t coreID, uint8_t *data)
   HID_MOUSE_Data.x      = data[1];
   HID_MOUSE_Data.y      = data[2];
   
-//////////////////////////////////////////  added by "STM32"
-  data_mouse_x = HID_MOUSE_Data.y;
-  data_mouse_y = HID_MOUSE_Data.x;
+  // user process 
+  data_mouse_x += HID_MOUSE_Data.x;
+  if (data_mouse_x<0) data_mouse_x=0;
+  if (data_mouse_x>640) data_mouse_x=640;
+
+  data_mouse_y += HID_MOUSE_Data.y;
+  if (data_mouse_y<0) data_mouse_y=0;
+  if (data_mouse_y>480) data_mouse_y=480;
+
   
   if(HID_MOUSE_Data.button != 0)
   {
     data_mouse_buttons = HID_MOUSE_Data.button;  
   }
-////////////////////////////////
   
   // USR_MOUSE_ProcessData(&HID_MOUSE_Data);
 

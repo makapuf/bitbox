@@ -224,7 +224,6 @@ static void  GAMEPAD_Init (uint8_t coreID, uint16_t vid, uint16_t pid)
 static inline uint32_t extract(uint8_t *data, uint16_t bitref, uint8_t nbits)
 // extracts the bitref-th bit from data, size wise
 // assumes does not cross a 32bit boundary !
-// XXX use special instruction (faster) 
 {
         uint32_t x = ((uint32_t *)data)[bitref>>5] >> (bitref & 31);
         uint32_t mask = (1<<nbits)-1;

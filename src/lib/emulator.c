@@ -8,9 +8,9 @@
 #include "kernel.h"
 #include "fatfs/ff.h"
 
-//#include "object.h"
 
-// gerer SLOW et FULLSCREEN comme commandes de l'emulateur
+// gerer SLOW et FULLSCREEN (alt-enter) comme commandes de l'emulateur
+// gerer 2 lignes de buffer  !
 //#define SLOW ou PAUSE 
 // ----------------------------- kernel ----------------------------------
 /* The only funcion of the kernel is
@@ -137,7 +137,7 @@ void set_mode(int width, int height)
     if ( !screen )
     {
         printf("%s\n",SDL_GetError());
-        die("Unable to set video mode:!\n");
+        die(-1,0);
     }
 }
 
@@ -457,8 +457,12 @@ int main ( int argc, char** argv )
 }
 
 
-void die(char *str)
+void die(int where, int cause)
 {
-    printf("ERROR : %s - dying.",str);
+    const char* causes[]= {
+        "Setting resolution"
+    };
+
+    printf("ERROR : %s : %d - dying.\n",causes[where],cause);
     exit(0);
 }

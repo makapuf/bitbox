@@ -1,4 +1,4 @@
-
+#include "bitbox.h"
 
 // - device handling -------------------------------------------------------------------------------------------------------------------------------------
 
@@ -6,13 +6,18 @@
 #define EVT_QUEUE_SIZE 64
 
 
-device_enum device_type[2]; // currently plugged device
+enum device_enum device_type[2]; // currently plugged device
 int16_t x[2], y[2], buttons[2];
 
-/* Queue. ignores content if put to full, returns empty event if get from empty
+/* Circular FIFO. 
+
+- ignores content if try to insert on a full queue 
+- returns "empty event"=0 if get from empty
+
  ---------xxxxxxx--------
           ^      ^
           out    in
+
 */
 
 #define QUEUE_START (&evt_queue[0])          
@@ -66,6 +71,7 @@ void event_clear()
 	evt_in=evt_out=&evt_queue[0];
 }
 
+#ifdef TEST
 static void event_test()
 {
 	// test vectors
@@ -84,6 +90,7 @@ static void event_test()
 		printf("\n");
 	}
 }
+#endif 
 
 // keymap : list of ranges of elements, non shifted and shifted
 // see http://www.usb.org/developers/devclass_docs/Hut1_11.pdf, page 7
@@ -94,19 +101,19 @@ const char keyb_fr_sh[60] = "QBCDEFGHIJKL?NOPARSTUVZXYW1234567890\n\027\b\t Â°+Â
 
 const char *keymap=keyb_en, *keymap_sh=keyb_en_sh; // XXX config ?
 
-char kbd_map(event kbd_e) 
+char kbd_map(event e) 
 /*
  maps a keyboard event to printable latin-1 letter given the current keymap & shift. 
  only printable output is given, zero else.
  */
 {
-	if (kbd_e.a>=3 && kbd_e.a<=58) 
-		return (kbd_e.b & (LShift|RShift)) ? keymap_sh[kbd_e.a-3] : keymap[kbd_e.a-3];
+	if (e.kbd.key>=3 && e.kbd.key<=58) 
+		return (e.kbd.mod & (LShift|RShift)) ? keymap_sh[e.kbd.key-3] : keymap[e.kbd.key-3];
 	else 
-		return 0;
-
+		return 0; // non printable char
 }
 
+#ifdef TEST
 #include <stdio.h>
 int main()
 {
@@ -115,7 +122,6 @@ int main()
 
 	return 0;
 }
-
-
+#endif
 
 
