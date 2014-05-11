@@ -94,11 +94,13 @@ void load(void)
 	if (r != FR_OK) die(OPEN,r);
 
 	// Ack : blink OK : 2 quick times
-	blink(2,1);
+	blink(1,1);
 
-	// read 128k max to RAM ! 
+	// read to RAM 
 	r=f_read (&bootfile, (void*)START_RAM, MAX_FILESIZE, &bytes_read);
 	if (r != FR_OK) die(READ,r);
+	
+	blink(1,1);
 
 	// check file content ? checksum =4last bytes ?
 }
@@ -131,6 +133,7 @@ void jump(uint32_t address)
     int i;
     for (i = 0; i < 8; i++)
             NVIC->ICER[i] = NVIC->IABR[i];
+	blink(1,1);
 
     // set stack pointer as in application's vector table
     __set_MSP((u32)(ApplicationAddress[0]));

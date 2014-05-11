@@ -7,33 +7,27 @@
 /*
 TODO
 
-Share as many possible files/libs with other projects (included button)
-
-Include full kernel: video & USB
 star demo/logo ?
+improve textmode, make it a "textmode" micro engine ?
+
 read SD card data, text funcs / menu  : from engine
+
 display image / text as selected when button pushed
+
+react to events from kernel
 
 write to Flash & jump to it.
 
-
-
  */
-
-#define BOOTFILE "bitbox.bin"
-
-
-#define START_RAM 0x20000000 // standard SRAM2, second - not CCRAM (see bitbox memories spreadsheet)
-#define MAX_FILESIZE (112*1024) // 112k MAX !
 
 #include <string.h>
 #include "stm32f4xx.h" 
 #include "fatfs/ff.h"
-//#include "fatfs/stm32f4_discovery_sdio_sd.h"
 #include "system.h" // InitializeSystem
 #include "kernel.h"
 
 enum {INIT =0, MOUNT=1, OPEN=2, READ=3}; // where we died
+#define MAX_FILES 20
 
 void die(int where, int cause);
 
@@ -59,50 +53,7 @@ FATFS fs32;
 // load from sd to RAM
 // flash LED, boot
 
-void NVIC_Configuration(void)
-{
-  NVIC_InitTypeDef NVIC_InitStructure;
 
-  /* Configure the NVIC Preemption Priority Bits */
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-
-  NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-}
-
-void init()
-{
-	InitializeSystem(); // now we're using system.c 
-	NVIC_Configuration(); /* Interrupt Config */
-	led_init();
-    
-
-}
-
-
-void load(void)
-{
-	FIL bootfile;
-	memset(&bootfile, 0, sizeof(FIL));
-	int bytes_read;
-
-	// check presence & size of file or die
-	FRESULT r=f_open (&bootfile,BOOTFILE,FA_READ | FA_OPEN_EXISTING);
-	// check result
-	if (r != FR_OK) die(OPEN,r);
-
-	// Ack : blink OK : 2 quick times
-	blink(2,1);
-
-	// read 128k max to RAM ! 
-	r=f_read (&bootfile, (void*)START_RAM, MAX_FILESIZE, &bytes_read);
-	if (r != FR_OK) die(READ,r);
-
-	// check file content ? checksum =4last bytes ?
-}
 
 // Code stolen from "matis"
 // http://forum.chibios.org/phpbb/viewtopic.php?f=2&t=338
@@ -142,8 +93,8 @@ void jump(uint32_t address)
 // ---------------- die : should be integrated to kerne + emulator (as window title by example)
 
 #define WAIT_TIME 168000000/128 // quick ticks 
-void wait(int k) {
-
+void wait(int k) 
+{
 	for (volatile int i=0;i<k*WAIT_TIME;i++) {};
 }
 
@@ -169,7 +120,10 @@ void die(int where, int cause)
 
 extern uint8_t font_data [256][16];
 char vram_char  [30][80];
-char vram_attrs [30][80];
+
+int nb_files;
+char filenames[MAX_FILES][11]; // 8+3
+// char vram_attrs [30][80];
 
 void print_at(int column, int line, const char *msg)
 {
@@ -177,6 +131,7 @@ void print_at(int column, int line, const char *msg)
 }
 
 // draws an empty window at this position, asserts x1<x2 && y1<y2
+// replace with full ascii art ?
 void window (int x1, int y1, int x2, int y2 )
 {
 	for (int i=x1+1;i<x2;i++) 
@@ -193,69 +148,122 @@ void window (int x1, int y1, int x2, int y2 )
 	vram_char[y1][x2] ='\xBB'; 
 	vram_char[y2][x1] ='\xC8'; 
 	vram_char[y2][x2] ='\xBC'; 
+}
+
+void list_roms()
+{
+
+    FRESULT res;
+    FILINFO fno;
+    DIR dir;
+    
+    char *fn;   /* This function is assuming non-Unicode cfg. */
+#if _USE_LFN
+    static char lfn[_MAX_LFN + 1];   /* Buffer to store the LFN */
+    fno.lfname = lfn;
+    fno.lfsize = sizeof lfn;
+#endif
+
+
+    res = f_opendir(&dir, "");                       /* Open the root directory */
+    if (res == FR_OK) {
+        for (nb_files=0;nb_files<MAX_FILES;) {
+            res = f_readdir(&dir, &fno);                   /* Read a directory item */
+            if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+            if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
+#if _USE_LFN
+            fn = *fno.lfname ? fno.lfname : fno.fname;
+#else
+            fn = fno.fname;
+#endif
+            if (!(fno.fattrib & AM_DIR)) {                    /* It is a directory : do nothing */
+                strcpy(filenames[nb_files],fn);
+                nb_files +=1;
+            }
+        }
+        if (res != FR_OK) {
+	        print_at(10,10,"Error reading directory !");
+    	    vram_char[11][10] = '0'+res;
+        } 
+        f_closedir(&dir);
+    } else {
+        print_at(10,10,"Error opening directory !");
+        vram_char[11][10] = '0'+res;
+    }
 
 }
 
 void game_init() {
-	window(2,2,58,5);
-	print_at(10,3, "\x01 Bonjour, amis de la Bitbox !");
-	
+	window(2,2,78,4);
+	print_at(10,3, "\x01 Hi ! Here are the current files");
     // init FatFS
-	/*
+	
 	memset(&fs32, 0, sizeof(FATFS));
-	FRESULT r = f_mount(&fs32,"",1); //mount now
-	if (r != FR_OK) die(MOUNT,r); 
-	*/
+	FRESULT r = f_mount(&fs32,"",1); // mount now
+	if (r != FR_OK) {
+		print_at(8,8,"Cannot mount disk");
+		die(MOUNT,r); 
+	}
+	
+	list_roms();
 }
 
+int selected;
 int x =5,y=10 , dir_x=1, dir_y=1;
+char old_val=' ';
 void game_frame() {
-	if (vga_frame%2 != 0 ) return;
-	// do something each ~ 1/4 seconds
+	// get input & check select ...
+	if (vga_frame%16==0) selected +=1;
+	
+	if (selected>=nb_files) selected=0;
 
-	vram_char[y][x]=' ';
-	if (x==59) dir_x = -1;
-	if (x==0)  dir_x = 1;
+	// update_display
+	for (int i=0;i<nb_files;i++)
+	{
+		print_at(10,i+10,filenames[i]);		
+		// cursor ?
+		vram_char[10+i][8]=(i==selected)?0x10:' ';
+		vram_char[10+i][25]=(i==selected)?0x11:' ';
+	}
 
-	if (y==6)  dir_y = 1;
-	if (y==29) dir_y = -1;
+	if (vga_frame%2 == 0 ) {
+		// bounce guy
+		vram_char[y][x]=old_val;
+		if (x==59) dir_x = -1;
+		if (x==0)  dir_x = 1;
 
-	x += dir_x;
-	y += dir_y;
-	vram_char[y][x] = '\x02';
+		if (y==6)  dir_y = 1;
+		if (y==29) dir_y = -1;
+
+		x += dir_x;
+		y += dir_y;
+		old_val = vram_char[y][x];
+		vram_char[y][x] = '\x02';
+	}
 }
 
 
 void game_line() 
 {
-
 	// text mode
 
-	uint16_t *dst = draw_buffer;
+	static const uint32_t lut_data[4] = { 0,0x7fff<<16,0x7fff, 0x7fff7fff }; // XXX modify to have cool FX :)
+
+	uint32_t *dst = (uint32_t *) draw_buffer;
 	char c;
-	// XXX FIXME 60->80 ! use 32 words / unroll manually (access from sram no more cached) / put data to sram ?
-	for (int i=0;i<60;i++) // column char
+
+	for (int i=0;i<80;i++) // column char
 	{
 		c = font_data[vram_char[vga_line / 16][i]][vga_line%16];
 		// draw a character on this line
-		for (int j=0x80;j>0;j>>=1)
-		{
-			// FIXME : attrs ?
-			*dst++ = (c & j) ? 0x7fff:0; // attrs ...
-		}
+
+		// FIXME : attrs ?
+		*dst++ = lut_data[(c>>6) & 0x3];
+		*dst++ = lut_data[(c>>4) & 0x3];
+		*dst++ = lut_data[(c>>2) & 0x3];
+		*dst++ = lut_data[(c>>0) & 0x3];
 	}
 }
 
 void game_snd_buffer(uint16_t *buffer, int len) {}
 
-/*
-void main(void) {
-	init();
-	while(1) {
-		wait(4);
-		blink(16,1);
-	}
-	load();
-	jump(START_RAM);
-}
-*/
