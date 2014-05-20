@@ -84,17 +84,7 @@ static void DMACompleteHandler();
 
 static inline void output_black()
 {
-	//GPIOB->BSRRH=0x0fff; // Set signal to black. 
-	// GPIOB->BSRRH is at 0x4002 041A
-        /*
-	__asm__ volatile( // force do it NOW
-	"   movw	r1,#0\n"
-	"	movt	r1,#0x4002\n"
-	"	movw 	r0,#0x0fff\n"
-	"	strh	r0,[r1,#0x41A]\n"
-	:::"r0","r1");
-        */
-        GPIOE->BSRRH=0x7fff; // Set signal to black. 
+    GPIOE->BSRRH=0x7fff; // Set signal to black. 
 } 
 
 

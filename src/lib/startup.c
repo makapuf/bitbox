@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-static uint8_t stack[8192];
+static uint8_t stack[8192]  __attribute__ ((section (".ccm")));
 
 extern uint32_t _sdata[];
 extern uint32_t _sidata[];

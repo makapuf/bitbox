@@ -11,6 +11,7 @@
 
 #include "stm32f4xx.h"
 #include "stm32f4_discovery_sdio_sd.h"
+#include "misc.h"
 
 #define BLOCK_SIZE            512 /* Block Size in Bytes */
 
@@ -23,29 +24,49 @@ DSTATUS disk_initialize (
 {
 	DSTATUS stat = 0;
 
-#ifdef DBGIO
-	printf("disk_initialize %d\n", drv);
-#endif
+	// initialize interrupts (FIXME use custom or STM lib but not both !)
+	NVIC_InitTypeDef NVIC_InitStructure;
+
+	/* Configure the NVIC Preemption Priority Bits */
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+
+	NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+
+	NVIC_InitStructure.NVIC_IRQChannel = SD_SDIO_DMA_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_Init(&NVIC_InitStructure);
 	
+	SD_Error res = SD_OK;
  	/* Supports only single drive */
-  if (drv)
-  {
-    stat |= STA_NOINIT;
-  }
-	
+	if (drv)
+	{
+		stat |= STA_NOINIT;
+	}
+
 	/*-------------------------- SD Init ----------------------------- */
-  if (SD_Init() !=SD_OK)
-  {
-#ifdef DBGIO
-		puts("Initialization Fail");
-#endif
-    stat |= STA_NOINIT;
-  }
+	if (SD_Init() !=SD_OK)
+	{
+		stat |= STA_NOINIT;
+	}
 
 	return(stat);
 }
 
+void SDIO_IRQHandler(void)
+{
+  /* Process All SDIO Interrupt Sources */
+  SD_ProcessIRQSrc();
+}
 
+void SD_SDIO_DMA_IRQHANDLER(void)
+{
+  /* Process DMA2 Stream3 or DMA2 Stream6 Interrupt Sources */
+  SD_ProcessDMAIRQ();
+}
 
 /*-----------------------------------------------------------------------*/
 /* Return Disk Status                                                    */
@@ -70,6 +91,9 @@ DSTATUS disk_status (
 /*-----------------------------------------------------------------------*/
 /* Read Sector(s)                                                        */
 
+// NOT ON THE STACK , stack is in fskcing CCM ! 
+static DWORD scratch[BLOCK_SIZE / 4]; // Alignment assured, you'll need a sufficiently big stack
+
 DRESULT disk_read (
         BYTE drv,               /* Physical drive nmuber (0..) */
         BYTE *buff,             /* Data buffer to store read data */
@@ -86,7 +110,6 @@ DRESULT disk_read (
 	// DMA Alignment failure, do single up to aligned buffer
 	{
 		DRESULT res = RES_OK;
-		DWORD scratch[BLOCK_SIZE / 4]; // Alignment assured, you'll need a sufficiently big stack
 
 		while(count--)
 		{
@@ -103,8 +126,7 @@ DRESULT disk_read (
 		return(res);
 	}
 	
-	// USE POLLING MODE !
-  Status = SD_ReadMultiBlocksFIXED(buff, sector, BLOCK_SIZE, count); // 4GB Compliant
+	Status = SD_ReadMultiBlocksFIXED(buff, sector, BLOCK_SIZE, count); // 4GB Compliant
 
 	if (Status == SD_OK)
 	{
@@ -146,7 +168,7 @@ DRESULT disk_write (
 	if ((DWORD)buff & 3) // DMA Alignment failure, do single up to aligned buffer
 	{
 		DRESULT res = RES_OK;
-		DWORD scratch[BLOCK_SIZE / 4]; // Alignment assured, you'll need a sufficiently big stack
+		// WORD scratch[BLOCK_SIZE / 4]; // Alignment assured, you'll need a sufficiently big stack NOPE NOT ON THE STACK
 
 		while(count--)
 		{

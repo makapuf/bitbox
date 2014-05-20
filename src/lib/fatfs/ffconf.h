@@ -23,7 +23,7 @@
 /  f_rename(), f_truncate() and useless f_getfree(). */
 
 
-#define _FS_MINIMIZE	1	/* 0 to 3 */
+#define _FS_MINIMIZE	0	/* 0 to 3 */
 /* The _FS_MINIMIZE option defines minimization level to remove API functions.
 /
 /   0: All basic functions are enabled.
@@ -41,7 +41,7 @@
 /* To enable f_mkfs() function, set _USE_MKFS to 1 and set _FS_READONLY to 0 */
 
 
-#define	_USE_FASTSEEK	0	/* 0:Disable or 1:Enable */
+#define	_USE_FASTSEEK	1	/* 0:Disable or 1:Enable */
 /* To enable fast seek feature, set _USE_FASTSEEK to 1. */
 
 

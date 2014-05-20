@@ -60,10 +60,6 @@ void SD_LowLevel_Init(void)
 {
   GPIO_InitTypeDef  GPIO_InitStructure;
 
-  // FIXME use directly CMSIS API
-
-
-
   /* GPIOC and GPIOD Periph clock enable */
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | SD_DETECT_GPIO_CLK, ENABLE);
 
@@ -186,6 +182,7 @@ void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize)
   /* DMA2 Stream3 or Stream6 enable */
   DMA_Cmd(SD_SDIO_DMA_STREAM, ENABLE);
 }
+
 
 /**
   * @}

@@ -309,8 +309,10 @@
 #define SD_SINGLE_BUS_SUPPORT           ((uint32_t)0x00010000)
 #define SD_CARD_LOCKED                  ((uint32_t)0x02000000)
 
-#define SD_DATATIMEOUT                  ((uint32_t)0x00100000)
-// #define SD_DATATIMEOUT                  ((uint32_t)0xFFFFFFFF) makapuf
+// makapuf
+//#define SD_DATATIMEOUT                  ((uint32_t)0x01000000)
+// #define SD_DATATIMEOUT                  ((uint32_t)0x00100000)
+#define SD_DATATIMEOUT                  ((uint32_t)0xFFFFFFFF) 
 #define SD_0TO7BITS                     ((uint32_t)0x000000FF)
 #define SD_8TO15BITS                    ((uint32_t)0x0000FF00)
 #define SD_16TO23BITS                   ((uint32_t)0x00FF0000)
@@ -1444,12 +1446,24 @@ SD_Error SD_WaitReadOperation(void)
 
   DMAEndOfTransfer = 0x00;
 
+/* Makapuf : disable check RXACT cause we already checked DMA ! Better check  SDIO_DCOUNT .... 
   timeout = SD_DATATIMEOUT;
-
   while(((SDIO->STA & SDIO_FLAG_RXACT)) && (timeout > 0))
   {
     timeout--;
   }
+*/
+  // SDIO->DCOUNT is at 0x40012c30  
+
+  
+  volatile uint32_t x = (uint32_t) &SDIO->DCOUNT;
+  timeout = SD_DATATIMEOUT;
+  while(SDIO->DCOUNT && (timeout > 0))
+  {
+    timeout--;
+  }
+
+
 
   if (StopCondition == 1)
   {
