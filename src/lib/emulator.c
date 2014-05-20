@@ -28,6 +28,7 @@ int screen_width;
 int screen_height;
 
 #define TICK_INTERVAL 1000/60
+#define LINE_BUFFER 1024
 
 int slow; // parameter : run slower ?
 
@@ -37,8 +38,9 @@ static uint32_t next_time;
 int fullscreen; // shall run fullscreen
 
 SDL_Surface* screen;
-uint16_t mybuffer[LINE_LENGTH];
-pixel_t *draw_buffer = mybuffer; // volatile ?
+uint16_t mybuffer1[LINE_BUFFER];
+uint16_t mybuffer2[LINE_BUFFER];
+pixel_t *draw_buffer; // volatile ?
 volatile uint16_t gamepad1;
 uint32_t vga_line; 
 volatile uint32_t vga_frame;
@@ -79,6 +81,8 @@ static void refresh_screen(SDL_Surface *scr)
 // uses global line
 {
     uint16_t *dst = (uint16_t*)scr->pixels;
+    
+    draw_buffer = &mybuffer1[0];
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
         game_line(); // using line, updating draw_buffer ...
@@ -89,6 +93,9 @@ static void refresh_screen(SDL_Surface *scr)
         for (int i=0;i<screen_width;i++) {
             *dst++= pixelconv(*src++);
         }
+
+        // swap lines buffers to simulate double line buffering
+        draw_buffer = (draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
     }
 
 }
@@ -200,15 +207,11 @@ int init(void)
 void instructions ()
 {
     printf("Use joystick or following keys : \n");
-    printf("    ESC (quit), \n");
-    printf("    D (A button),\n");
-    printf("    F (B button),\n");
-    printf("    E (X button),\n");
-    printf("    R (Y button),\n");
-    printf("    Left/Right CTRL (L/R shoulders),\n");
-    printf("    Space (Select),\n");
-    printf("    Enter (start) \n");
-    printf("    Arrows (D-pad)\n");
+    printf("       -------\n");
+    printf("    Space (Select),   Enter (Start),   Arrows (D-pad)\n");
+    printf("    D (A button),     F (B button),    E (X button),   R (Y button),\n");
+    printf("    Left/Right CTRL (L/R shoulders),   ESC (quit), \n");
+    printf("       -------\n");
 }
 
 
@@ -422,6 +425,7 @@ int main ( int argc, char** argv )
         printf("Invoke with --slow argument to run slower (fullscreen not supported).\n");
 
     instructions();
+    printf(" - Starting\n");
 
     gamepad1 = 0; // all up
     if (init()) return 1;
@@ -452,10 +456,14 @@ int main ( int argc, char** argv )
     } // end main loop
 
     // all is well ;)
-    printf("Exited cleanly\n");
+    printf(" - Exited cleanly\n");
     return 0;
 }
 
+void message (char *what)
+{
+    printf("%s",what);
+}
 
 void die(int where, int cause)
 {

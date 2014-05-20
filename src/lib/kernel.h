@@ -14,7 +14,7 @@ typedef uint16_t  pixel_t;
 
 inline uint16_t RGB(uint8_t r, uint8_t g, uint8_t b) 
 {
-    return (((b)&0xf)<<8 | ((g)&0xf)<<4 | ((r)&0xf));
+    return (((r)&0x1f)<<10 | ((g)&0x1f)<<5 | ((b)&0x1f));
 }
 
 void game_init(void);
@@ -39,3 +39,4 @@ void vga640_setup();
 // perfs counters
 extern uint32_t max_line,max_line_time; // max_line is the maximum number of cycles used on last frame.
 
+void message(char *m);
