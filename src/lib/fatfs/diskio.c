@@ -31,13 +31,13 @@ DSTATUS disk_initialize (
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
 	NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
 	NVIC_InitStructure.NVIC_IRQChannel = SD_SDIO_DMA_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
 	NVIC_Init(&NVIC_InitStructure);
 	
 	SD_Error res = SD_OK;
@@ -91,8 +91,10 @@ DSTATUS disk_status (
 /*-----------------------------------------------------------------------*/
 /* Read Sector(s)                                                        */
 
-// NOT ON THE STACK , stack is in fskcing CCM ! 
+// NOT ON THE STACK , stack is in CCM ! 
 static DWORD scratch[BLOCK_SIZE / 4]; // Alignment assured, you'll need a sufficiently big stack
+
+
 
 DRESULT disk_read (
         BYTE drv,               /* Physical drive nmuber (0..) */
