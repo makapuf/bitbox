@@ -24,13 +24,12 @@ int16_t x[2], y[2], buttons[2];
 #define QUEUE_END (&evt_queue[EVT_QUEUE_SIZE])          
 
 
-
 //- event queue implementation ---------------------------------------------------------------------------------------------------------
 
 
 static event evt_queue[EVT_QUEUE_SIZE];
 static event *evt_in=QUEUE_START, *evt_out=QUEUE_START; 
-// queue is empty is in=out; full if just before end (keep at least one empty)
+// queue is empty if in=out; full if just before end (keep at least one empty)
 // in : next to write, out = next place to write
 
 static inline int event_full()

@@ -7,24 +7,22 @@
 /*
 TODO
 
-star demo/logo ?
-improve textmode, make it a "textmode" micro engine ?
-
-read SD card data, text funcs / menu  : from engine
+bug when usb plugged ? 
 
 display image / text as selected when button pushed
 
 react to events from kernel
 
-write to Flash & jump to it.
+asynchronously write to Flash
+jump to it (maybe not, reset can also do it).
 
  */
 
 #include <string.h>
 #include "stm32f4xx.h" 
-#include "fatfs/ff.h"
 #include "system.h" // InitializeSystem
 #include "kernel.h"
+#include "flashit.h"
 
 enum {INIT =0, MOUNT=1, OPEN=2, READ=3}; // where we died
 #define MAX_FILES 20
@@ -118,12 +116,19 @@ void die(int where, int cause)
 	}
 }
 
-extern uint8_t font_data [256][16];
+extern const uint8_t font_data [256][16];
 char vram_char  [30][80];
 
 int nb_files;
 char filenames[MAX_FILES][11]; // 8+3
-// char vram_attrs [30][80];
+
+#define ICON_W 128 // read from file ?
+#define ICON_SIZE (ICON_W*ICON_W/8) // 128x128 1 bit data
+
+int icon_x, icon_y;
+uint8_t icon_data[ICON_SIZE]; // 2KB b&w 128x128 data 
+// pixel on(i,j) = data[i*16+j/8]&(1<<(7-j%8)))
+
 
 void print_at(int column, int line, const char *msg)
 {
@@ -194,6 +199,10 @@ void list_roms()
 }
 
 void game_init() {
+	SCB->VTOR=SRAM1_BASE; // HACK, FIXME with a proper init of the interrupt table
+
+	// flash_init();
+
 	window(2,2,78,4);
 	print_at(10,3, "\x01 Hi ! Here are the current files");
     // init FatFS
@@ -206,12 +215,53 @@ void game_init() {
 	}
 	
 	list_roms();
+	icon_y=1024; // don't display it now
 }
+
+ 
+// read icon PNM data to memory
+int read_icon(const char *filename)
+{
+	char c;
+	FRESULT res;
+	unsigned int b_read;
+	 
+	FIL *fp; 
+	res = f_open (fp, filename, FA_OPEN_EXISTING);
+	if (res != FR_OK) return res;
+
+	// header
+	for (int i=0;i<3;i++) {
+		res = f_read (fp, &c, 1, &b_read);
+		if (res != FR_OK) 
+			return res;
+		if (c!="P4\n"[i])
+			return 1000; // bad header
+	}
+	 
+	// skip one non-comment line -> XXX check size , ie 128 128\n 
+	int lines=0;
+	int cmt=0;
+	do {
+		res = f_read (fp, &c, 1,&b_read); // read first line char
+		cmt = (c=='#'); // asserts no empty line
+		while (c!='\n') f_read (fp, &c, 1, &b_read);// XXX skip or check size
+		if (!cmt) lines += 1;
+		// in a comment ?
+	} while (lines < 1 && !cmt); // skip lines
+	 
+	res=f_read(fp,icon_data,ICON_SIZE,&b_read);
+	f_close(fp);
+	return res;
+}
+ 
+
 
 int selected;
 int x =5,y=10 , dir_x=1, dir_y=1;
 char old_val=' ';
 void game_frame() {
+
 	// get input & check select ...
 	if (vga_frame%16==0) selected +=1;
 	
@@ -240,14 +290,25 @@ void game_frame() {
 		old_val = vram_char[y][x];
 		vram_char[y][x] = '\x02';
 	}
+
+	// flash_frame(); // at the end to let it finish 
+
 }
 
+extern const uint16_t bg_data[256];
 
 void game_line() 
 {
+	static uint32_t lut_data[4];
 	// text mode
 
-	static const uint32_t lut_data[4] = { 0,0x7fff<<16,0x7fff, 0x7fff7fff }; // XXX modify to have cool FX :)
+	// bg effect, just because
+	uint16_t line_color = bg_data[(vga_frame+vga_line)%256];
+	lut_data[0] = 0;
+	lut_data[1] = line_color<<16;
+	lut_data[2] = (uint32_t) line_color;
+	lut_data[3] = line_color * 0x10001;
+	
 
 	uint32_t *dst = (uint32_t *) draw_buffer;
 	char c;
@@ -263,7 +324,25 @@ void game_line()
 		*dst++ = lut_data[(c>>2) & 0x3];
 		*dst++ = lut_data[(c>>0) & 0x3];
 	}
+
+	// overdraw icon, 16 bytes data for 128 lines. align icon by 2 pixels.
+	if (vga_line>icon_y && vga_line<icon_y+128)
+	{
+		dst = (uint32_t*) &draw_buffer[icon_x & ~1]; // align 2 pixels
+		uint8_t *src = (uint8_t *)&icon_data[(vga_line-icon_y)*16];
+
+		for (int i=0;i<16;i++)
+		{
+			// draw a byte worth of pixels
+			*dst++ = lut_data[(*src>>6) & 0x3];
+			*dst++ = lut_data[(*src>>4) & 0x3];
+			*dst++ = lut_data[(*src>>2) & 0x3];
+			*dst++ = lut_data[(*src>>0) & 0x3];
+
+			src++; // next byte
+		}
+	}
 }
 
-void game_snd_buffer(uint16_t *buffer, int len) {}
+void game_snd_buffer(uint16_t *buffer, int len) {} // beeps ?
 

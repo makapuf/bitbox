@@ -12,17 +12,14 @@
 
 typedef uint16_t  pixel_t;
 
-inline uint16_t RGB(uint8_t r, uint8_t g, uint8_t b) 
-{
-    return (((r)&0x1f)<<10 | ((g)&0x1f)<<5 | ((b)&0x1f));
-}
+#define RGB(r,g,b)  (((r>>3)&0x1f)<<10 | ((g>>3)&0x1f)<<5 | ((b>>3)&0x1f))
+
 
 void game_init(void);
 void game_frame(void);
 void game_line(void);
 
 void game_snd_buffer(uint16_t *buffer, int len); // this callback is called each time we need to fill the buffer
-
 
 void die(int where, int cause);
 
@@ -40,3 +37,6 @@ void vga640_setup();
 extern uint32_t max_line,max_line_time; // max_line is the maximum number of cycles used on last frame.
 
 void message(char *m);
+
+void set_led(int value);
+int button_state();

@@ -46,15 +46,26 @@ __ALIGN_BEGIN USBH_HOST                     USB_FS_Host __ALIGN_END ;
 */ 
 #endif
 
-void init_led()
+void board_init()
 {
+  // User LED  
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA
   GPIOA->MODER |= (1 << 4) ; // set pin 2 to be general purpose output
+
+  // button is PE15
+  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; // enable GPIO 
+  GPIOE->PUPDR |= GPIO_PUPDR_PUPDR15_0; // set input / pullup 
+  
+  // SDIO sense is PC7
+  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // enable GPIO 
+  GPIOC->PUPDR |= GPIO_PUPDR_PUPDR7_0; // set input / pullup 
 }
+
+
 
 void toggle_led()
 {
-	GPIOA->ODR ^= 1<<2; // led on/off
+  GPIOA->ODR ^= 1<<2; // led on/off
 }
 
 void set_led(int value)
@@ -65,36 +76,24 @@ void set_led(int value)
     GPIOA->BSRRH |= 1<<2;
 }
 
-void button_init()
-{
-  // button is PE15
-  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; // enable GPIO 
-  GPIOE->PUPDR |= GPIO_PUPDR_PUPDR15_0; // set input / pullup 
-}
-
 int button_state()
 {
   return GPIOE->IDR & GPIO_IDR_IDR_15;
 }
 
-void sdio_sense_init()
-{
-  // SDIO sense is PC7
-  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // enable GPIO 
-  GPIOC->PUPDR |= GPIO_PUPDR_PUPDR7_0; // set input / pullup 
-}
 
 int sdio_sense_state()
 {
   return GPIOC->IDR & GPIO_IDR_IDR_7;
 }
 
+
+void message(char *msg) {};
+
 void main()
 {
 	InitializeSystem();
-	init_led();
-  button_init();
-  sdio_sense_init();
+	board_init();
 
 	#ifdef GAMEPAD
   /* Init Host Library */
@@ -130,12 +129,14 @@ void main()
 	audio_init();
 	#endif
 	
+
+  uint32_t oframe;
+  __IO uint32_t oline;
+
+  game_init();
+
+  // start vga after game setup
 	vga640_setup();
-
-	uint32_t oframe;
-	__IO uint32_t oline;
-
-	game_init();
 
 	while (1)
 	{
@@ -147,8 +148,8 @@ void main()
     gamepad1 = 0;
 		oframe=vga_frame;
 
-        do 
-        {
+    do 
+    {
         #ifdef GAMEPAD
             oline = vga_line;
             #ifdef USE_USB_OTG_HS
@@ -163,9 +164,6 @@ void main()
                 // } while (line < 450);
         #endif
 		} while (oframe==vga_frame);
-
-		//if (vga_frame%32 == 0) toggle_led(); // each second
-
 
     set_led(button_state());
 

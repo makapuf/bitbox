@@ -4,8 +4,7 @@ MEMORY
 {
 	flash (rx)		: ORIGIN = 0x08000000, LENGTH = 1024K
 	ccmram (rwx)	: ORIGIN = 0x10000000, LENGTH = 64K
-	sram (rwx)		: ORIGIN = 0x20000000, LENGTH = 112K
-    sram2 (rwx)     : ORIGIN = 0x2001C000, LENGTH = 16K
+	sram (rwx)		: ORIGIN = 0x20000000, LENGTH = 128K
 }
 
 __isr_vector_sram = 0x2001C000-0x200;

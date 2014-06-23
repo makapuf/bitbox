@@ -7,7 +7,7 @@ filename = sys.argv[1] # '8x16_437.png'
 
 print "/* *** File : %s *** */ "%filename
 print "#include <stdint.h>"
-print "uint8_t font_data[256][16] = {"
+print "const uint8_t font_data[256][16] = {"
 src = Image.open(filename)
 
 for y in range(src.size[1]//16) : 

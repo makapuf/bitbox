@@ -1,3 +1,5 @@
+/* This linker script is almost as a normal bitbox script, butlinking to sram or ccmram */
+
 ENTRY(InterruptVectors)
 
 MEMORY

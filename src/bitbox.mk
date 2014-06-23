@@ -20,11 +20,13 @@ CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 
-DEFINES =	-DARM_MATH_CM4 -DOVERCLOCK -DAUDIO -DGAMEPAD -DPROFILE
+DEFINES =	-DARM_MATH_CM4 -DOVERCLOCK -DAUDIO -DPROFILE 
+# -DGAMEPAD 
 # -DSNES_GAMEPAD 
 
 # USB defines
-DEFINES += -DUSE_USB_OTG_HS -DUSE_STDPERIPH_DRIVER -DUSE_EMBEDDED_PHY -DUSE_USB_OTG_FS
+#DEFINES += -DUSE_USB_OTG_HS -DUSE_EMBEDDED_PHY -DUSE_USB_OTG_FS
+DEFINES += -DUSE_STDPERIPH_DRIVER 
 
 C_OPTS = -std=c99 \
 		-mthumb \
@@ -52,12 +54,13 @@ LINKER_SCRIPT = ../Linker.ld
 
 KERNEL_FILES = startup.c system.c \
 	new_vga.c snes_gamepad.c bitbox_main.c audio.c \
-	stm32fxxx_it.c \
 	stm32f4xx_gpio.c \
 	stm32f4xx_rcc.c \
 	stm32f4xx_tim.c \
-	misc.c \
-	usb_bsp.c \
+	misc.c 
+
+ifdef USB
+	KERNEL_FILES += usb_bsp.c \
 	usbh_usr.c \
 	usb_core.c \
 	usb_hcd.c \
@@ -69,7 +72,9 @@ KERNEL_FILES = startup.c system.c \
 	usbh_hid_mouse.c \
 	usbh_hid_gamepad.c \
 	usbh_ioreq.c \
-	usbh_stdreq.c 
+	usbh_stdreq.c \
+	stm32fxxx_it.c 
+endif 
 
 # fatfs related files
 KERNEL_FILES += fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c stm32f4xx_sdio.c stm32f4xx_dma.c fatfs/ff.c fatfs/diskio.c
@@ -140,7 +145,7 @@ $(SOURCE_DIR)/%.btc: $(SOURCE_DIR)/%.png
 $(SOURCE_DIR)/%.spr: $(SOURCE_DIR)/%.png
 	python ../engine/sprite_encode1.py $< $@
 
-
+# ---------------------------------
 
 $(BUILD_DIR)/%.o: $(LIB_SOURCE_DIR)/%.S
 	@mkdir -p $(dir $@)
@@ -161,5 +166,5 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.S
 
 
 $(NAME)_emu: $(GAME_C_FILES) ../lib/emulator.c $(ENGINE_FILES:%=../engine/%)
-	gcc -Og $(GAME_C_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) -I../lib/ -I../engine/  $(ENGINE_FILES:%=../engine/%) ../lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
+	gcc -Og -DEMULATOR $(GAME_C_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) -I../lib/ -I../engine/  $(ENGINE_FILES:%=../engine/%) ../lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
 
