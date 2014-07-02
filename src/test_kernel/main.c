@@ -1,24 +1,29 @@
-#include <kernel.h>
+#include <bitbox.h>
 
-volatile int x,y;
+volatile int x,y, snd_vol;
+
 // x and y  should be volatile since the vga thread calling line must see the changes to x and y 
 // which are runnin in the main thread 
 
-extern volatile int data_mouse_x , data_mouse_y;
-extern volatile uint8_t data_mouse_buttons;
-
 void game_init() {
 	audio_on=1;
+	snd_vol=0; // 0-31 volume
 }
 
 void game_frame()
 {
 
-    if (PRESSED(up) && y>-240) y--;
-    if (PRESSED(down) && y<240) y++;
-    if (PRESSED(left) && x>-320) x--;
-    if (PRESSED(right) && x<320) x++;
+    if (GAMEPAD_PRESSED(0,up) && y>-240) y--;
+    if (GAMEPAD_PRESSED(0,down) && y<240) y++;
+    if (GAMEPAD_PRESSED(0,left) && x>-320) x--;
+    if (GAMEPAD_PRESSED(0,right) && x<320) x++;
 
+    if (gamepad_buttons[0]) {
+    	snd_vol=32;
+    } else {
+    	if (snd_vol) 
+    		snd_vol--;
+    }
 } 
 
 void game_line()
@@ -44,10 +49,10 @@ void game_line()
 	for (int i=0;i<64;i++)
 		draw_buffer[LINE_LENGTH-vga_line-i] = (i/4)<<8;
 
-    // display gamepad state as an inverse video point
+    // display gamepad state as 16 inverse video pixels
     if (vga_line == 200) {
     for (int i=0; i<16; i++)
-      if (gamepad1 & (1 << i)) draw_buffer[320+i]^=0x7fff;
+      if (gamepad_buttons[0] & (1 << i)) draw_buffer[320+i]^=0x7fff;
     }
 
     if (vga_line==200+y)
@@ -62,22 +67,18 @@ void game_line()
 	if (vga_line >= data_mouse_y-2 && vga_line<=2+data_mouse_y) {
 		draw_buffer[data_mouse_x] ^= 0x7fff; 
 	}
-
-
-
 }
 
 void game_snd_buffer(uint16_t *buffer, int len) 
-/* generates a 500Hz sound alternatibng between left & right */
+/* generates a 1kHz sound alternatibng between left & right */
 {
 	for (int i=0;i<len;i++)
 	{
-		if ((i/64)&1) 
+		if ((i/32)&1) // square each 32 samples 
 		{
-			*buffer++ = (vga_frame/8)&1 ?  0x4000 : 0x0040;
+			*buffer++ = snd_vol*((vga_frame/8)&1 ?  0x4000 : 0x0040)/32;
 		} else {
 			*buffer++ = 0;
 		}
-
 	}
-};
+}
