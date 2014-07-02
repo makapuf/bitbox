@@ -21,6 +21,7 @@
 #define BOOTFILE "2nd_boot.bin" // this is the standard filename of the firmware, to be located on the uSD root.
 
 #define START_RAM 0x20000000 // standard SRAM2, second - not CCRAM (see bitbox memories spreadsheet)
+#define START_FLASH_PGM 0x08004000 // standard flash (excepted this bootloader)
 #define MAX_FILESIZE (112*1024) // 112k MAX !
 
 #include <string.h>
@@ -33,6 +34,12 @@
 enum {INIT =0, MOUNT=1, OPEN=2, READ=3}; // where we died
 void die(int where, int cause);
 
+
+int button_state()
+{
+	return GPIOE->IDR & GPIO_IDR_IDR_15;
+}
+
 void led_on() 
 {
     GPIOA->BSRRL = 1<<2; 
@@ -43,7 +50,11 @@ void led_off()
     GPIOA->BSRRH = 1<<2; 
 }
 
-void led_init() {
+void GPIO_init() {
+	// button is PE15
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; // enable GPIO 
+	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR15_0; // set input / pullup 
+	
 	// init LED GPIO
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA (+)
     GPIOA->MODER |= (1 << 4) ; // set pin 8 to be general purpose output
@@ -73,7 +84,7 @@ void init()
 {
 	InitializeSystem(); // now we're using system.c 
 	NVIC_Configuration(); /* Interrupt Config */
-	led_init();
+	GPIO_init();
     
     // init FatFS
 	memset(&fs32, 0, sizeof(FATFS));
@@ -143,8 +154,14 @@ void jump(uint32_t address)
 
 void main(void) {
 	init();
-	load();
-	jump(START_RAM);
+
+	// activate bootloader if button pressed.
+	if (!button_state()) { 
+		load(); // blocks if NOK
+		jump(START_RAM);
+	} else {
+		jump(START_FLASH_PGM);
+	}
 }
 
 
