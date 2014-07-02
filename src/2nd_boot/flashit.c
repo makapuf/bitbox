@@ -1,17 +1,5 @@
-/*
-
-	Async flash : asychronously write a uSD file to flash memory.
-	Assumes we wan write DWORD by DWORD
-
-	Usage : 
-		- flash_init
-		- flash_start_write : call to launch a write of an open file to flash mem.
-		- flash_frame : call each frame. Can be long, do whatever is needed before.
-		- char flash_message[] : progress / error message 
-	
-	Statically allocs a buffer of memory (8k)
-
-*/
+/* flashit : aynchronous writing to flash fro ma SD card 
+(c) makapuf2@gmail.com */
 
 
 #include <stdint.h>
