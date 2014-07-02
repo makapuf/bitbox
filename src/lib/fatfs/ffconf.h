@@ -23,7 +23,7 @@
 /  f_rename(), f_truncate() and useless f_getfree(). */
 
 
-#define _FS_MINIMIZE	0	/* 0 to 3 */
+#define _FS_MINIMIZE	1	/* 0 to 3 */
 /* The _FS_MINIMIZE option defines minimization level to remove API functions.
 /
 /   0: All basic functions are enabled.

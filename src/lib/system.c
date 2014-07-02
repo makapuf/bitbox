@@ -24,6 +24,9 @@
 
 static void InitializeClocks();
 
+extern InterruptHandler *__isr_vector_sram[];
+extern uint32_t __isr_vector_start[];
+
 void InitializeSystem()
 {
 	// Reset the RCC clock configuration to the default reset state
@@ -39,7 +42,7 @@ void InitializeSystem()
 	InitializeClocks();
 
 	// Set vector table offset to flash memory start.
-	SCB->VTOR=FLASH_BASE;
+	SCB->VTOR=(uint32_t) __isr_vector_start; 
 
 	// Set up interrupts to 4 bits preemption priority.
 	SCB->AIRCR=0x05FA0000|0x300;
@@ -86,7 +89,6 @@ static void InitializeClocks()
 static InterruptHandler **WritableInterruptTable();
 void Default_Handler();
 
-extern InterruptHandler *__isr_vector_sram[];
 
 void InstallInterruptHandler(IRQn_Type interrupt,InterruptHandler handler)
 {
@@ -105,9 +107,9 @@ void RemoveInterruptHandler(IRQn_Type interrupt,InterruptHandler handler)
 static InterruptHandler **WritableInterruptTable()
 {
 	InterruptHandler **currenttable=(InterruptHandler **)SCB->VTOR;
-	if((uint32_t)currenttable==FLASH_BASE)
+	if((uint32_t)currenttable==(uint32_t)__isr_vector_start) 
 	{
-		InterruptHandler **flashtable=(InterruptHandler **)FLASH_BASE;
+		InterruptHandler **flashtable=(InterruptHandler **)__isr_vector_start; 
 		currenttable=__isr_vector_sram;
 		for(int i=0;i<98;i++) currenttable[i]=flashtable[i];
 

@@ -5,20 +5,27 @@
 #include <stdint.h>
 
 // emulated interfaces
-#include "kernel.h"
+#include "bitbox.h"
 #include "fatfs/ff.h"
 
+/*
+   TODO
+   
+ handle SLOW + PAUSE + FULLSCREEN (alt-enter) as keyboard handles 
+ handle properly gamepads, second gamepad, mouse, 
+ keyboard (or treat keyboard gamepads as config ?)
+ handling events
 
-// gerer SLOW et FULLSCREEN (alt-enter) comme commandes de l'emulateur
-// gerer 2 lignes de buffer  !
-//#define SLOW ou PAUSE 
+*/ 
+
+
 // ----------------------------- kernel ----------------------------------
-/* The only funcion of the kernel is
+/* The only function of the kernel is
 - calling game_init and game_frame
 - calling update draw_buffer (which calls object_blitX)
 
 - displaying other buffer updating line, frame
-- read user input and update gamepad1
+- read user input and update gamepad 
 
 */
 
@@ -40,10 +47,15 @@ int fullscreen; // shall run fullscreen
 SDL_Surface* screen;
 uint16_t mybuffer1[LINE_BUFFER];
 uint16_t mybuffer2[LINE_BUFFER];
-pixel_t *draw_buffer; // volatile ?
-volatile uint16_t gamepad1;
+uint16_t *draw_buffer; // volatile ?
+volatile uint16_t gamepad_buttons[2]; 
 uint32_t vga_line; 
 volatile uint32_t vga_frame;
+
+volatile int data_mouse_x, data_mouse_y;
+volatile uint8_t data_mouse_buttons;
+
+int user_button=0; 
 
 // sound
 uint16_t audio_buffer[BITBOX_SNDBUF_LEN]; // stereo, 31khz 1frame
@@ -53,7 +65,7 @@ int audio_on;
 static int sdl_joy_num;
 static SDL_Joystick * sdl_joy = NULL;
 static const int joy_commit_range = 3276;
-
+static const int gamepad_MAX = 12;
 
 uint32_t time_left(void)
 {
@@ -210,29 +222,14 @@ void instructions ()
     printf("       -------\n");
     printf("    Space (Select),   Enter (Start),   Arrows (D-pad)\n");
     printf("    D (A button),     F (B button),    E (X button),   R (Y button),\n");
-    printf("    Left/Right CTRL (L/R shoulders),   ESC (quit), \n");
+    printf("    Left/Right CTRL (L/R shoulders),   ESC (quit), B (user Button)\n");
     printf("       -------\n");
 }
 
 
 
-#define KD(key,code) case SDLK_##key : gamepad1 |= (1<<gamepad_##code); break;
-#define KU(key,code) case SDLK_##key : gamepad1 &= ~(1<<gamepad_##code); break;
+// handle HAT and analog joystick properly.
 
-
-
-#define BUTMAX 8
-const int8_t JOY_BUTTONS[BUTMAX] = 
-{
-    gamepad_B,
-    gamepad_Y,
-    gamepad_A,
-    gamepad_X,
-    gamepad_L,
-    gamepad_start,
-    gamepad_R,
-    gamepad_select,
-};
 
 static void handle_joystick(SDL_Event event)
 {
@@ -241,47 +238,48 @@ static void handle_joystick(SDL_Event event)
     {
     case 0: /* X axis */
         if (axisval > joy_commit_range)
-            gamepad1 |= (1<<gamepad_right);
+            gamepad_buttons[0] |= gamepad_right;
         else 
-            gamepad1 &= ~(1<<gamepad_right);
+            gamepad_buttons[0] &= ~gamepad_right;
 
         if (axisval < -(joy_commit_range))
-            gamepad1 |= (1<<gamepad_left);
+            gamepad_buttons[0] |= gamepad_left;
         else 
-            gamepad1 &= ~(1<<gamepad_left);
+            gamepad_buttons[0] &= ~gamepad_left;
         break;
         
     case 1: /* Y axis*/ 
         if (axisval > joy_commit_range)
-            gamepad1 |= (1<<gamepad_down);
+            gamepad_buttons[0] |= gamepad_down;
         else 
-            gamepad1 &= ~(1<<gamepad_down);
+            gamepad_buttons[0] &= ~gamepad_down;
 
         if (axisval < -(joy_commit_range))
-            gamepad1 |= (1<<gamepad_up);
+            gamepad_buttons[0] |= gamepad_up;
         else 
-            gamepad1 &= ~(1<<gamepad_up);
+            gamepad_buttons[0] &= ~gamepad_up;
         break;
     }
 }
 
 const char * gamepad_names[] = {
-    [11]="gamepad_B",
-    [10]="gamepad_Y",
-    [9]="gamepad_select",
-    [8]="gamepad_start",
-    [7]="gamepad_up",
-    [6]="gamepad_down",
-    [5]="gamepad_left",
-    [4]="gamepad_right",
-    [3]="gamepad_A",
-    [2]="gamepad_X",
-    [1]="gamepad_L",
-    [0]="gamepad_R",
+    "gamepad_A",
+    "gamepad_B",
+    "gamepad_X",
+    "gamepad_Y",
+    "gamepad_L",
+    "gamepad_R",
+    "gamepad_select",
+    "gamepad_start",
+
+    "gamepad_up",    
+    "gamepad_down",
+    "gamepad_left",
+    "gamepad_right",
 };
 
-#define KD(key,code) case SDLK_##key : gamepad1 |= (1<<gamepad_##code); break;
-#define KU(key,code) case SDLK_##key : gamepad1 &= ~(1<<gamepad_##code); break;
+#define KD(key,code) case SDLK_##key : gamepad_buttons[0] |= gamepad_##code; break;
+#define KU(key,code) case SDLK_##key : gamepad_buttons[0] &= ~gamepad_##code; break;
 
 static bool handle_gamepad()
 {
@@ -302,23 +300,23 @@ static bool handle_gamepad()
                     switch(event.key.keysym.sym) {
                         // exit if ESCAPE is pressed
                         case SDLK_ESCAPE:
-                            return true; // quit
+                            return true; // quit now
                         break;
                         KD(d,A)
                         KD(f,B)
                         KD(e,X)
                         KD(r,Y)
-
                         KD(LCTRL, L)
                         KD(RCTRL, R)
-
                         KD(RETURN, start)
                         KD(SPACE, select)
-
-                        KD(RIGHT, right)
                         KD(LEFT, left)
+                        KD(RIGHT, right)
                         KD(UP, up)
                         KD(DOWN, down)
+
+                        case SDLK_b : user_button = 1;
+                        break;
 
                         default :
                         break;
@@ -329,17 +327,21 @@ static bool handle_gamepad()
                 {
                     switch(event.key.keysym.sym) {
                         KU(d, A)
-                        KU(RETURN, start)
-                        KU(LCTRL, L)
-                        KU(RCTRL, R)
-                        KU(RIGHT, right)
-                        KU(LEFT, left)
-                        KU(UP, up)
-                        KU(DOWN, down)
                         KU(f,B)
                         KU(e,X)
                         KU(r,Y)
+                        KU(LCTRL, L)
+                        KU(RCTRL, R)
+                        KU(RETURN, start)
                         KU(SPACE, select)
+                        KU(LEFT, left)
+                        KU(RIGHT, right)
+                        KU(UP, up)
+                        KU(DOWN, down)
+
+                        case SDLK_b : user_button = 0;
+                        break;
+
                         default :
                         break;
                     }
@@ -350,15 +352,15 @@ static bool handle_gamepad()
                 handle_joystick(event);
                 break;
             case SDL_JOYBUTTONUP:
-                if (event.jbutton.button>=BUTMAX) break;
-                gamepad1 &= ~(1<<JOY_BUTTONS[event.jbutton.button]);
+                if (event.jbutton.button>=gamepad_MAX) break;
+                gamepad_buttons[0] &= ~(1<<event.jbutton.button);
                 break;
             case SDL_JOYBUTTONDOWN:
-                if (event.jbutton.button>=BUTMAX) break;
-                gamepad1 |= 1<<JOY_BUTTONS[event.jbutton.button];
+                if (event.jbutton.button>=gamepad_MAX) break;
+                gamepad_buttons[0] |= 1<<event.jbutton.button;
                 printf ("pressed button %d : %s\n",
                     event.jbutton.button,
-                    gamepad_names[JOY_BUTTONS[event.jbutton.button]]
+                    gamepad_names[event.jbutton.button]
                     );
                 break;
             } // end switch
@@ -408,6 +410,10 @@ void *memcpy2(void *dst, void*src, size_t size)
     return memcpy(dst,src,size);
 }
 
+// user button
+int button_state() {
+    return user_button;
+}
 
 int main ( int argc, char** argv )
 {
@@ -427,7 +433,7 @@ int main ( int argc, char** argv )
     instructions();
     printf(" - Starting\n");
 
-    gamepad1 = 0; // all up
+    gamepad_buttons[0] = 0; // all up
     if (init()) return 1;
     game_init();
 

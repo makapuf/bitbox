@@ -1,3 +1,4 @@
+#NO_USB=1
 
 NAME = 2nd_boot
 GAME_C_FILES = $(NAME).c font.c bg.c flashit.c
@@ -9,6 +10,7 @@ TO_SRAM=1
 ifdef TO_SRAM
 # NOTE that this program is loaded to SRAM1 (see bitbox memories), thus data is mapped accordingly & load stlink also !
 LINKER_SCRIPT=Linker_2Bootloader.ld
+
 # redefinition of stlink load : to sram
 stlink: $(NAME).bin
 	st-flash write $(NAME).bin 0x20000000

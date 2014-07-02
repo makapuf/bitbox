@@ -6,8 +6,7 @@
 #define EVT_QUEUE_SIZE 64
 
 
-enum device_enum device_type[2]; // currently plugged device
-int16_t x[2], y[2], buttons[2];
+volatile enum device_enum device_type[2]; // currently plugged device
 
 /* Circular FIFO. 
 
@@ -27,8 +26,8 @@ int16_t x[2], y[2], buttons[2];
 //- event queue implementation ---------------------------------------------------------------------------------------------------------
 
 
-static event evt_queue[EVT_QUEUE_SIZE];
-static event *evt_in=QUEUE_START, *evt_out=QUEUE_START; 
+static struct event evt_queue[EVT_QUEUE_SIZE];
+static struct event *evt_in=QUEUE_START, *evt_out=QUEUE_START; 
 // queue is empty if in=out; full if just before end (keep at least one empty)
 // in : next to write, out = next place to write
 
@@ -42,7 +41,7 @@ static inline int event_empty()
 	return evt_in==evt_out; 
 }
 
-void event_push(event e)
+void event_push(struct event e)
 {
 	// full ? don't push
 	if (event_full()) return; 
@@ -53,11 +52,11 @@ void event_push(event e)
 	}
 }
 
-event event_get()
+struct event event_get()
 {
-	event e;
+	struct event e;
 	// empty ? return empty event
-	if (event_empty()) return (event){.type=no_event};
+	if (event_empty()) return (struct event){.type=no_event};
 	e=*evt_out++;
 	if (evt_out==&evt_queue[EVT_QUEUE_SIZE]) {
 		evt_out=&evt_queue[0];
@@ -100,7 +99,7 @@ const char keyb_fr_sh[60] = "QBCDEFGHIJKL?NOPARSTUVZXYW1234567890\n\027\b\t Â°+Â
 
 const char *keymap=keyb_en, *keymap_sh=keyb_en_sh; // XXX config ?
 
-char kbd_map(event e) 
+char kbd_map(struct event e) 
 /*
  maps a keyboard event to printable latin-1 letter given the current keymap & shift. 
  only printable output is given, zero else.

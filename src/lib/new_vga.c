@@ -31,9 +31,8 @@
 	*(TIM_TypeDef*) 0x40000c00 TIM5
 */
 
-#include "kernel.h" // base 
-
 #include <stdint.h>
+
 
 #include "system.h" // interrupts 
 #include "stm32f4xx.h" // ports, timers, profile
@@ -41,8 +40,9 @@
 #include "GPIO.h"
 #include "RCC.h"
 
+#define LINE_LENGTH 640 // revoir les variables ...
 
-#ifdef GAMEPAD
+#ifdef SNES_GAMEPAD
 // #include "gamepad.h"
 #endif 
 
@@ -61,10 +61,10 @@ uint32_t line_time,max_line_time, max_line; // maximum time of line
 #endif 
 
 #define PIXELCLOCK 7
-//#define PIXELCLOCK 7
 
 #define MIN(x,y) ((x)<(y)?x:y) 
 
+extern void game_line();
 
 // public interface
 uint32_t vga_line;
@@ -295,7 +295,7 @@ static void HSYNCHandler()
 	if (vga_line <= 480) {
 
 		// swap display & draw buffers, effectively draws line-1
-		pixel_t *t;
+		uint16_t *t;
 		t=display_buffer;
 		display_buffer = draw_buffer;
 		draw_buffer = t;

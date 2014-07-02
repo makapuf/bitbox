@@ -155,14 +155,15 @@ uint8_t USBH_SOF (USB_OTG_CORE_HANDLE *pdev)
   * @brief  USBH_Init
   *         Host hardware and stack initializations 
   * @param  class_cb: Class callback structure address
-  * @param  usr_cb: User callback structure address
+  * @param  usr_cb: User callback structure address --> no more (makapuf
   * @retval None
   */
 void USBH_Init(USB_OTG_CORE_HANDLE *pdev,
                USB_OTG_CORE_ID_TypeDef coreID,
                USBH_HOST *phost,               
-               USBH_Class_cb_TypeDef *class_cb, 
-               USBH_Usr_cb_TypeDef *usr_cb)
+               USBH_Class_cb_TypeDef *class_cb
+               // makapuf USBH_Usr_cb_TypeDef *usr_cb
+               )
 {
      
   /* Hardware Init */
@@ -177,13 +178,13 @@ void USBH_Init(USB_OTG_CORE_HANDLE *pdev,
   
   /*Register class and user callbacks */
   phost->class_cb = class_cb;
-  phost->usr_cb = usr_cb;  
+  // phost->usr_cb = usr_cb;   makapuf
     
   /* Start the USB OTG core */     
    HCD_Init(pdev , coreID);
    
   /* Upon Init call usr call back */
-  phost->usr_cb->Init();
+  // phost->usr_cb->Init(); makapuf
   
   /* Enable Interrupts */
   USB_OTG_BSP_EnableInterrupt(pdev);
@@ -249,14 +250,14 @@ void USBH_Process(USB_OTG_CORE_HANDLE *pdev , USBH_HOST *phost)
    
   case HOST_DEV_ATTACHED :
     
-    phost->usr_cb->DeviceAttached();
+    // phost->usr_cb->DeviceAttached();
     phost->Control.hc_num_out = USBH_Alloc_Channel(pdev, 0x00);
     phost->Control.hc_num_in = USBH_Alloc_Channel(pdev, 0x80);  
   
     /* Reset USB Device */
     if ( HCD_ResetPort(pdev) == 0)
     {
-      phost->usr_cb->ResetDevice();
+      // makapuf phost->usr_cb->ResetDevice();
       /*  Wait for USB USBH_ISR_PrtEnDisableChange()  
       Host is Now ready to start the Enumeration 
       */
@@ -264,7 +265,7 @@ void USBH_Process(USB_OTG_CORE_HANDLE *pdev , USBH_HOST *phost)
       phost->device_prop.speed = HCD_GetCurrentSpeed(pdev);
       
       phost->gState = HOST_ENUMERATION;
-      phost->usr_cb->DeviceSpeedDetected(phost->device_prop.speed);
+      // makapuf phost->usr_cb->DeviceSpeedDetected(phost->device_prop.speed);
         
       /* Open Control pipes */
       USBH_Open_Channel (pdev,
@@ -291,7 +292,7 @@ void USBH_Process(USB_OTG_CORE_HANDLE *pdev , USBH_HOST *phost)
       /* The function shall return USBH_OK when full enumeration is complete */
       
       /* user callback for end of device basic enumeration */
-      phost->usr_cb->EnumerationDone();
+      // phost->usr_cb->EnumerationDone();
       
       phost->gState  = HOST_USR_INPUT;    
     }
@@ -299,14 +300,13 @@ void USBH_Process(USB_OTG_CORE_HANDLE *pdev , USBH_HOST *phost)
     
   case HOST_USR_INPUT:    
     /*The function should return user response true to move to class state */
-    if ( phost->usr_cb->UserInput() == USBH_USR_RESP_OK)
-    {
+    //if ( phost->usr_cb->UserInput() == USBH_USR_RESP_OK) {
       if((phost->class_cb->Init(pdev, phost))\
         == USBH_OK)
       {
         phost->gState  = HOST_CLASS_REQUEST;     
       }     
-    }   
+    //}   
     break;
     
   case HOST_CLASS_REQUEST:  
@@ -342,17 +342,17 @@ void USBH_Process(USB_OTG_CORE_HANDLE *pdev , USBH_HOST *phost)
   case HOST_ERROR_STATE:
     /* Re-Initilaize Host for new Enumeration */
     USBH_DeInit(pdev, phost);
-    phost->usr_cb->DeInit();
+    //phost->usr_cb->DeInit();
     phost->class_cb->DeInit(pdev, &phost->device_prop);
     break;
     
   case HOST_DEV_DISCONNECTED :
     /* Manage User disconnect operations*/
-    phost->usr_cb->DeviceDisconnected();
+    //phost->usr_cb->DeviceDisconnected();
     
     /* Re-Initilaize Host for new Enumeration */
     USBH_DeInit(pdev, phost);
-    phost->usr_cb->DeInit();
+    //phost->usr_cb->DeInit();
     phost->class_cb->DeInit(pdev, &phost->device_prop); 
     USBH_DeAllocate_AllChannel(pdev);  
     phost->gState = HOST_IDLE;
@@ -378,7 +378,7 @@ void USBH_ErrorHandle(USBH_HOST *phost, USBH_Status errType)
   if ( (errType == USBH_ERROR_SPEED_UNKNOWN) ||
        (errType == USBH_UNRECOVERED_ERROR) )
   {
-    phost->usr_cb->UnrecoveredError(); 
+    //phost-> ->UnrecoveredError(); 
     phost->gState = HOST_ERROR_STATE;   
   }  
   /* USB host restart requested from application layer */
@@ -386,7 +386,7 @@ void USBH_ErrorHandle(USBH_HOST *phost, USBH_Status errType)
   {
     phost->gState = HOST_ERROR_STATE;  
     /* user callback for initalization */
-    phost->usr_cb->Init();
+    // phost->usr_cb->Init();
   } 
 }
 
@@ -437,7 +437,7 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
       == USBH_OK)
     {
       /* user callback for device descriptor available */
-      phost->usr_cb->DeviceDescAvailable(&phost->device_prop.Dev_Desc);      
+      //phost->usr_cb->DeviceDescAvailable(&phost->device_prop.Dev_Desc);      
       phost->EnumState = ENUM_SET_ADDR;
     }
     break;
@@ -450,7 +450,7 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
       phost->device_prop.address = USBH_DEVICE_ADDRESS;
       
       /* user callback for device address assigned */
-      phost->usr_cb->DeviceAddressAssigned();
+      //phost->usr_cb->DeviceAddressAssigned();
       phost->EnumState = ENUM_GET_CFG_DESC;
       
       /* modify control channels to update device address */
@@ -487,10 +487,10 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
                          phost->device_prop.Cfg_Desc.wTotalLength) == USBH_OK)
     {
       /* User callback for configuration descriptors available */
-      phost->usr_cb->ConfigurationDescAvailable(&phost->device_prop.Cfg_Desc,
+      /*phost->usr_cb->ConfigurationDescAvailable(&phost->device_prop.Cfg_Desc,
                                                       phost->device_prop.Itf_Desc,
                                                       phost->device_prop.Ep_Desc[0]);
-      
+      */
       phost->EnumState = ENUM_GET_MFC_STRING_DESC;
     }
     break;
@@ -506,13 +506,13 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
                                0xff) == USBH_OK)
       {
         /* User callback for Manufacturing string */
-        phost->usr_cb->ManufacturerString(Local_Buffer);
+        // phost->usr_cb->ManufacturerString(Local_Buffer);
         phost->EnumState = ENUM_GET_PRODUCT_STRING_DESC;
       }
     }
     else
     {
-      phost->usr_cb->ManufacturerString("N/A");      
+      // phost->usr_cb->ManufacturerString("N/A");      
       phost->EnumState = ENUM_GET_PRODUCT_STRING_DESC;
     }
     break;
@@ -527,13 +527,13 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
                                0xff) == USBH_OK)
       {
         /* User callback for Product string */
-        phost->usr_cb->ProductString(Local_Buffer);
+        // phost->usr_cb->ProductString(Local_Buffer);
         phost->EnumState = ENUM_GET_SERIALNUM_STRING_DESC;
       }
     }
     else
     {
-      phost->usr_cb->ProductString("N/A");
+      // phost->usr_cb->ProductString("N/A");
       phost->EnumState = ENUM_GET_SERIALNUM_STRING_DESC;
     } 
     break;
@@ -548,13 +548,13 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
                                0xff) == USBH_OK)
       {
         /* User callback for Serial number string */
-        phost->usr_cb->SerialNumString(Local_Buffer);
+        // phost->usr_cb->SerialNumString(Local_Buffer);
         phost->EnumState = ENUM_SET_CONFIGURATION;
       }
     }
     else
     {
-      phost->usr_cb->SerialNumString("N/A");      
+      // phost->usr_cb->SerialNumString("N/A");      
       phost->EnumState = ENUM_SET_CONFIGURATION;
     }  
     break;

@@ -20,12 +20,15 @@ CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 
-DEFINES =	-DARM_MATH_CM4 -DOVERCLOCK -DAUDIO -DPROFILE 
-# -DGAMEPAD 
-# -DSNES_GAMEPAD 
+DEFINES = -DARM_MATH_CM4 -DOVERCLOCK -DAUDIO -DPROFILE 
 
 # USB defines
-#DEFINES += -DUSE_USB_OTG_HS -DUSE_EMBEDDED_PHY -DUSE_USB_OTG_FS
+ifdef NO_USB
+DEFINES += -DNO_USB
+else
+DEFINES += -DUSE_USB_OTG_HS -DUSE_EMBEDDED_PHY -DUSE_USB_OTG_FS
+endif
+
 DEFINES += -DUSE_STDPERIPH_DRIVER 
 
 C_OPTS = -std=c99 \
@@ -48,20 +51,20 @@ DATA_DIR=data
 LIB_SOURCE_DIR =../lib
 BUILD_DIR =build
 #LIB_FILES = ../lib/object.c
-LINKER_SCRIPT = ../Linker.ld
 
-
+# replace with linker_raw if you want to overwrite bootloader
+LINKER_SCRIPT = ../Linker_loader.ld
 
 KERNEL_FILES = startup.c system.c \
-	new_vga.c snes_gamepad.c bitbox_main.c audio.c \
+	new_vga.c bitbox_main.c audio.c \
+	evt_queue.c\
 	stm32f4xx_gpio.c \
 	stm32f4xx_rcc.c \
 	stm32f4xx_tim.c \
 	misc.c 
 
-ifdef USB
+ifndef NO_USB
 	KERNEL_FILES += usb_bsp.c \
-	usbh_usr.c \
 	usb_core.c \
 	usb_hcd.c \
 	usb_hcd_int.c \
@@ -74,6 +77,7 @@ ifdef USB
 	usbh_ioreq.c \
 	usbh_stdreq.c \
 	stm32fxxx_it.c 
+	#usbh_usr.c 
 endif 
 
 # fatfs related files
@@ -119,7 +123,7 @@ clean:
 $(NAME).bin: $(NAME).elf
 	$(OBJCOPY) -O binary $(NAME).elf $(NAME).bin
 
-$(NAME).elf: $(OBJS)
+$(NAME).elf: $(OBJS) 
 	$(LD) $(ALL_LDFLAGS) -o $@ $^ $(LIBS)
 
 .SUFFIXES: .o .c .S

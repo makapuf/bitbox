@@ -5,23 +5,14 @@
 
 
 /*
-TODO
-
-bug when usb plugged ? 
-
-display image / text as selected when button pushed
-
-react to events from kernel
-
-asynchronously write to Flash
-jump to it (maybe not, reset can also do it).
-
+	keep under 64k (error ? )
+	cannot intialize USB if already plugged - interactions with bootloader 1 ?
  */
 
 #include <string.h>
 #include "stm32f4xx.h" 
 #include "system.h" // InitializeSystem
-#include "kernel.h"
+#include "bitbox.h"
 #include "flashit.h"
 
 enum {INIT =0, MOUNT=1, OPEN=2, READ=3}; // where we died
@@ -120,7 +111,7 @@ extern const uint8_t font_data [256][16];
 char vram_char  [30][80];
 
 int nb_files;
-char filenames[MAX_FILES][11]; // 8+3
+char filenames[MAX_FILES][13]; // 8+3 +. + 1 chr0
 
 #define ICON_W 128 // read from file ?
 #define ICON_SIZE (ICON_W*ICON_W/8) // 128x128 1 bit data
@@ -128,7 +119,7 @@ char filenames[MAX_FILES][11]; // 8+3
 int icon_x, icon_y;
 uint8_t icon_data[ICON_SIZE]; // 2KB b&w 128x128 data 
 // pixel on(i,j) = data[i*16+j/8]&(1<<(7-j%8)))
-
+FIL file;
 
 void print_at(int column, int line, const char *msg)
 {
@@ -187,85 +178,120 @@ void list_roms()
             }
         }
         if (res != FR_OK) {
-	        print_at(10,10,"Error reading directory !");
-    	    vram_char[11][10] = '0'+res;
+	        print_at(5,20,"Error reading directory !");
+    	    vram_char[21][5] = '0'+res;
         } 
         f_closedir(&dir);
     } else {
-        print_at(10,10,"Error opening directory !");
-        vram_char[11][10] = '0'+res;
+        print_at(5,20,"Error opening directory !");
+        vram_char[21][5] = '0'+res;
     }
 
 }
-
-void game_init() {
-	SCB->VTOR=SRAM1_BASE; // HACK, FIXME with a proper init of the interrupt table
-
-	// flash_init();
-
-	window(2,2,78,4);
-	print_at(10,3, "\x01 Hi ! Here are the current files");
-    // init FatFS
-	
-	memset(&fs32, 0, sizeof(FATFS));
-	FRESULT r = f_mount(&fs32,"",1); // mount now
-	if (r != FR_OK) {
-		print_at(8,8,"Cannot mount disk");
-		die(MOUNT,r); 
-	}
-	
-	list_roms();
-	icon_y=1024; // don't display it now
-}
-
  
-// read icon PNM data to memory
+// read icon PBM data to memory
 int read_icon(const char *filename)
 {
 	char c;
 	FRESULT res;
 	unsigned int b_read;
-	 
-	FIL *fp; 
-	res = f_open (fp, filename, FA_OPEN_EXISTING);
-	if (res != FR_OK) return res;
+	
+	res = f_open (&file, filename, FA_READ);
+	if (res != FR_OK)
+		return res;
 
 	// header
 	for (int i=0;i<3;i++) {
-		res = f_read (fp, &c, 1, &b_read);
+		res = f_read (&file, &c, 1, &b_read);
 		if (res != FR_OK) 
 			return res;
 		if (c!="P4\n"[i])
 			return 1000; // bad header
 	}
 	 
-	// skip one non-comment line -> XXX check size , ie 128 128\n 
+	// skip one non-comment line  
 	int lines=0;
 	int cmt=0;
 	do {
-		res = f_read (fp, &c, 1,&b_read); // read first line char
+		res = f_read (&file, &c, 1,&b_read); // read first line char
 		cmt = (c=='#'); // asserts no empty line
-		while (c!='\n') f_read (fp, &c, 1, &b_read);// XXX skip or check size
-		if (!cmt) lines += 1;
-		// in a comment ?
-	} while (lines < 1 && !cmt); // skip lines
+		while (c!='\n') 
+			f_read (&file, &c, 1, &b_read);
+			// XXX check size 128
+		if (!cmt) lines += 1; // in a comment ?
+	} while (lines < 1 || cmt); // skip lines
 	 
-	res=f_read(fp,icon_data,ICON_SIZE,&b_read);
-	f_close(fp);
+	res=f_read(&file,icon_data,ICON_SIZE,&b_read);
+	f_close(&file);
 	return res;
 }
  
+char *HEX_Digits;
+
+void game_init() {
+	// CB->VTOR=SRAM1_BASE;
+	// HACK, FIXME with a proper init of the interrupt table
+
+	flash_init();
+
+	window(2,2,78,4);
+	print_at(5,3, " BITBOX bootloader \x01 Hi ! Here are the current files");
+
+    // init FatFS
+	memset(&fs32, 0, sizeof(FATFS));
+	FRESULT r = f_mount(&fs32,"",1); // mount now
+	if (r != FR_OK) {
+		print_at(5,20,"Cannot mount disk");
+		die(MOUNT,r); 
+	}
+	
+	memset(icon_data, 0x55, sizeof(icon_data));
+	icon_x = 400;
+	r=read_icon("bitbox.pbm");
+	if (r==FR_OK) 
+		icon_y=200; 
+	else {
+		vram_char[16][1] = HEX_Digits[r&0xf];
+		vram_char[16][0] = HEX_Digits[(r>>4)&0xf];
+		icon_y=1024; // don't display it now
+	}
+
+	list_roms();
+}
 
 
 int selected;
 int x =5,y=10 , dir_x=1, dir_y=1;
 char old_val=' ';
-void game_frame() {
+void game_frame() 
+{
+	// handle input 
+	if (GAMEPAD_PRESSED(0,down) && vga_frame%4==0)
+		selected +=1;
+	if (selected>nb_files) selected=0;
 
-	// get input & check select ...
-	if (vga_frame%16==0) selected +=1;
+	if (GAMEPAD_PRESSED(0,up) && vga_frame%4==0)
+		selected -=1;
+	if (selected<0) selected=nb_files;
 	
-	if (selected>=nb_files) selected=0;
+	// XXX try to read game icon if selected is different
+
+	if (GAMEPAD_PRESSED(0,start) || GAMEPAD_PRESSED(0,A))
+	{
+		print_at(5,20,"Goldorak GO ! Flashing ");
+		print_at(29,20,filenames[selected]);
+
+		if (f_open(&file,filenames[selected],FA_READ)==FR_OK)
+		{
+			flash_start_write(&file);
+		} else {
+			print_at(5,20,"Error reading ");
+			print_at(20,20,filenames[selected]);
+		}		
+	}
+
+	memset(&vram_char[21][5],' ',30);
+	strcpy(&vram_char[21][5],flash_message);
 
 	// update_display
 	for (int i=0;i<nb_files;i++)
@@ -291,8 +317,7 @@ void game_frame() {
 		vram_char[y][x] = '\x02';
 	}
 
-	// flash_frame(); // at the end to let it finish 
-
+	flash_frame(); // at the end to let it finish 
 }
 
 extern const uint16_t bg_data[256];
@@ -318,7 +343,6 @@ void game_line()
 		c = font_data[vram_char[vga_line / 16][i]][vga_line%16];
 		// draw a character on this line
 
-		// FIXME : attrs ?
 		*dst++ = lut_data[(c>>6) & 0x3];
 		*dst++ = lut_data[(c>>4) & 0x3];
 		*dst++ = lut_data[(c>>2) & 0x3];
@@ -331,7 +355,7 @@ void game_line()
 		dst = (uint32_t*) &draw_buffer[icon_x & ~1]; // align 2 pixels
 		uint8_t *src = (uint8_t *)&icon_data[(vga_line-icon_y)*16];
 
-		for (int i=0;i<16;i++)
+		for (int i=0;i<16;i++) // 16*8=128
 		{
 			// draw a byte worth of pixels
 			*dst++ = lut_data[(*src>>6) & 0x3];

@@ -41,9 +41,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbh_hid_core.h"
-#include "usbh_hid_gamepad.h"
-#include "usbh_hid_mouse.h"
-#include "usbh_hid_keybd.h"
+#include "usbh_hid_devices.h"
 
 /** @addtogroup USBH_LIB
 * @{
@@ -270,7 +268,7 @@ static USBH_Status USBH_HID_InterfaceInit ( USB_OTG_CORE_HANDLE *pdev,
   }
   else
   {
-    pphost->usr_cb->DeviceNotSupported();   
+    // pphost->usr_cb->DeviceNotSupported();   
   }
 
   return status;

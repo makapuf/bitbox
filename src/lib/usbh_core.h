@@ -190,33 +190,34 @@ typedef struct _USBH_Class_cb
   
 } USBH_Class_cb_TypeDef;
 
-
+/*
 typedef struct _USBH_USR_PROP
 {
-  void (*Init)(void);       /* HostLibInitialized */
-  void (*DeInit)(void);       /* HostLibInitialized */  
-  void (*DeviceAttached)(void);           /* DeviceAttached */
+  void (*Init)(void);       // HostLibInitialized 
+  void (*DeInit)(void);      // HostLibInitialized   
+  void (*DeviceAttached)(void);         // DeviceAttached 
   void (*ResetDevice)(void);
   void (*DeviceDisconnected)(void); 
   void (*OverCurrentDetected)(void);  
-  void (*DeviceSpeedDetected)(uint8_t DeviceSpeed);          /* DeviceSpeed */
-  void (*DeviceDescAvailable)(void *);    /* DeviceDescriptor is available */
-  void (*DeviceAddressAssigned)(void);  /* Address is assigned to USB Device */
+  void (*DeviceSpeedDetected)(uint8_t DeviceSpeed);    //DeviceSpeed 
+  void (*DeviceDescAvailable)(void *);   // DeviceDescriptor is available 
+  void (*DeviceAddressAssigned)(void);  // Address is assigned to USB Device 
   void (*ConfigurationDescAvailable)(USBH_CfgDesc_TypeDef *,
                                      USBH_InterfaceDesc_TypeDef *,
                                      USBH_EpDesc_TypeDef *); 
-  /* Configuration Descriptor available */
-  void (*ManufacturerString)(void *);     /* ManufacturerString*/
-  void (*ProductString)(void *);          /* ProductString*/
-  void (*SerialNumString)(void *);        /* SerialNubString*/
-  void (*EnumerationDone)(void);           /* Enumeration finished */
+  // Configuration Descriptor available 
+  void (*ManufacturerString)(void *);    // ManufacturerString
+  void (*ProductString)(void *);         // ProductString
+  void (*SerialNumString)(void *);       // SerialNubString
+  void (*EnumerationDone)(void);          // Enumeration finished 
   USBH_USR_Status (*UserInput)(void);
   int  (*UserApplication) (void);
-  void (*DeviceNotSupported)(void); /* Device is not supported*/
+  void (*DeviceNotSupported)(void); // Device is not supported
   void (*UnrecoveredError)(void);
 
 }
 USBH_Usr_cb_TypeDef;
+*/
 
 typedef struct _Host_TypeDef
 {
@@ -229,7 +230,7 @@ typedef struct _Host_TypeDef
   USBH_Device_TypeDef   device_prop; 
   
   USBH_Class_cb_TypeDef               *class_cb;  
-  USBH_Usr_cb_TypeDef  	              *usr_cb;
+  // USBH_Usr_cb_TypeDef  	              *usr_cb;
 
   
 } USBH_HOST, *pUSBH_HOST;
@@ -262,8 +263,8 @@ typedef struct _Host_TypeDef
 void USBH_Init(USB_OTG_CORE_HANDLE *pdev,
                USB_OTG_CORE_ID_TypeDef coreID, 
                USBH_HOST *phost,                    
-               USBH_Class_cb_TypeDef *class_cb, 
-               USBH_Usr_cb_TypeDef *usr_cb);
+               USBH_Class_cb_TypeDef *class_cb);
+//               USBH_Usr_cb_TypeDef *usr_cb);
                
 USBH_Status USBH_DeInit(USB_OTG_CORE_HANDLE *pdev, 
                         USBH_HOST *phost);

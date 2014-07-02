@@ -1,4 +1,4 @@
-/* This linker script is almost as a normal bitbox script, butlinking to sram or ccmram */
+/* This linker script is almost as a normal bitbox script, but linking to sram or ccmram */
 
 ENTRY(InterruptVectors)
 
