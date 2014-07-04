@@ -29,11 +29,12 @@ make a font element (avec sub packbits : array de chars = packbits independants,
  */
 
 typedef struct {
-    // ** long standing variables
+    object object_store[MAX_OBJECTS]; // real objects. set y to INT16_MAX for not used   
+
 
     // list of objects blit.
-    int nb_objects; // maximum used objects. There may be holes before this however.
     object *objects[MAX_OBJECTS]; // Sorted by Y. Objects shall not be added or modified within display
+    int nb_objects; // next unused object 
 
     // ** frame-lived variables (ie they are reset each frame)
 
@@ -62,7 +63,8 @@ void blitter_init()
 
 // return new object pointer
 // append to end of list ; list ends up unsorted now
-// DON'T insert something twice !
+
+object* blitter_new() __attribute__ ((warn_unused_result))
 {
     if (blt.nb_objects<MAX_OBJECTS)
         return blt.objects[blt.nb_objects++]; // index of free object IN !
@@ -77,7 +79,7 @@ void blitter_remove(object *o)
 }
 
 // http://en.wikipedia.org/wiki/Insertion_sort
-// insertion sort objects array by Y. Simplest form, just sorting
+// insertion sort of object ptr array, sorted by Y. Simplest form, just sorting.
 void blitter_sort_objects_y()
 {
     // consider empty values as bigger than anything (Y = INT16_MAX)
