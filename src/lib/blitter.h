@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <kernel.h>
+#include <bitbox.h>
 
 #define MAX_OBJECTS 64 // max objects present at the same time
 
@@ -40,3 +40,4 @@ object * sprite_new(uint32_t *sprite_data)  __attribute__ ((warn_unused_result))
 object * btc4_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __attribute__ ((warn_unused_result)); 
 object * btc4_2x_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __attribute__ ((warn_unused_result)); 
 
+// tilemap : tilemap (64x64 u16= 1b semitrans + 3b tilemap + 12b index) + u16 *tilesets[8], + roll 64x64

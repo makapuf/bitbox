@@ -90,7 +90,12 @@ def quantize_colors(cols) :
 
 
 
-def encode(src, dither):
+def encode_plain(src, dither):
+    '''in : source image + dither bool, 
+       out : [encoded_block1, encoded_block2] 
+             where encoded_block = (col1 col2, u16 pixels)
+    '''
+
     dither_array = ((1,4),(3,2))
     encoded_blocks = [] 
     for y in range(src.size[1]//BLOCKSIZE) : 
@@ -122,6 +127,45 @@ def encode(src, dither):
             encoded = sum(1<<n for n,(b,yu) in enumerate(zip(block,yuvblock)) if yu>=avg_y)
             encoded_blocks.append((avghi,avglo,encoded))
     return encoded_blocks
+
+def encode_numpy(src, dither):
+    '''in : source image + dither bool, 
+       out : [encoded_block1, encoded_block2] 
+             where encoded_block = (col1 col2, u16 pixels)
+    '''
+    
+    dither_array = ((1,4),(3,2))
+    encoded_blocks = [] 
+    for y in range(src.size[1]//BLOCKSIZE) : 
+        for x in range(src.size[0]//BLOCKSIZE) : 
+            imgblock = src.crop((x*BLOCKSIZE,y*BLOCKSIZE,(x+1)*BLOCKSIZE,(y+1)*BLOCKSIZE))
+            if dither :
+                block = tuple( 
+                    tuple(
+                        d(c,i) 
+                        for c in x) 
+                    for (i,x) in enumerate(imgblock.getdata())) # keep image in RAM as RGB tuples. 
+            else : 
+                block = tuple( tuple(c*31/255 for c in x) for x in imgblock.getdata()) # keep image in RAM as RGB tuples. 
+                
+
+            yuvblock = lumi(block)
+            avg_y = sum(yuvblock)/float(BLOCKSIZE*BLOCKSIZE) 
+            hipix = [b for b,yb in zip(block,yuvblock) if yb>=avg_y]
+            lopix = [b for b,yb in zip(block,yuvblock) if yb<avg_y]
+            # take average of hi pixels 
+            avghi = tuple(int(round(sum(b[i] for b in hipix)/float(len(hipix)))) for i in range(3)) if hipix else None
+            if avghi!=None : assert all(x<256 for x in avghi),(avghi,hipix,list(enumerate(imgblock.getdata())))
+
+
+            avglo = tuple(int(round(sum(b[i] for b in lopix)/float(len(lopix)))) for i in range(3)) if lopix else None
+            if avglo!=None : assert all(x<256 for x in avglo),(avglo,lopix)
+
+            # decoded = tuple(avghi if y>=avg_y else avglo for y in yuvblock)
+            encoded = sum(1<<n for n,(b,yu) in enumerate(zip(block,yuvblock)) if yu>=avg_y)
+            encoded_blocks.append((avghi,avglo,encoded))
+    return encoded_blocks
+
 
 def decode_image(size, encoded_blocks,encoded_palette,filename) : 
     # decode palette
@@ -183,7 +227,7 @@ def encode_file(name, options) :
     src=src.crop((0,0,src.size[0]//BLOCKSIZE*BLOCKSIZE,src.size[1]//BLOCKSIZE*BLOCKSIZE))
 
     # extract colors
-    encoded_blocks = encode(src, options.dither)
+    encoded_blocks = encode_plain(src, options.dither)
     cols=set()
     for c1,c2,_ in encoded_blocks : 
         cols.add(c1)

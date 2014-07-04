@@ -32,12 +32,12 @@ endif
 DEFINES += -DUSE_STDPERIPH_DRIVER 
 
 C_OPTS = -std=c99 \
-		-mthumb \
-		-mcpu=cortex-m4 \
-		-I../Libraries/CMSIS/Include \
-		-I../lib/ \
-		-I../engine/ \
-		-Werror \
+	-mthumb \
+	-mcpu=cortex-m4 \
+	-Ilib/ \
+	-Ilib/CMSIS/Include \
+	-Ilib/StdPeriph \
+	-Werror \
         -O3 \
         -mlittle-endian \
         -g \
@@ -48,12 +48,12 @@ LIBS =	-lm
 
 SOURCE_DIR =.
 DATA_DIR=data
-LIB_SOURCE_DIR =../lib
 BUILD_DIR =build
-#LIB_FILES = ../lib/object.c
+LIB_SOURCE_DIR =lib
+LIB_STD_SOURCE_DIR =lib/StdPeriph
 
 # replace with linker_raw if you want to overwrite bootloader
-LINKER_SCRIPT = ../Linker_loader.ld
+LINKER_SCRIPT = lib/Linker_loader.ld
 
 KERNEL_FILES = startup.c system.c \
 	new_vga.c bitbox_main.c audio.c \
@@ -85,7 +85,7 @@ KERNEL_FILES += fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c stm32
 
 # engine related
 ifdef USE_ENGINE
-ENGINE_FILES = blitter.c 
+ENGINE_FILES = lib/blitter.c 
 endif
 
 C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES) $(ENGINE_FILES)
@@ -132,7 +132,7 @@ $(BUILD_DIR)/%.o: $(LIB_SOURCE_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: ../engine/%.c
+$(BUILD_DIR)/%.o: $(LIB_STD_SOURCE_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 
@@ -144,10 +144,10 @@ $(BUILD_DIR)/%_dat.o: $(SOURCE_DIR)/%
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c build/$*.c -o $@
 
 $(SOURCE_DIR)/%.btc: $(SOURCE_DIR)/%.png
-	python ../engine/btc4.py $<
+	python ../scripts/btc4.py $<
 
 $(SOURCE_DIR)/%.spr: $(SOURCE_DIR)/%.png
-	python ../engine/sprite_encode1.py $< $@
+	python ../scripts/sprite_encode1.py $< $@
 
 # ---------------------------------
 
@@ -169,6 +169,6 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.S
 -include $(OBJS:.o=.d)
 
 
-$(NAME)_emu: $(GAME_C_FILES) ../lib/emulator.c $(ENGINE_FILES:%=../engine/%)
-	gcc -Og -DEMULATOR $(GAME_C_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) -I../lib/ -I../engine/  $(ENGINE_FILES:%=../engine/%) ../lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
+$(NAME)_emu: $(GAME_C_FILES) lib/emulator.c $(ENGINE_FILES)
+	gcc -Og -DEMULATOR $(GAME_C_FILES) $(ENGINE_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) -Ilib/ lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
 
