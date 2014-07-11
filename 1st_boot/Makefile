@@ -3,7 +3,6 @@ NAME=1st_boot
 
 C_FILES = $(NAME).c
 C_FILES += stm32f4_lowlevel.c stm32f4_discovery_sdio_sd.c ff.c diskio.c 
-#C_FILES += system_stm32f4xx.c
 C_FILES += system.c
 C_FILES += stm32fxxx_it.c stm32f4xx_dma.c  stm32f4xx_gpio.c stm32f4xx_sdio.c  misc.c startup.c stm32f4xx_rcc.c 
 
@@ -18,20 +17,17 @@ OBJCOPY = arm-none-eabi-objcopy
 DEFINES = -DARM_MATH_CM4  -DUSE_STDPERIPH_DRIVER
 SOURCE_DIR=.
 
-# USB defines
-#DEFINES += -DUSE_USB_OTG_HS -DUSE_STDPERIPH_DRIVER -DUSE_EMBEDDED_PHY -DUSE_USB_OTG_FS
-
 OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.s=$(BUILD_DIR)/%.o) 
 BUILD_DIR = build
 
 C_OPTS = -std=c99 \
 		-mthumb \
 		-mcpu=cortex-m4 \
-		-I../Libraries/CMSIS/Include \
-		-I../lib/ \
 		-g \
 		-Werror \
         -Os \
+        -I../lib/CMSIS/Include \
+        -I../lib/StdPeriph \
         -mlittle-endian 
         
 CFLAGS = -ffunction-sections -fdata-sections
