@@ -1,9 +1,0 @@
-Bitbox sdk
-
-cd test_kernel
-make 
-this will hopefully create a .bin (for bitbox) and a _emu (SDL emulator) of your game
-
-to create a new project, create a directory there  and a makefile.
-
-makapuf
