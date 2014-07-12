@@ -54,6 +54,7 @@ LIB_STD_SOURCE_DIR =lib/StdPeriph
 
 # replace with linker_raw if you want to overwrite bootloader
 LINKER_SCRIPT = lib/Linker_loader.ld
+#LINKER_SCRIPT = lib/Linker_raw.ld
 
 KERNEL_FILES = startup.c system.c \
 	new_vga.c bitbox_main.c audio.c \

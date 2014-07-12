@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h> // NULL
-#include <string.h> // memset
+#include <string.h> // memset, size_t (indirect)
 
 void *memcpy2 (void *dst, const void *src, size_t count); // included as memcpy in a later newlib version
 

@@ -12,9 +12,9 @@ import sys
 from PIL import Image # using the PIL library, maybe you'll need to install it. python should come with t.
 out=False # output data 
 
-LAMBDA = 0.3 # quality, lower is better
+LAMBDA = 0.5 # quality, lower is better
 USE_RLE = True # can use RLE for maps ?
-USE_4bits = True 
+USE_4bits = False 
 
 # grouper par couples
 
@@ -125,7 +125,7 @@ for name in sys.argv[1:] : # for each input file
 
     encoded_blocks = [] 
     encoded_size = 0
-    print '// blocks  , lambda :%d, blocksize: %d '%(LAMBDA, BLOCKSIZE)
+    print '// blocks  , lambda :%.1f, blocksize: %d '%(LAMBDA, BLOCKSIZE)
 
     for dim in 0,1 : 
         if src.size[dim]%BLOCKSIZE==0 : 

@@ -17,6 +17,9 @@
 
 enum {INIT =0, MOUNT=1, OPEN=2, READ=3}; // where we died
 #define MAX_FILES 20
+#define LIST_Y 6
+#define MSG_X 40
+#define MSG_Y 25
 
 void die(int where, int cause);
 
@@ -41,8 +44,6 @@ void blink(int times, int speed);
 FATFS fs32;
 // load from sd to RAM
 // flash LED, boot
-
-
 
 // Code stolen from "matis"
 // http://forum.chibios.org/phpbb/viewtopic.php?f=2&t=338
@@ -178,13 +179,13 @@ void list_roms()
             }
         }
         if (res != FR_OK) {
-	        print_at(5,20,"Error reading directory !");
-    	    vram_char[21][5] = '0'+res;
+	        print_at(MSG_X,MSG_Y,"Error reading directory !");
+    	    vram_char[MSG_Y+1][MSG_X] = '0'+res;
         } 
         f_closedir(&dir);
     } else {
-        print_at(5,20,"Error opening directory !");
-        vram_char[21][5] = '0'+res;
+        print_at(MSG_X,MSG_Y,"Error opening directory !");
+        vram_char[MSG_Y+1][MSG_X] = '0'+res;
     }
 
 }
@@ -268,38 +269,38 @@ void game_frame()
 	// handle input 
 	if (GAMEPAD_PRESSED(0,down) && vga_frame%4==0)
 		selected +=1;
-	if (selected>nb_files) selected=0;
+	if (selected>=nb_files) selected=0;
 
 	if (GAMEPAD_PRESSED(0,up) && vga_frame%4==0)
 		selected -=1;
-	if (selected<0) selected=nb_files;
+	if (selected<0) selected=nb_files-1;
 	
 	// XXX try to read game icon if selected is different
 
-	if (GAMEPAD_PRESSED(0,start) || GAMEPAD_PRESSED(0,A))
+	if (flash_done() && (GAMEPAD_PRESSED(0,start) || GAMEPAD_PRESSED(0,A)))
 	{
-		print_at(5,20,"Goldorak GO ! Flashing ");
-		print_at(29,20,filenames[selected]);
+		print_at(MSG_X,MSG_Y,"Goldorak GO ! Flashing ");
+		print_at(29,MSG_Y,filenames[selected]);
 
 		if (f_open(&file,filenames[selected],FA_READ)==FR_OK)
 		{
 			flash_start_write(&file);
 		} else {
-			print_at(5,20,"Error reading ");
-			print_at(20,20,filenames[selected]);
+			print_at(MSG_X,MSG_Y,"Error reading ");
+			print_at(20,MSG_Y,filenames[selected]);
 		}		
 	}
 
-	memset(&vram_char[21][5],' ',30);
-	strcpy(&vram_char[21][5],flash_message);
+	memset(&vram_char[MSG_Y+1][MSG_X],' ',30);
+	strcpy(&vram_char[MSG_Y+1][MSG_X],flash_message);
 
 	// update_display
 	for (int i=0;i<nb_files;i++)
 	{
-		print_at(10,i+10,filenames[i]);		
+		print_at(10,i+LIST_Y,filenames[i]);		
 		// cursor ?
-		vram_char[10+i][8]=(i==selected)?0x10:' ';
-		vram_char[10+i][25]=(i==selected)?0x11:' ';
+		vram_char[LIST_Y+i][8]=(i==selected)?0x10:' ';
+		vram_char[LIST_Y+i][25]=(i==selected)?0x11:' ';
 	}
 
 	if (vga_frame%2 == 0 ) {

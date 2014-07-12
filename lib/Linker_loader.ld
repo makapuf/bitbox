@@ -56,4 +56,10 @@ SECTIONS
     {
       *(.ccm)
     } > ccmram
+
+    /* strange bugs even if C only is used ... */
+    /DISCARD/ :
+    {
+        *(.ARM.exidx)
+    }
 }

@@ -1,11 +1,11 @@
-/* flashit : aynchronous writing to flash fro ma SD card 
+/* flashit : aynchronous writing to flash from a SD card 
 (c) makapuf2@gmail.com */
 
 
 #include <stdint.h>
 #include <string.h>
 #include "stm32f4xx.h" // CMSIS
-#include "bitbox.h" // vga_line, 
+#include "bitbox.h" // vga_line, frame
 
 #include "flashit.h"
 
@@ -13,7 +13,7 @@
 #define FLASH_PSIZE_WORD 0x200
 #define CR_PSIZE_MASK ((uint32_t)0xFFFFFCFF)
 
-// 16k must be divideable by it, readable in a frame on the SD
+// 8k buffer here. 16k must be divideable by it, better be readable in a frame on the SD
 #define BUFFERSIZE (8*1024)
 
 #define FLASH_KEY1 ((uint32_t)0x45670123)
@@ -27,7 +27,7 @@
 
 #define END_LINE 360 // line where to end writing
 
-PROGSIZE buffer[BUFFERSIZE/sizeof(PROGSIZE)]; // u32 are 8 bytes
+PROGSIZE buffer[BUFFERSIZE/sizeof(PROGSIZE)];
 
 struct Sector {
 	uint16_t sector_id;
@@ -36,7 +36,7 @@ struct Sector {
 
 struct Sector sectors[]= {
 	// { 0x00, 0x08000000}, // 16 Kbytes, sector 0 (reserved for bootloader), never written
-	{ 0x08, (PROGSIZE *)0x08004000}, // 16 Kbytes, sector 1 (reserved for data ?)
+	{ 0x08, (PROGSIZE *)0x08004000}, // 16 Kbytes, sector 1 
 	{ 0x10, (PROGSIZE *)0x08008000}, // 16 Kbytes, sector 2
 	{ 0x18, (PROGSIZE *)0x0800C000}, // 16 Kbytes, sector 3
 	{ 0x20, (PROGSIZE *)0x08010000}, // 64 Kbytes, sector 4
@@ -65,7 +65,7 @@ char flash_message[32];
 char *HEX_Digits="0123456789ABCDEF";
 
 // private
-static int flash_state=state_idle;
+static volatile enum State flash_state=state_idle;
 static FIL *file_to_write;
 static int current_sector;
 static PROGSIZE *src, *dst;
@@ -98,7 +98,7 @@ static void display_byte(int r)
 int flash_start_write(FIL *file) 
 // async write the content of file to the start of flash.
 {
-	// check pas deja en train 
+	// check not busy
 	if (file_to_write) return 0;
 
 	file_to_write = file;
@@ -132,7 +132,15 @@ void flash_frame()
 		case state_must_read : 
 			// needs reading (reading of a buffer must be done within a frame)
 			src = &buffer[0];
-			f_read(file_to_write,buffer,BUFFERSIZE,&bytes_to_write); // bytes read  = to write
+
+			r = f_read(file_to_write,buffer,BUFFERSIZE,&bytes_to_write); // bytes read  = to write
+			if ( r != FR_OK ) {
+				strcpy(flash_message,"ERROR Reading :     ");
+				display_byte(r);
+				flash_state == state_error;
+				return;
+			}
+
 			eof = bytes_to_write!=BUFFERSIZE;
 
 			// if must erase before writing, start to do it
@@ -151,7 +159,6 @@ void flash_frame()
 	   			// update display
 				strcpy(flash_message,"Erasing sector : ");
 				display_byte(current_sector);
-
 			}
 			
 			// after : erasing state (either already finished = not needed) or busy erasing
@@ -204,6 +211,7 @@ void flash_frame()
 			{
 				if (eof) {
 					flash_state = state_idle;
+					file_to_write = 0;
 					strcpy(flash_message,"Done !");	
 
 					FLASH->CR |= FLASH_CR_LOCK; // relock flash

@@ -1,5 +1,5 @@
-#include "../lib/system.h"
-#include "../lib/bitbox.h"
+#include "system.h"
+#include "bitbox.h"
 
 #ifndef NO_USB
 #include "usb_bsp.h"
@@ -14,6 +14,7 @@ __ALIGN_BEGIN USBH_HOST                     USB_FS_Host __ALIGN_END ;
 
 // vga init, not public, it's done automatically
 void vga640_setup();
+void audio_frame(); // will call audio callback
 
 
 void board_init()

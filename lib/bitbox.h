@@ -20,7 +20,7 @@ void game_snd_buffer(uint16_t *buffer, int len); // **buffer plutot ?
 extern int audio_on; 
 
 void audio_init();
-void audio_frame(); // will call audio callback
+
 
 // --- VGA interface ----------------------------------------------------------------------
 #define RGB(r,g,b)  (((r>>3)&0x1f)<<10 | ((g>>3)&0x1f)<<5 | ((b>>3)&0x1f))

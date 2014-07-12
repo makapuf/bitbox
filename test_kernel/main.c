@@ -74,7 +74,7 @@ void game_snd_buffer(uint16_t *buffer, int len)
 {
 	for (int i=0;i<len;i++)
 	{
-		if ((i/32)&1) // square each 32 samples 
+		if (i&32) // square each 32 samples 
 		{
 			*buffer++ = snd_vol*((vga_frame/8)&1 ?  0x4000 : 0x0040)/32;
 		} else {
