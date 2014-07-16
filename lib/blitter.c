@@ -154,7 +154,7 @@ void blitter_line()
 
     
     // add new active objects
-    while (blt.next_to_activate<blt.nb_objects && vga_line>=blt.objects[blt.next_to_activate]->y)
+    while (blt.next_to_activate<blt.nb_objects && (int)vga_line>=blt.objects[blt.next_to_activate]->y)
     {
         activelist_add(blt.objects[blt.next_to_activate]);
         //printf("activate %d\n",blt.objects[blt.next_to_activate]->x);
@@ -467,10 +467,17 @@ static void sprite_p4_line (object *o)
             src++;
         }
 
-        // finish with 1, 2 or 3 u16 pixels ..
-        src++;
- 
+        // finish with 1, 2, 3 or 4 u16 pixels ..
+        while (i>2) {
+            *dst++ = pal[*src   &0xf] | pal[*src>> 4&0xf]<<16;
+            i -=2;
+        }
 
+        if (i) 
+            *dst = pal[*src>>8&0xf] | (*dst&0xffff0000) ;
+        
+
+        src++;
 
         // advance x 
         x += data_len;
@@ -485,7 +492,7 @@ static void sprite_p4_line (object *o)
 }
 
 
-
+// --- BTC4 (single and 2x magnification)
 // ---------------------------------------------------------------------------
 
 void btc4_line (object *o);
@@ -618,3 +625,127 @@ void btc4_2x_line (object *o)
     }
 } 
 
+// --- 16x16 Tilemap
+// --------------------------------------------------------------------------------------
+
+// tileset is a list of 16x16 data  
+// width and height are displayed data, can be bigger than tileset, in which case loop
+// tilemap can be 32x32, 64x32. references can be u16, i16 (semi transparent tiles), u8 or i8
+
+/*
+    data : 
+        first u32 : 
+            tilemap_size:3 = 0: 64x64, ...
+            tilemap_index_type:2 = 0:u16, 1:u8, 2:i16, 3:i8
+            rest : RFU
+
+        rest : tile_index either u8 or u16 ... 
+
+    RAM data : 
+    
+        *data : start of tilemap (id data+1)
+        a : tileset
+        b : current tile in tilemap
+
+ */
+
+
+
+#define TILESIZE16 16
+#define HEIGHT_64 64
+#define WIDTH_64 64
+#define vga_screen_width 640
+
+#define min(a,b) (a<b?a:b)
+
+void tilemap_6464u8_line(object *o)
+{
+    // in this version, we can assume that we don't have a full 
+    // TODO : take care of smaller x, don't recalc all each time. case o->x <0 
+
+    // use current frame, line, buffer
+
+    // line inside tile (pixel), looped.
+    int sprline = (vga_line-o->y) % (HEIGHT_64*16); 
+
+    // index of first tile to run in tile map, in pixels
+    int start_tile = o->x%(WIDTH_64*16)/16; 
+
+    // which tile to start on 
+    uint8_t *idxptr = (uint8_t *)o->data+(sprline/TILESIZE16) * WIDTH_64 + start_tile; // all is in nb of tiles
+
+    // offset from start of tile (in lines)
+    int offset = sprline%TILESIZE16; 
+
+    // printf("idxptr : %x base : %x, 1st ref = %d\n",idxptr, ot->frames, *idxptr);
+
+    uint32_t * restrict dst = (uint32_t*) &draw_buffer[o->x+start_tile*TILESIZE16]; 
+    int right_stop = min(o->x+o->w, vga_screen_width); // end at which pixel ? 
+
+    const uint32_t *dst_max = (uint32_t*) &draw_buffer[right_stop]; // pixel addr of the last pixel
+    // dst = (uint32_t*) ((uint32_t) dst & ~1); // FAULT if x is odd ?
+    
+    uint32_t *tiledata = (uint32_t *)o->a;
+
+    while (dst<dst_max) 
+    {
+        // blit one tile, 2pix=32bits at a time, 8times = 16pixels
+        if (*idxptr) {
+            uint32_t * restrict src;
+            src = &tiledata[((*idxptr)*TILESIZE16 + offset)*TILESIZE16*2/4];  
+
+            // force unroll
+            *dst++=*src++;  
+            *dst++=*src++;  
+            *dst++=*src++;  
+            *dst++=*src++;  
+
+            *dst++=*src++;  
+            *dst++=*src++;  
+            *dst++=*src++;  
+            *dst++=*src++;  
+
+            /* __asm__ (
+                "ldmia %[src]!,{r0-r7} \r\n"
+                "stmia %[dst]!,{r0-r7}"
+                :[src] "+r" (src), [dst] "+r" (dst)
+                :: "r0","r1","r2","r3","r4","r5","r6","r7"
+                );
+            */
+        } else { // skip the tile
+            dst += TILESIZE16/2; // words per tile
+        }
+        idxptr++;
+    }
+}
+
+
+object * tilemap_new(const uint16_t *tileset, int w, int h, uint32_t *tmap)
+{
+    object *o = blitter_new();    
+    if (!o) return 0; // error
+
+
+    // generic attributes
+    o->x=0;
+    o->y=500; // hidden by default
+    o->z=0;
+
+    o->w=w;  o->h=h;
+
+    o->data = (uint32_t*)tmap+1; 
+    o->a = (uintptr_t)tileset-512; // to start at index 1 and not 0, offset now in bytes.
+    
+    switch (*tmap)
+    {
+        case 0 : // 64x64, u8 references
+            o->line=tilemap_6464u8_line;
+            break;
+
+        default : 
+            message("Unknown format code !");
+            return 0; // error : not implemented
+            break;
+    }
+    return o;
+}

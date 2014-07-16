@@ -170,6 +170,6 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.S
 -include $(OBJS:.o=.d)
 
 
-$(NAME)_emu: $(GAME_C_FILES) lib/emulator.c $(ENGINE_FILES)
+$(NAME)_emu: $(GAME_C_FILES) lib/emulator.c $(ENGINE_FILES) $(GAME_BINARY_FILES)
 	gcc -Og -DEMULATOR $(GAME_C_FILES) $(ENGINE_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) -Ilib/ lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
 

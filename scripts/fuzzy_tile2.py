@@ -1,3 +1,4 @@
+#!/usr/bin/python
 "Encode as 16x16 palette, lossy, using RLE or not for map, 16 colors per tile"
 
 'TODO : faster encode, encode really as index:11+rle:5 (eol?) 8bpp'
@@ -167,7 +168,7 @@ for name in sys.argv[1:] : # for each input file
 
             output_tileset() # optional ?
 
-    print 'encoded size:',encoded_size, 'reduc : %.1f'%(src.size[0]*src.size[1]/2./encoded_size)
+    print 'encoded size:',encoded_size, 'reduc : %.1f'%(src.size[0]*src.size[1]*8./encoded_size)
     print stats
     
     totsize += encoded_size

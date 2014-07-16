@@ -39,5 +39,6 @@ object * rect_new(int16_t x, int16_t y, int16_t w, int16_t h,int16_t z, uint16_t
 object * sprite_new(uint32_t *sprite_data)  __attribute__ ((warn_unused_result));
 object * btc4_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __attribute__ ((warn_unused_result)); 
 object * btc4_2x_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __attribute__ ((warn_unused_result)); 
+object * tilemap_new (const uint16_t *tileset, int w, int h, uint32_t *data);
 
 // tilemap : tilemap (64x64 u16= 1b semitrans + 3b tilemap + 12b index) + u16 *tilesets[8], + roll 64x64
