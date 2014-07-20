@@ -326,6 +326,7 @@ static void HSYNCHandler()
 
 		if(vga_line==491)
 		{
+			// synchronous. buffers shall be ready now
 		    #ifdef AUDIO
     		audio_frame();
     		#endif 

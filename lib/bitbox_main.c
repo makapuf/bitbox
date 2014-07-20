@@ -14,8 +14,7 @@ __ALIGN_BEGIN USBH_HOST                     USB_FS_Host __ALIGN_END ;
 
 // vga init, not public, it's done automatically
 void vga640_setup();
-void audio_frame(); // will call audio callback
-
+extern uint16_t *audio_write; // draw sound buffer. accessible by mùain thread.
 
 void board_init()
 {
@@ -52,14 +51,15 @@ int button_state()
 	return GPIOE->IDR & GPIO_IDR_IDR_15;
 }
 
-
 int sdio_sense_state()
 {
 	return GPIOC->IDR & GPIO_IDR_IDR_7;
 }
 
 
-void message(char *msg) {};
+void message(const char * msg, ...) {
+	// do nothing on bitbox (UART ? write to flash ?)
+}
 
 void main()
 {
@@ -108,6 +108,9 @@ void main()
 
 	while (1)
 	{
+		// must be finished by the end of frame 
+		game_snd_buffer(audio_write,BITBOX_SNDBUF_LEN); 
+
 		game_frame();
 		
 		oframe=vga_frame;
@@ -123,7 +126,33 @@ void main()
 		} while (oframe==vga_frame);
 		// wait next frame.
 
-		set_led(button_state());
+		//set_led(button_state());
 
 	} 
+}
+
+// die : standard blinking to sgnal on the user led where we died and why
+
+#define WAIT_TIME 168000000/128 // quick ticks, random number, good enough
+void wait(int k) {
+	for (volatile int i=0;i<k*WAIT_TIME;i++) {};
+}
+
+void blink(int times, int speed) {
+	for (int i=0;i<times;i++) 
+		{
+			set_led(1);wait(speed);
+			set_led(0);wait(speed);
+		}
+}
+
+void die(int where, int cause)
+{
+	for (;;)
+	{
+		blink(where,3);
+		wait(4);
+		blink(cause,2);
+		wait(4);
+	}
 }

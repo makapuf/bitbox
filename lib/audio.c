@@ -3,13 +3,16 @@
 #include "stm32f4xx.h"
 #include "audio.h"
 
+// TODO : use DMA (double buffering NOT CIRCULAR)
+// see https://github.com/libopencm3/libopencm3-examples/blob/master/examples/stm32/f4/stm32f4-discovery/dac-dma/dac-dma.c
 
-// XXX use double buffering ? DMA ?
-// explicit the rate !
-uint16_t audio_buffer[BITBOX_SNDBUF_LEN]; // one sample per line
+static uint16_t audio_buffer1[BITBOX_SNDBUF_LEN]; // u16 stereo samples
+static uint16_t audio_buffer2[BITBOX_SNDBUF_LEN]; 
+
 uint16_t *audio_ptr; // current sample to play 
-int audio_on;
+uint16_t *audio_read, *audio_write; // current sample to play 
 
+int audio_on;
 
 void audio_init()
 {
@@ -36,17 +39,23 @@ void audio_init()
 	// clear TEN1/2 for immediate value change
 	DAC->CR |= DAC_CR_EN1 | DAC_CR_EN2 ; 
 
+	audio_read = &audio_buffer1[0];
+	audio_write = &audio_buffer2[0];
 
-	audio_ptr = &audio_buffer[0]; 
+	audio_ptr = audio_read; 
 
 }
 
 void audio_frame()
 {
 	if (audio_on) {
-		// XXX switch buffers
-		audio_ptr = audio_buffer;
-		game_snd_buffer(audio_buffer,BITBOX_SNDBUF_LEN); 
+		// Switch buffers
+		uint16_t * d = audio_write;
+		audio_write = audio_read;
+		audio_read = d;
+
+		// assumes frame takes place exactly when needed . ?
+		audio_ptr = audio_read;
 	}
 }
 

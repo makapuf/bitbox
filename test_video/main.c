@@ -55,7 +55,7 @@ video_setframe() : file.seek(calculer), attendre frame paire
 
 void game_init() 
 {
-    blitter_init();
+    blitter_init(); // to be removed as engine shall be handled  automatically 
     unsigned int bytes_read;
 
 	result = f_mount(&fatfs,"",1); //mount now
@@ -84,9 +84,7 @@ void game_frame()
 	unsigned int bytes_to_read=512;
 	static uint32_t *dst;
 
-	
-	// in a frame display thread ?
-    blitter_frame();
+	blitter_frame(); // shall be automated with USE ENGINE
 
 	// every 2 frame  (30fps fixed)
 	if (vga_frame%2==0) {
@@ -140,7 +138,6 @@ void game_frame()
 } 
 
 void game_line() 
-// simple default implementation
 {
     blitter_line();
 } 

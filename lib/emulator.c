@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <unistd.h>
 
 // emulated interfaces
 #include "bitbox.h"
@@ -12,10 +13,10 @@
    TODO
    
  handle SLOW + PAUSE + FULLSCREEN (alt-enter) as keyboard handles 
- handle properly gamepads, second gamepad, mouse, 
- keyboard (or treat keyboard gamepads as config ?)
- handling events
-
+ handle properly gamepads, second gamepad, 
+ handle mouse, 
+ keyboard (treat keyboard gamepads as config for quick saves)
+ handling other events (plugged, ...)
 */ 
 
 
@@ -139,10 +140,10 @@ void audio_init(void)
 
     //if (SDL_OpenAudio(&desired, &obtained) != 0) {
    if (SDL_OpenAudio(&desired, NULL) != 0) {
-     printf("Erreur lors de l'ouverture du périphérique audio: %s\n", SDL_GetError());
+     printf("Error in opening audi peripheral: %s\n", SDL_GetError());
      return ; // return anyways even with no sound
    }
-   printf("Paramètres audio desired (after): format %d,%d canaux, fs=%d, %d samples.\n",
+   printf("Audio parameters desired (after): format %d,%d canaux, fs=%d, %d samples.\n",
      desired.format , desired.channels, desired.freq, desired.samples);
 
 }
@@ -403,6 +404,18 @@ FRESULT f_lseek (FIL* fp, DWORD ofs)
     return res ? FR_DISK_ERR : FR_OK; // always from start
 }
 
+/* Change current directory */
+FRESULT f_chdir (const char* path)
+{
+    int res = chdir(path); 
+    return res ? FR_DISK_ERR : FR_OK; 
+}
+
+// #include <dirent.h>
+// struct dirent *readdir(DIR *dir);
+// int readdir(DIR *dir, struct dirent *entry, struct dirent **result);
+
+ 
 
 // ------------- datacopy
 void *memcpy2(void *dst, void*src, size_t size) 
@@ -466,17 +479,16 @@ int main ( int argc, char** argv )
     return 0;
 }
 
-void message (char *what)
+void message (const char *fmt, ...)
 {
-    printf("%s",what);
+    va_list argptr;
+    va_start(argptr, fmt);
+    vprintf(fmt, argptr);
+    va_end(argptr);
 }
 
 void die(int where, int cause)
 {
-    const char* causes[]= {
-        "Setting resolution"
-    };
-
-    printf("ERROR : %s : %d - dying.\n",causes[where],cause);
+    printf("ERROR : dying doing %d at  %d.\n",cause, where);
     exit(0);
 }

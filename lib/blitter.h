@@ -39,6 +39,24 @@ object * rect_new(int16_t x, int16_t y, int16_t w, int16_t h,int16_t z, uint16_t
 object * sprite_new(uint32_t *sprite_data)  __attribute__ ((warn_unused_result));
 object * btc4_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __attribute__ ((warn_unused_result)); 
 object * btc4_2x_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __attribute__ ((warn_unused_result)); 
-object * tilemap_new (const uint16_t *tileset, int w, int h, uint32_t *data);
+
+object * tilemap_new (const uint16_t *tileset, int w, int h, uint32_t *data) __attribute__ ((warn_unused_result)); ;
+/* 
+	- tileset is a list of 16x16 u16 pixels  
+
+	- width and height are displayed sizes, can be bigger/smaller than tilemap, in which case it will loop
+	- tilemap is stored in data
+	tilemap size can be 32x32, 64x32, 64x32, ... 
+	tilemap references can be u16, i16 (semi transparent tiles), u8 or i8
+
+	data : 
+	    first u32 : header
+	    	r....rssstt
+	        r : reserved
+	        sss : tilemap_size: 000: 64x64, ...
+	        tt : tilemap_index_type = 00:u16, 01:u8, 10:i16, 11:i8
+	    next words : tile_index either u8 or u16 ... 
+
+*/
 
 // tilemap : tilemap (64x64 u16= 1b semitrans + 3b tilemap + 12b index) + u16 *tilesets[8], + roll 64x64

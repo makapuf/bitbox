@@ -628,25 +628,11 @@ void btc4_2x_line (object *o)
 // --- 16x16 Tilemap
 // --------------------------------------------------------------------------------------
 
-// tileset is a list of 16x16 data  
-// width and height are displayed data, can be bigger than tileset, in which case loop
-// tilemap can be 32x32, 64x32. references can be u16, i16 (semi transparent tiles), u8 or i8
-
 /*
-    data : 
-        first u32 : 
-            tilemap_size:3 = 0: 64x64, ...
-            tilemap_index_type:2 = 0:u16, 1:u8, 2:i16, 3:i8
-            rest : RFU
-
-        rest : tile_index either u8 or u16 ... 
-
     RAM data : 
     
         *data : start of tilemap (id data+1)
         a : tileset
-        b : current tile in tilemap
-
  */
 
 

@@ -13,9 +13,9 @@ void game_snd_buffer(uint16_t *buffer, int len); // **buffer plutot ?
 
 // --- Audio ----------------------------------------------------------------------------
 
-
 #define BITBOX_SAMPLERATE 31469 
-#define BITBOX_SNDBUF_LEN (BITBOX_SAMPLERATE/60) // 524
+#define BITBOX_SNDBUF_LEN (BITBOX_SAMPLERATE/60+1) // 525
+#define BITBOX_SAMPLE_BITDEPTH 8 // 8bit output 
 
 extern int audio_on; 
 
@@ -172,6 +172,9 @@ struct event event_get();
 char kbd_map(struct event kbd_e);
 
 
-// misc
+// --- misc
 void die(int where, int cause); // blink leds 
-void message(char *msg); // do nothing on device, printf it on emulator
+
+// do nothing on device, printf it on emulator
+// please only %s, %d, %x and %p, no format qualifiers
+void message (const char *fmt, ...); 

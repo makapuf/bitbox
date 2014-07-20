@@ -80,34 +80,6 @@ void jump(uint32_t address)
 }
 
 
-// ---------------- die : should be integrated to kerne + emulator (as window title by example)
-
-#define WAIT_TIME 168000000/128 // quick ticks 
-void wait(int k) 
-{
-	for (volatile int i=0;i<k*WAIT_TIME;i++) {};
-}
-
-void blink(int times, int speed)
-{
-	for (int i=0;i<times;i++) 
-		{
-			led_on();wait(speed);
-			led_off();wait(speed);
-		}
-}
-
-void die(int where, int cause)
-{
-	for (;;)
-	{
-		blink(where,2);
-		wait(4);
-		blink(cause,1);
-		wait(4);
-	}
-}
-
 extern const uint8_t font_data [256][16];
 char vram_char  [30][80];
 

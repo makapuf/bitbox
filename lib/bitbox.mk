@@ -54,6 +54,8 @@ LIB_STD_SOURCE_DIR =lib/StdPeriph
 
 # replace with linker_raw if you want to overwrite bootloader
 LINKER_SCRIPT = lib/Linker_loader.ld
+FLASH_START = 0x08004000
+#FLASH_START = 0x08000000
 #LINKER_SCRIPT = lib/Linker_raw.ld
 
 KERNEL_FILES = startup.c system.c \
@@ -116,7 +118,7 @@ debug: $(NAME).elf
 
 stlink: $(NAME).bin
 	#arm-eabi-gdb $(NAME).elf --eval-command="target ext :4242"
-	st-flash write $(NAME).bin 0x08000000
+	st-flash write $(NAME).bin $(FLASH_START)
 
 clean:
 	rm -rf $(BUILD_DIR) $(NAME).elf $(NAME).bin $(NAME)_emu *.btc 
