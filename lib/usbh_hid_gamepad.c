@@ -10,14 +10,14 @@ typedef struct {
 
     /* hat type : 
      *   0 : None, use analog
-     *   1 : 7 value hat switch 0-7 0-270 degrees
-     *   ...
+     *   1 : 7 value hat switch 0-7 0-270 degrees (or 0-315)
+     *   2 : LDRU individual bits
      */
     unsigned int dpad_type:3;
 
     /* analog type : 
      *   0 : None, use dpad, XY values not used
-     *   1 : 2x8 bit axis, 0 default
+     *   1 : 2x8 bit axis, 0 default 
      *   2 : 2x8 bit axis, 127 default 
      */
     unsigned int analog_type:2;
@@ -25,7 +25,8 @@ typedef struct {
     unsigned int reserved_config:8;  
          
     uint16_t dpad_bit; // starting bit, len is taken from type
-    uint16_t analog_bit;
+    uint16_t analog_X_bit; // starting bit
+    uint16_t analog_Y_bit;
 
     // button descriptor : button byte/bit offset
     // order: B Y select start A X L R
@@ -41,23 +42,45 @@ static const USB_Gamepad_descriptor device_table[] = {
     {
         .vid=0x044f,.pid=0xb315,.pid2=0xb301,.pid3=0xb300,
         .dpad_type=1,.analog_type=1,.max_button_index=7,
-        .dpad_bit=20,.analog_bit=24,
+        .dpad_bit=20,.analog_X_bit=24,.analog_Y_bit=32,
         .button_bit={0,1,2,3,4,5,6,7}       
     },
+
+    // Thrustmaster T-Wireless (FIXME : correct start/select )
+    {
+        .vid=0x044f,.pid=0xd007,
+        .dpad_type=1,.analog_type=1,.max_button_index=7,
+        .dpad_bit=20,.analog_X_bit=24,.analog_Y_bit=32,
+        .button_bit={0,1,2,3,4,5,6,7}       
+    },
+
     // Trust GXT 24 
     {
         .vid=0x0079,.pid=0x0006,.pid2=0x0006,.pid3=0x0006,
         .dpad_type=1,.analog_type=0,.max_button_index=7,
-        .dpad_bit=40,.analog_bit=0,
+        .dpad_bit=40,
         .button_bit={44,45,46,47,48,49,50,51}
     },
+
     // SNES Gamepad USB, Ebay
     {
         .vid=0x0079,.pid=0x0011,.pid2=0x0011,.pid3=0x0011,
         .dpad_type=0,.analog_type=2,.max_button_index=7,
-        .dpad_bit=0,.analog_bit=0,
+        .dpad_bit=0,
         .button_bit={44,45,46,47,48,49,50,51}
-    },      
+    },     
+
+    // PS3 dualshock 3 (info from http://eleccelerator.com/wiki/index.php?title=DualShock_3)
+    {
+        .vid=0x054C, .pid=0x0268, 
+        .dpad_type=2, .analog_type=3, .max_button_index=7,
+        .dpad_bit=2*8+3,
+        .analog_X_bit=40, .analog_Y_bit=48,
+        .button_bit={16+14,16+15,16+0,16+3,16+13,16+12,16+11,16+10} //  B=X Y=square select start A=O X=tri L R
+    },
+
+    // XBOX 360 wireless : see info from http://free60.org/wiki/index.php?title=GamePad
+
     {.vid=0} // terminator
 };
 
@@ -164,6 +187,18 @@ static void GAMEPAD_Decode(uint8_t coreID, uint8_t *data)
             gamepad_buttons[coreID] |= hat_translate[val];             
         break;
 
+        case 2 : // LDRU individual bits (ps3)
+            val = extract(data, gp->dpad_bit, 4);
+            if (val & 1)
+                gamepad_buttons[coreID] |= gamepad_left;
+            if (val & 2)
+                gamepad_buttons[coreID] |= gamepad_down;
+            if (val & 4)
+                gamepad_buttons[coreID] |= gamepad_right;
+            if (val & 8)
+                gamepad_buttons[coreID] |= gamepad_up;
+        break;
+
         case 0 : 
         default : 
             // do nothing
@@ -174,12 +209,15 @@ static void GAMEPAD_Decode(uint8_t coreID, uint8_t *data)
     switch (gp->analog_type) 
     {
         case 1 :
-            gamepad_x[coreID] = (int8_t)extract(data, gp->analog_bit, 8);
-            gamepad_y[coreID] = (int8_t)extract(data, gp->analog_bit+8, 8);
+            gamepad_x[coreID] = (int8_t)extract(data, gp->analog_X_bit, 8);
+            gamepad_y[coreID] = (int8_t)extract(data, gp->analog_Y_bit, 8);
             break;
         case 2 :
-            gamepad_x[coreID] = (int16_t)extract(data, gp->analog_bit, 8) - 127;
-            gamepad_y[coreID] = (int16_t)extract(data, gp->analog_bit+8, 8) - 127;
+            gamepad_x[coreID] = (int16_t)extract(data, gp->analog_X_bit, 8) - 127;
+            gamepad_y[coreID] = (int16_t)extract(data, gp->analog_Y_bit, 8) - 127;
+            break;
+        case 3 : 
+
             break;
         case 0 :
         default:
