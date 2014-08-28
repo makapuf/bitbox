@@ -98,7 +98,7 @@ S_FILES = memcpy-armv7m.S
 OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.S=$(BUILD_DIR)/%.o) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%_dat.o) 
 
 
-ALL_CFLAGS = $(C_OPTS) $(DEFINES) $(CFLAGS)
+ALL_CFLAGS = $(C_OPTS) $(DEFINES) $(CFLAGS) $(GAME_C_OPTS)
 ALL_LDFLAGS = $(LD_FLAGS) -mthumb -mcpu=cortex-m4 -nostartfiles -Wl,-T,$(LINKER_SCRIPT),--gc-sections
 #-specs Terrible.specs
 
@@ -120,7 +120,8 @@ stlink: $(NAME).bin
 	#arm-eabi-gdb $(NAME).elf --eval-command="target ext :4242"
 	st-flash write $(NAME).bin $(FLASH_START)
 
-clean:
+# double colon to allow extra cleaning
+clean::
 	rm -rf $(BUILD_DIR) $(NAME).elf $(NAME).bin $(NAME)_emu *.btc 
 
 $(NAME).bin: $(NAME).elf
@@ -173,5 +174,5 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.S
 
 
 $(NAME)_emu: $(GAME_C_FILES) lib/emulator.c $(ENGINE_FILES) $(GAME_BINARY_FILES)
-	gcc -Og -DEMULATOR $(GAME_C_FILES) $(ENGINE_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) -Ilib/ lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
+	gcc -Og -DEMULATOR $(GAME_C_FILES) $(ENGINE_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(GAME_C_OPTS) -Ilib/ lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
 

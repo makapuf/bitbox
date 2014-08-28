@@ -4,10 +4,17 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
+ #include <errno.h>
 
 // emulated interfaces
 #include "bitbox.h"
+
+#define DIR NIX_DIR // prevents name clashes with datfs DIR
+#include <dirent.h>
+#undef DIR
+
 #include "fatfs/ff.h"
+
 
 /*
    TODO
@@ -17,6 +24,9 @@
  handle mouse, 
  keyboard (treat keyboard gamepads as config for quick saves)
  handling other events (plugged, ...)
+
+ really handle set_led (as window title) 
+
 */ 
 
 
@@ -87,7 +97,7 @@ RRRRRGGGGG0BBBBB
 inline uint16_t pixelconv(uint16_t pixel)
 {
     return (pixel & (uint16_t)(~0x1f))<<1 | (pixel & 0x1f);
-}
+} 
 
 
 static void refresh_screen(SDL_Surface *scr)
@@ -103,9 +113,8 @@ static void refresh_screen(SDL_Surface *scr)
         // copy to screen at this position (cheating)
         uint16_t *src = (uint16_t*) &draw_buffer[0];//[MARGIN];
 
-        for (int i=0;i<screen_width;i++) {
+        for (int i=0;i<screen_width;i++) 
             *dst++= pixelconv(*src++);
-        }
 
         // swap lines buffers to simulate double line buffering
         draw_buffer = (draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
@@ -160,6 +169,7 @@ void set_mode(int width, int height)
         die(-1,0);
     }
 }
+
 
 
 static void joy_init()
@@ -411,11 +421,34 @@ FRESULT f_chdir (const char* path)
     return res ? FR_DISK_ERR : FR_OK; 
 }
 
-// #include <dirent.h>
-// struct dirent *readdir(DIR *dir);
-// int readdir(DIR *dir, struct dirent *entry, struct dirent **result);
 
- 
+FRESULT f_opendir ( DIR* dp, const TCHAR* path )
+{
+    NIX_DIR *res = opendir(path);
+    if (res) {
+        dp->fs = (FATFS*) res; // hides it in the fs field as a fatfs variable
+        dp->dir = (unsigned char *)path;
+        return FR_OK;
+    } else {
+        printf("Error opening directory : %s\n",strerror(errno));
+        return FR_DISK_ERR;
+    }
+}
+
+
+FRESULT f_readdir ( DIR* dp, FILINFO* fno ) 
+{
+    struct dirent *de = readdir((NIX_DIR *)dp->fs); // updates ?
+    if (de) {
+        for (int i=0;i<13;i++)
+            fno->fname[i]=de->d_name[i];
+        return FR_OK;
+    } else {
+        printf("Error reading directory %s : %s\n",dp->dir, strerror(errno));
+        return FR_DISK_ERR;
+    }
+}
+
 
 // ------------- datacopy
 void *memcpy2(void *dst, void*src, size_t size) 
@@ -426,6 +459,12 @@ void *memcpy2(void *dst, void*src, size_t size)
 // user button
 int button_state() {
     return user_button;
+}
+
+// user LED
+void set_led(int x) {
+    printf("Setting LED to %d\n",x);
+    // do nothing : set keyboard LED ? window title ?
 }
 
 int main ( int argc, char** argv )
