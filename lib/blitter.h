@@ -26,7 +26,7 @@ void fast_fill(uint16_t x1, uint16_t x2, uint16_t c); // utility: fast fill with
 
 void blitter_init();
 
-// adds a new object in the , returns a handler. never insert an object twice 
+// adds a new object in the , returns a handler. never insert an object twice. generally use new_ functions instead.
 int blitter_insert(object *o);
 void blitter_remove(object *o);
 // don't modify an object or add objects during a frame rendering. 
@@ -36,27 +36,32 @@ void blitter_line();
 
 
 object * rect_new(int16_t x, int16_t y, int16_t w, int16_t h,int16_t z, uint16_t color) __attribute__ ((warn_unused_result));
-object * sprite_new(uint32_t *sprite_data)  __attribute__ ((warn_unused_result));
+object * sprite_new(uint32_t *sprite_data)  __attribute__ ((warn_unused_result)); // XXX passer en void*
 object * btc4_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __attribute__ ((warn_unused_result)); 
 object * btc4_2x_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __attribute__ ((warn_unused_result)); 
 
-object * tilemap_new (const uint16_t *tileset, int w, int h, uint32_t *data) __attribute__ ((warn_unused_result)); ;
+#define TMAP_U8 1
+#define TILEMAP_6464u8 64<<24|64<<16|TMAP_U8
+#define TILEMAP_3232u8 32<<24|32<<16|TMAP_U8
+
+object * tilemap_new (const uint16_t *tileset, int w, int h, uint32_t header, void *tilemap) __attribute__ ((warn_unused_result));
 /* 
-	- tileset is a list of 16x16 u16 pixels  
+	- tileset is a list of 16x16 u16 pixels. It will be 1-indexed by tilemap.
+    - width and height are displayed sizes, can be bigger/smaller than tilemap, in which case it will loop
+	tilemap size can be 32x32, 64x32, 64x32, (or any other, but need to be standard)
+	tilemap references can be u16, i16 (semi transparent tiles), u8 or i8 (not all implemented now)
 
-	- width and height are displayed sizes, can be bigger/smaller than tilemap, in which case it will loop
-	- tilemap is stored in data
-	tilemap size can be 32x32, 64x32, 64x32, ... 
-	tilemap references can be u16, i16 (semi transparent tiles), u8 or i8
+	header
+	        u8 : width of tilemap in tiles
+	        u8 : height in tiles
+	        u8 : reserved
+	        u8 : tilemap_index_type = 0:u16, 1:u8, 2:i16, 3:i8
+	void * data : tile_index either u8 or u16 ... 
 
-	data : 
-	    first u32 : header
-	    	r....rssstt
-	        r : reserved
-	        sss : tilemap_size: 000: 64x64, ...
-	        tt : tilemap_index_type = 00:u16, 01:u8, 10:i16, 11:i8
-	    next words : tile_index either u8 or u16 ... 
-
+	tilemap index 0 are always transparent (ie no tile, so first tile in tileset has index 1)
 */
 
-// tilemap : tilemap (64x64 u16= 1b semitrans + 3b tilemap + 12b index) + u16 *tilesets[8], + roll 64x64
+void tmap_blit(object *tm, int x, int y, uint32_t src_header, const void *data);
+/* 
+	blits a tilemap on the object tilemap at x,y position (x,y in tiles)
+ */
