@@ -86,12 +86,15 @@ void init()
 	NVIC_Configuration(); /* Interrupt Config */
 	GPIO_init();
     
-    // init FatFS
+
+}
+
+void init_fatfs()
+{
 	memset(&fs32, 0, sizeof(FATFS));
 	FRESULT r = f_mount(&fs32,"",1); //mount now
 	if (r != FR_OK) die(MOUNT,r); 
 }
-
 
 void load(void)
 {
@@ -157,6 +160,7 @@ void main(void) {
 
 	// activate bootloader if button pressed.
 	if (!button_state()) { 
+		init_fatfs();
 		load(); // blocks if NOK
 		jump(START_RAM);
 	} else {
