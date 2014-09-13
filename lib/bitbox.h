@@ -59,13 +59,6 @@ enum device_enum {
 	device_gamepad 
 };
 
-enum buttons_enum { 
-	but_A=1,but_B,but_X,but_Y,but_L,but_R,but_select,but_start,
-	// Those values are alternate names for mouse. 
-	but_left=but_A,but_right=but_B,but_middle=but_X 
-};
-
-
 enum evt_type { // type (a,b,c data)
 	no_event=0x00, // (error / empty queue)
 	evt_device_change, // device : port, device type, subtype. Set device type to 0 to mean unconnect
@@ -116,12 +109,16 @@ enum gamepad_buttons_enum {
     gamepad_up = 1<<8,
     gamepad_down =1<<9,
     gamepad_left = 1<<10,
-    gamepad_right=1<<12,
+    gamepad_right=1<<11,
+
+	mousebut_left=gamepad_A,
+	mousebut_right=gamepad_B,
+	mousebut_middle=gamepad_X 
 };
 
 #define GAMEPAD_PRESSED(id , key) (gamepad_buttons[id] & (gamepad_##key))
 
-struct event {
+struct event { //should be coded in 32bits 
 	uint8_t type;
 	union {
 		struct {
@@ -147,7 +144,7 @@ struct event {
 
 		uint8_t data[3];
 	};		
-} ;
+} __attribute__ ((__packed__));
 
 // -- state. defined in usb_devices.c
 extern volatile enum device_enum device_type[2]; // currently plugged device
@@ -171,6 +168,21 @@ struct event event_get();
 
 char kbd_map(struct event kbd_e);
 
+/* This emulates the gamepad with a keyboard.
+ * fetches all keyboard events, 
+ * discarding all others (not optimal)
+ * mapping: 
+
+    Space : Select,   2C
+    Enter : Start,    28
+    UDLR arrows : D-pad    52, 51, 50, 4F
+    D     : A button, 07
+    F : B button, 09
+    E : X button, 08
+    R : Y button, 15
+    Left/Right CTRL (L/R shoulders) 
+ */
+void kbd_emulate_gamepad (void);
 
 // --- misc
 void die(int where, int cause); // blink leds 
