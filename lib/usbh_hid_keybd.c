@@ -47,12 +47,17 @@ static void KEYBRD_Init (uint8_t coreID, uint16_t vid, uint16_t pid)
 static void KEYBRD_Decode(uint8_t coreID, uint8_t *pbuf)
 {
         static uint8_t nb_last;
-        static uint8_t keys_last[KBR_MAX_NBR_PRESSED];
+        static uint8_t keys_last[KBR_MAX_NBR_PRESSED]; // list of 0-nb_last codes of last pressed keys
+        static uint8_t mod_last;
+
         int j;
         struct event e;
 
+        // keyboard boot protocol : modifiers bits(Ctrl, Shift, Alt, Win L then R), reserved, char[6]
+
         // calculates New-Last & send keypresses
         for (int i = 2; i < 2 + KBR_MAX_NBR_PRESSED; i++) {                       
+                if (pbuf[i]==0) continue; // break?
                 // tests for errors (code 1,2 or 3)
                 if ((unsigned)(pbuf[i]-1) <= 2)
                         return;
@@ -70,8 +75,8 @@ static void KEYBRD_Decode(uint8_t coreID, uint8_t *pbuf)
                         e.kbd.key=pbuf[i];
                         event_push(e);
                 }
-
         }
+
         
         // now calculates old-new and send key released events.
         for (int i=0;i<nb_last;i++)
@@ -84,10 +89,29 @@ static void KEYBRD_Decode(uint8_t coreID, uint8_t *pbuf)
                 {
                         e.type=evt_keyboard_release;
                         e.kbd.mod=pbuf[0];
-                        e.kbd.key=pbuf[i];
+                        e.kbd.key=keys_last[i];
                         event_push(e);
                 }                
         }
+
+        // special case : modifier keys as keypresses
+        if (pbuf[0] != mod_last)
+            for (int i=0;i<8;i++) {
+                if ((pbuf[0] & ~mod_last) & (1<<i)) // new ones
+                {
+                    e.type=evt_keyboard_press;
+                    e.kbd.key=0xE0 + i; // codes are in the same order as bits                
+                    event_push(e);
+                }
+
+                if ((mod_last & ~pbuf[0]) & (1<<i)) // released ones
+                {
+                    e.type=evt_keyboard_release;
+                    e.kbd.key=0xE0 + i; // codes are in the same order as bits                
+                    event_push(e);
+                }
+            }
+
 
         // fills old keys with current 
         nb_last=0;
@@ -95,5 +119,6 @@ static void KEYBRD_Decode(uint8_t coreID, uint8_t *pbuf)
                 if (pbuf[2+i])
                         keys_last[nb_last++]=pbuf[2+i];
         }
+        mod_last=pbuf[0];
         
 }

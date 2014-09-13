@@ -202,9 +202,6 @@ int read_icon(const char *filename)
 char *HEX_Digits;
 
 void game_init() {
-	// CB->VTOR=SRAM1_BASE;
-	// HACK, FIXME with a proper init of the interrupt table
-
 	flash_init();
 
 	window(2,2,78,4);
@@ -233,11 +230,38 @@ void game_init() {
 }
 
 
+void display_first_event(void)
+{
+	// display first event, put it back
+	struct event e; 
+	e=event_get();		
+	switch(e.type)
+	{
+		case evt_keyboard_press : 
+			print_at(50,10,"KB pressed      ");
+			vram_char[10][61]="0123456789ABCDEF"[e.kbd.key>>4];
+			vram_char[10][62]="0123456789ABCDEF"[e.kbd.key&0xf];
+		break;
+
+		case evt_keyboard_release : 
+			print_at(50,10,"KB released     ");
+			vram_char[10][63]="0123456789ABCDEF"[e.kbd.key>>4];
+			vram_char[10][64]="0123456789ABCDEF"[e.kbd.key&0xf];
+		break;
+	}
+	if (e.type) event_push(e); // put it back
+}
+
 int selected;
 int x =5,y=10 , dir_x=1, dir_y=1;
 char old_val=' ';
 void game_frame() 
 {
+	display_first_event();
+	
+	// interpret keyboard as gamepad & discard all other events
+	kbd_emulate_gamepad();
+
 	// handle input 
 	if (GAMEPAD_PRESSED(0,down) && vga_frame%4==0)
 		selected +=1;
@@ -249,6 +273,8 @@ void game_frame()
 	
 	// XXX try to read game icon if selected is different
 
+
+	// Start flashing ?
 	if (flash_done() && (GAMEPAD_PRESSED(0,start) || GAMEPAD_PRESSED(0,A)))
 	{
 		print_at(MSG_X,MSG_Y,"Goldorak GO ! Flashing ");
@@ -289,6 +315,8 @@ void game_frame()
 		old_val = vram_char[y][x];
 		vram_char[y][x] = '\x02';
 	}
+
+
 
 	flash_frame(); // at the end to let it finish 
 }
