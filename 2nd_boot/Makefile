@@ -5,7 +5,9 @@ GAME_C_FILES = $(NAME).c font.c bg.c flashit.c
 include lib/bitbox.mk
 
 #comment to build to flash (for testing with out bootloader 1)
-ifdef FALSE
+TO_SRAM=1
+
+ifdef TO_SRAM
 # NOTE that this program is loaded to SRAM1 (see bitbox memories), thus data is mapped accordingly & load stlink also !
 LINKER_SCRIPT=Linker_2Bootloader.ld
 
