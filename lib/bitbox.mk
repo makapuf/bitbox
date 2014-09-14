@@ -20,7 +20,8 @@ CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 
-DEFINES = -DARM_MATH_CM4 -DOVERCLOCK -DAUDIO -DPROFILE 
+DEFINES = -DARM_MATH_CM4 -DOVERCLOCK  -DPROFILE 
+#-DAUDIO
 
 # USB defines
 ifdef NO_USB
