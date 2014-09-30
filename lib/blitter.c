@@ -800,7 +800,7 @@ void tmap_blit(object *tm, int x, int y, uint32_t src_header, const void *data)
 
     // XXX FIXME handle different cases ?
     if (dst_type != src_type) {
-        message ("Error blitting tmap : dst type : %d, src type %d", src_type, dst_type);
+        message ("Error blitting tmap : dst type : %d, src type %d\n", src_type, dst_type);
         die(5,5);
     }
 

@@ -57,7 +57,7 @@ with open(tsname,'wb') as of:
 
 out_code='B' # bytes
 typename = {'B':'uint8_t', 'b' : 'int8_t','H':'uint16_t'}
-codes = {'B':0,'b':1,'H':2,'h':3}
+codes = {'B':1}#0,'b':1,'H':2,'h':3}
 
 fname = base_name+'.tmap'
 index=0
