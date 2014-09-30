@@ -2,7 +2,7 @@
 
 NAME = 2nd_boot
 GAME_C_FILES = $(NAME).c font.c bg.c flashit.c
-include lib/bitbox.mk
+include $(BITBOX)/bitbox.mk
 
 #comment to build to flash (for testing with out bootloader 1)
 TO_SRAM=1

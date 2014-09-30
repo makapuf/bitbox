@@ -5,8 +5,9 @@
 # Update 
 #   DEFINES with whatever defines are needed with -DXYZ
 #   CFLAGS
+#  BITBOX environment variable should point to the base bitbox source  dir (where /lib is)
 
-# specific flags : use audio, use USB, use uSD, ... (?)
+# specific flags : NO_USB, NO_SDCARD
 
 #NAME = shoot
 #GAME_C_FILES = test_data.c object.c test_game.c $(NAME)
@@ -34,26 +35,26 @@ DEFINES += -DUSE_STDPERIPH_DRIVER
 C_OPTS = -std=c99 \
 	-mthumb \
 	-mcpu=cortex-m4 \
-	-Ilib/ \
-	-Ilib/CMSIS/Include \
-	-Ilib/StdPeriph \
+	-I$(BITBOX)/lib/ \
+	-I$(BITBOX)/lib/CMSIS/Include \
+	-I$(BITBOX)/lib/StdPeriph \
 	-Werror \
-        -O3 \
-        -mlittle-endian \
-        -g \
-        -fomit-frame-pointer 
+    -O3 \
+    -mlittle-endian \
+    -g \
+    -fomit-frame-pointer 
         #-funroll-all-loops \
 
 LIBS =	-lm
 
 SOURCE_DIR =.
-DATA_DIR=data
+
 BUILD_DIR =build
-LIB_SOURCE_DIR =lib
-LIB_STD_SOURCE_DIR =lib/StdPeriph
+LIB_SOURCE_DIR =$(BITBOX)/lib
+LIB_STD_SOURCE_DIR =$(BITBOX)/lib/StdPeriph
 
 # replace with linker_raw if you want to overwrite bootloader
-LINKER_SCRIPT = lib/Linker_loader.ld
+LINKER_SCRIPT = $(BITBOX)/lib/Linker_loader.ld
 FLASH_START = 0x08004000
 #FLASH_START = 0x08000000
 #LINKER_SCRIPT = lib/Linker_raw.ld
@@ -80,18 +81,20 @@ ifndef NO_USB
 	usbh_ioreq.c \
 	usbh_stdreq.c \
 	stm32fxxx_it.c 
-	#usbh_usr.c 
 endif 
 
 # fatfs related files
-KERNEL_FILES += fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c stm32f4xx_sdio.c stm32f4xx_dma.c fatfs/ff.c fatfs/diskio.c
+ifndef NO_SDCARD
+KERNEL_FILES += fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c fatfs/ff.c fatfs/diskio.c
+KERNEL_FILES += stm32f4xx_sdio.c stm32f4xx_dma.c 
+endif 
 
 # engine related
 ifdef USE_ENGINE
-ENGINE_FILES = lib/blitter.c 
+KERNEL_FILES += blitter.c 
 endif
 
-C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES) $(ENGINE_FILES)
+C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES) 
 S_FILES = memcpy-armv7m.S
 
 
@@ -147,12 +150,6 @@ $(BUILD_DIR)/%_dat.o: $(SOURCE_DIR)/%
 	xxd -i $< | sed "s/unsigned/const unsigned/" > $(BUILD_DIR)/$*.c
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c build/$*.c -o $@
 
-$(SOURCE_DIR)/%.btc: $(SOURCE_DIR)/%.png
-	python ../scripts/btc4.py $<
-
-$(SOURCE_DIR)/%.spr: $(SOURCE_DIR)/%.png
-	python ../scripts/sprite_encode1.py $< $@
-
 # ---------------------------------
 
 $(BUILD_DIR)/%.o: $(LIB_SOURCE_DIR)/%.S
@@ -173,6 +170,6 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.S
 -include $(OBJS:.o=.d)
 
 
-$(NAME)_emu: $(GAME_C_FILES) lib/emulator.c $(ENGINE_FILES) $(GAME_BINARY_FILES)
-	gcc -Og -DEMULATOR $(GAME_C_FILES) $(ENGINE_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(GAME_C_OPTS) -Ilib/ lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
+$(NAME)_emu: $(GAME_C_FILES) $(BITBOX)/lib/emulator.c $(GAME_BINARY_FILES) $(if $(USE_ENGINE),$(BITBOX)/lib/blitter.c)
+	gcc -Og -DEMULATOR $(GAME_C_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(GAME_C_OPTS)  $(if $(USE_ENGINE),$(BITBOX)/lib/blitter.c) -I$(BITBOX)/lib/ $(BITBOX)/lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
 

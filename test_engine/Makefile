@@ -5,7 +5,7 @@ GAME_C_FILES = main.c
 GAME_BINARY_FILES = img0001_p16.spr mechant3_16.spr bg.tset bg_bg.tmap
 USE_ENGINE = 1
 
-include lib/bitbox.mk
+include $(BITBOX)/lib/bitbox.mk
 
 bg.tset bg_bg.tmap : bg.tmx bg.png ../scripts/tmx.py
 	python ../scripts/tmx.py bg.tmx
