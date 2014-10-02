@@ -11,9 +11,13 @@
 #   	- In particular, define one of VGAMODE_640, VGAMODE_800, VGAMODE_320 or VGA_640_OVERCLOCK
 #   	  to set up a resolution ion the kernel (those will be used in kconf.h)
 #
-#       - Other specific flags : NO_USB, NO_SDCARD, USE_ENGINE
+#       - Other specific flags : 
+#             NO_USB,       - when you don't want to use USB input related function)
+#             NO_SDCARD,    - when you don't want to use or compile SDcard or fatfs related functions in the game
+#             USE_ENGINE,   - when you want to use the engine
+#             USE_SD_SENSE  - enabling this will disable being used on rev2 !
 
-#NAME = shoot
+#NAME = yourgame
 #GAME_C_FILES = test_data.c object.c $(NAME).c
 #GAME_H_FILES = test_data.h kernel.h object.h test_object.h
 

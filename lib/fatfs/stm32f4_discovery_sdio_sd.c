@@ -522,10 +522,15 @@ uint8_t SD_Detect(void)
   __IO uint8_t status = SD_PRESENT;
 
   /*!< Check GPIO to detect SD */
-  if (GPIO_ReadInputDataBit(SD_DETECT_GPIO_PORT, SD_DETECT_PIN) != Bit_RESET)
+  /* If card is ON, this means circuit is Open, so pulled UP, so level 1*/ 
+  
+  #ifdef USE_SD_SENSE
+  if (GPIO_ReadInputDataBit(SD_DETECT_GPIO_PORT, SD_DETECT_PIN) == Bit_RESET)
   {
     status = SD_NOT_PRESENT;
   }
+  #endif 
+
   return status;
 }
 

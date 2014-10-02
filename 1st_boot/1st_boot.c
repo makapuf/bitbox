@@ -85,8 +85,6 @@ void init()
 	InitializeSystem(); // now we're using system.c 
 	NVIC_Configuration(); /* Interrupt Config */
 	GPIO_init();
-    
-
 }
 
 void init_fatfs()
@@ -154,10 +152,19 @@ void jump(uint32_t address)
     Jump_To_Application();
 }
 
+void loop_check_sense(void)
+{
+	// SDIO sense is PC7
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // enable GPIO 
+	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR7_0; // set input / pullup 
+	while(1) {
+		GPIOC->IDR & GPIO_IDR_IDR_7 ? led_on() : led_off();
+	}
+}
+
 
 void main(void) {
 	init();
-
 	// activate bootloader if button pressed.
 	if (!button_state()) { 
 		init_fatfs();

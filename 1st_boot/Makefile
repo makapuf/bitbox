@@ -1,4 +1,5 @@
-#NAME=sdtest
+# Dont forget to disable USE_SD_SENSE for rev2 bitbox
+
 NAME=1st_boot
 
 C_FILES = $(NAME).c
@@ -14,7 +15,7 @@ CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 
-DEFINES = -DARM_MATH_CM4  -DUSE_STDPERIPH_DRIVER
+DEFINES = -DARM_MATH_CM4  -DUSE_STDPERIPH_DRIVER -DUSE_SD_SENSE
 SOURCE_DIR=.
 
 OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.s=$(BUILD_DIR)/%.o) 

@@ -8,8 +8,8 @@
 #include "stm32f4xx_conf.h"
 
 
-// defined for bitbox rev2 : sense is PC7
-#define SD_DETECT_PIN                    GPIO_Pin_7                 /* PC.02 */
+// defined for bitbox rev2b : sense is PC7
+#define SD_DETECT_PIN                    GPIO_Pin_7                 /* PC.07 */
 #define SD_DETECT_GPIO_PORT              GPIOC                      /* GPIOC */
 #define SD_DETECT_GPIO_CLK               RCC_AHB1Periph_GPIOC
 
