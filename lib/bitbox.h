@@ -3,6 +3,7 @@
 
 // to be provided by games or engines
 #include <stdint.h>
+#include "kconf.h" // kernel conf can be the basis of values
 
 // user-provided
 void game_init();
@@ -13,8 +14,8 @@ void game_snd_buffer(uint16_t *buffer, int len); // **buffer plutot ?
 
 // --- Audio ----------------------------------------------------------------------------
 
-#define BITBOX_SAMPLERATE 31469 
-#define BITBOX_SNDBUF_LEN (BITBOX_SAMPLERATE/60+1) // 525
+#define BITBOX_SAMPLERATE VGA_VFREQ 
+#define BITBOX_SNDBUF_LEN (BITBOX_SAMPLERATE/VGA_FPS+1) // 525
 #define BITBOX_SAMPLE_BITDEPTH 8 // 8bit output 
 
 extern int audio_on; 
@@ -25,19 +26,16 @@ void audio_init();
 // --- VGA interface ----------------------------------------------------------------------
 #define RGB(r,g,b)  (((r>>3)&0x1f)<<10 | ((g>>3)&0x1f)<<5 | ((b>>3)&0x1f))
 
-#define LINE_LENGTH 640 
 extern uint32_t vga_line; // should be const
 extern volatile uint32_t vga_frame; 
 
-//extern int vga_pixel_clock; // linked to x resolution. max drawn pixels is 1024 : less means smaller pixels H
-// all reglages..
-
 // 0x0rrrrrgggggbbbbb pixels
 extern uint16_t *draw_buffer; // drawing next line 
+// also check kconf.h for video modes.
 
 
 // --- SD reader -------------------------------------------------------------------------
-// use ff.h api directly, separately.
+// use fatfs/ff.h api directly, separately.
 
 // --- UEXT
 // use SPI / I2C / Serial directly ? by device drivers

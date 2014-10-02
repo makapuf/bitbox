@@ -217,7 +217,7 @@ int init(void)
     atexit(SDL_Quit);
 
     // create a default new window
-    set_mode(640,480);
+    set_mode(VGA_H_PIXELS,VGA_V_PIXELS);
     audio_init();
     joy_init();
 

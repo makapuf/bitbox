@@ -1,16 +1,20 @@
+# BITBOX environment variable should point to the base bitbox source  dir (where this file is)
+
 # DEFINE in outside makefile
 #   NAME : name of the project
 #   GAME_C_FILES c files of the project
-#   
-# Update 
-#   DEFINES with whatever defines are needed with -DXYZ
-#   CFLAGS
-#  BITBOX environment variable should point to the base bitbox source  dir (where /lib is)
-
-# specific flags : NO_USB, NO_SDCARD
+#	GAME_BINARY_FILES : binary files to embed as part of the main binary ROM
+#   GAME_C_OPTS : C language options. Those will be used for the ARM game as well as the emulator.
+#		- define with whatever defines are needed with -DXYZ CFLAGS .
+#		  they can be used to define specific kernel resolution. 
+#
+#   	- In particular, define one of VGAMODE_640, VGAMODE_800, VGAMODE_320 or VGA_640_OVERCLOCK
+#   	  to set up a resolution ion the kernel (those will be used in kconf.h)
+#
+#       - Other specific flags : NO_USB, NO_SDCARD, USE_ENGINE
 
 #NAME = shoot
-#GAME_C_FILES = test_data.c object.c test_game.c $(NAME)
+#GAME_C_FILES = test_data.c object.c $(NAME).c
 #GAME_H_FILES = test_data.h kernel.h object.h test_object.h
 
 #MCU  = cortex-m4
@@ -21,7 +25,7 @@ CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 
-DEFINES = -DARM_MATH_CM4 -DOVERCLOCK -DAUDIO -DPROFILE 
+DEFINES += -DARM_MATH_CM4 -DOVERCLOCK -DAUDIO -DPROFILE 
 
 # USB defines
 ifdef NO_USB

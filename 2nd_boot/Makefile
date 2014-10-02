@@ -2,16 +2,17 @@
 
 NAME = 2nd_boot
 GAME_C_FILES = $(NAME).c font.c bg.c flashit.c
-include $(BITBOX)/bitbox.mk
+GAME_C_OPTS = -DVGAMODE_640
+include $(BITBOX)/lib/bitbox.mk
 
-#comment to build to flash (for testing with out bootloader 1)
+# comment to build to flash. This will load boot2 as a normal program in flash
 TO_SRAM=1
 
 ifdef TO_SRAM
 # NOTE that this program is loaded to SRAM1 (see bitbox memories), thus data is mapped accordingly & load stlink also !
 LINKER_SCRIPT=Linker_2Bootloader.ld
 
-# redefinition of stlink load : to sram
+# redefinition of stlink load : to sram. This is normal 
 stlink: $(NAME).bin
 	st-flash write $(NAME).bin 0x20000000
 endif 

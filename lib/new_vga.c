@@ -1,6 +1,6 @@
 /*
 
-640 x 480 mode, 15 bits
+mode as defined in kconf.h values 
 - output is on PORT E, lower 15 bits
 - sync is on PORT A, pin0 (vsync), pin1 (hsync)
 
@@ -10,7 +10,6 @@
 /*
   TODO : audio, exclude headers, ...
   soft reflash doesnt enable output
-  pixelclock
 */
 
 /* 
@@ -36,14 +35,19 @@
 
 #include "system.h" // interrupts 
 #include "stm32f4xx.h" // ports, timers, profile
+#include "kconf.h"
 
 #include "GPIO.h"
 #include "RCC.h"
 
-#define LINE_LENGTH 640 // revoir les variables ...
+
+// --- local
+#define TIMER_CYCL (SYSCLK/VGA_VFREQ/APB_PRESC)
+#define SYNC_END (VGA_H_SYNC*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
+#define BACKPORCH_END ((VGA_H_SYNC+VGA_H_BACKPORCH)*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
 
 #ifdef SNES_GAMEPAD
-// #include "gamepad.h"
+ #include "gamepad.h"
 #endif 
 
 #ifdef AUDIO
@@ -60,7 +64,6 @@ uint32_t line_time,max_line_time, max_line; // maximum time of line
 // gdb : disp *(uint32_t *)0xE0001004
 #endif 
 
-#define PIXELCLOCK 7
 
 #define MIN(x,y) ((x)<(y)?x:y) 
 
@@ -88,8 +91,9 @@ static inline void output_black()
 } 
 
 
-void vga640_setup()
+void vga_setup()
 {
+
 	for (int i=0;i<1024;i++)
 	{
 		LineBuffer1[i]=0;
@@ -159,7 +163,8 @@ void vga640_setup()
 	TIM5->DIER=TIM_DIER_UIE; // Enable update interrupt.
 	TIM5->CCER=0; // Disable CC, so we can program it.
 	// TIM5->ARR=2796-1; // 88 MHz (OC) / 31.46875 kHz = 2796.42502483 (88 = 176MHz / 2 )
-	TIM5->ARR=3050-1; // 96 MHz (OC) / 31.46875 kHz = 3 050.64548 (96 = 192MHz / 2 )
+	// TIM5->ARR=3050-1; // 96 MHz (OC) / 31.46875 kHz = 3 050.64548 (96 = 192MHz / 2 )
+	TIM5->ARR=TIMER_CYCL-1; // 96 MHz (OC) / 31.46875 kHz = 3 050.64548 (96 = 192MHz / 2 )
 
 	// -- Channel 2  : Hsync pulse
 
@@ -172,7 +177,7 @@ void vga640_setup()
 	// TIM5->CCR2=336; 
     // 96 MHz * 3.813 microseconds = 366.048 - sync pulse end
 
-	TIM5->CCR2=366; 
+	TIM5->CCR2=SYNC_END; 
 
 	// -- Channel 3 : Trigger signal for TIM1 - will start on ITR1
 
@@ -188,7 +193,7 @@ void vga640_setup()
 
 	// 96 MHz * (3.813 + 1.907) microseconds = 549.12 - back porch end, start pixel clock
     // -14 is a kludge to account for slow start of timer.
-	TIM5->CCR3=549-14;
+	TIM5->CCR3=BACKPORCH_END-14;
 
 	// Enable HSync timer.
 
@@ -198,7 +203,7 @@ void vga640_setup()
 	// TIM5->CCR4=503;
 	// 96 MHz * (3.813 + 1.907) microseconds = 549.12 - back porch end, start pixel clock
 	//TIM5->CCER=TIM_CCER_CC4E|TIM_CCER_CC4P; // Channel 4 enabled, reversed polarity (active low).
-	TIM5->CCR4=549;
+	TIM5->CCR4=BACKPORCH_END;
 	// wait for last line ? 
 
 	// Enable HSync timer interrupt and set highest priority.
@@ -217,7 +222,7 @@ void vga640_setup()
 	// Prescaler = 1.
 	TIM1->PSC=0; 
 	// loop each "pixelclock"
-	TIM1->ARR=PIXELCLOCK-1; 
+	TIM1->ARR=VGA_PIXELCLOCK-1; 
 	// autoreload preload enable, no other function on
 	TIM1->CR1=TIM_CR1_ARPE;
 	// Enable update DMA request interrupt
@@ -262,7 +267,7 @@ static void prepare_pixel_DMA()
 	DMA_SxCR_TCIE |  // Transfer complete interrupt 
 	(1*DMA_SxCR_MBURST_0); // burst on the memory-side
 
-	DMA2_Stream5->NDTR=LINE_LENGTH+1; // transfer N pixels + one last _black_ pixel
+	DMA2_Stream5->NDTR=VGA_H_PIXELS+1; // transfer N pixels + one last _black_ pixel
 	DMA2_Stream5->PAR=((uint32_t)&(GPIOE->ODR));
 	DMA2_Stream5->M0AR=(uint32_t)display_buffer; // XXX +MARGIN*2;
 
@@ -292,7 +297,7 @@ static void HSYNCHandler()
 
 	vga_line++;
         // starting from line #1, line #0 already in drawbuffer
-	if (vga_line <= 480) {
+	if (vga_line <= VGA_V_PIXELS) {
 
 		// swap display & draw buffers, effectively draws line-1
 		uint16_t *t;
@@ -315,28 +320,29 @@ static void HSYNCHandler()
 		}
 		#endif
 	}  else {
-		if (vga_line==481) vga_frame++; // new frame sync now
+		if (vga_line== VGA_V_PIXELS+1) vga_frame++; // new frame sync now
 
 		#ifdef SNES_GAMEPAD
-		if (vga_line<=480+1+33)
+		if (vga_line<=VGA_V_PIXELS+1+VGA_V_BACKPORCH)
 		{
 			gamepad_readstep();
 		}
 		#endif
 
-		if(vga_line==491)
+		if(vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) 
 		{
 			// synchronous. buffers shall be ready now
 		    #ifdef AUDIO
     		audio_frame();
     		#endif 
+
 			GPIOA->BSRRH|=(1<<0); // lower VSync line
 		}
-		else if(vga_line==493)
+		else if(vga_line==VGA_V_PIXELS+1+VGA_V_FRONTPORCH+VGA_V_SYNC)
 		{
 			GPIOA->BSRRL|=(1<<0); // raise VSync line
 		}
-		else if(vga_line==525)
+		else if(vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+VGA_V_SYNC+VGA_V_BACKPORCH)
 		{
 			vga_line=0;
             game_line();  // first line next frame!

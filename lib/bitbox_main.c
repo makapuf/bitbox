@@ -13,7 +13,7 @@ __ALIGN_BEGIN USBH_HOST                     USB_FS_Host __ALIGN_END ;
 #endif
 
 // vga init, not public, it's done automatically
-void vga640_setup();
+void vga_setup();
 extern uint16_t *audio_write; // draw sound buffer. accessible by mùain thread.
 
 void board_init()
@@ -104,15 +104,15 @@ void main()
 	start vga after game setup so that we can 
 	setup data that will be used in line callbacks
 	*/
-	vga640_setup();
+	vga_setup();
 
 	while (1)
 	{
-		// must be finished by the end of frame 
-		game_snd_buffer(audio_write,BITBOX_SNDBUF_LEN); 
 
 		game_frame();
 		
+		// must be finished by the end of frame 
+		game_snd_buffer(audio_write,BITBOX_SNDBUF_LEN); 
 		oframe=vga_frame;
 
 		do {
