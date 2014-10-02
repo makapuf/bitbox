@@ -30,11 +30,11 @@ void game_line()
 // called from VGA kernel
 {	
 	// clear the line with a repeating gradient
-	for (int i=0;i<LINE_LENGTH;i++)
+	for (int i=0;i<VGA_H_PIXELS;i++)
 		draw_buffer[i]=(vga_line&0x1f)<<(5*((vga_line/32)&3)); 
 	
 	// force pixel after screen to black.
-	draw_buffer[LINE_LENGTH]=0; 
+	draw_buffer[VGA_H_PIXELS]=0; 
 	
 	// first oblique line (behind)
 	for (int i=0;i<128;i++)
@@ -47,7 +47,7 @@ void game_line()
 
 	// second oblique line (front)
 	for (int i=0;i<64;i++)
-		draw_buffer[LINE_LENGTH-vga_line-i] = (i/4)<<8;
+		draw_buffer[VGA_H_PIXELS-vga_line-i] = (i/4)<<8;
 
     // display gamepad state as 16 inverse video pixels
     if (vga_line == 200) {
