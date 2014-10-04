@@ -4,7 +4,7 @@
  * to override this file in your project, just include a modified kconf.h in your main compile dir. 
  */
 
-#ifdef VGA_640_OVERCLOCK
+#ifdef VGAMODE_640_OVERCLOCK
 
 // 640 480 VESA on 192 MHz SYSCLK
 #define VGA_H_PIXELS 640 
@@ -28,32 +28,31 @@
 
 #elif defined(VGAMODE_800)
 
-// 800 600 non VESA on non O/C core (168MHz) - ~ 30kHz, 50fps
-// few cycles left ! 5400 to blit 800 pixels - vsync quite small 
- 
+// 800 600 non VESA on lightly O/C core (180MHz) - ~ 30kHz, 50fps
+// 
 
 #define VGA_H_PIXELS 800 
-#define VGA_H_FRONTPORCH 32 
+#define VGA_H_FRONTPORCH 64 
 #define VGA_H_SYNC 128
-#define VGA_H_BACKPORCH 128
+#define VGA_H_BACKPORCH 50
 
 #define VGA_V_PIXELS 600
 #define VGA_V_FRONTPORCH 1
 #define VGA_V_SYNC 4
 #define VGA_V_BACKPORCH 14
 
-#define VGA_FPS 50
+#define VGA_FPS 56
 #define VGA_PIXELCLOCK 5 // DMA clocks per pixel
 
-#define PLL_M 8
-#define PLL_N 336
-#define PLL_P 2
-#define PLL_Q 7
+#define PLL_M 4
+#define PLL_N 360
+#define PLL_P 4
+#define PLL_Q 15
 #define APB_PRESC 2 
 
 #elif defined(VGAMODE_320)
 
-// 640 480 non completely VESA on non O/C core (168MHz) - 30kHz, 60fps
+// 320 480 non completely VESA on non O/C core (168MHz) - 30kHz, 60fps
 #define VGA_H_PIXELS 320 
 #define VGA_H_FRONTPORCH 8 
 #define VGA_H_SYNC 48
@@ -65,7 +64,7 @@
 #define VGA_V_BACKPORCH 13
 
 #define VGA_FPS 60
-#define VGA_PIXELCLOCK 7 // DMA clocks per pixel
+#define VGA_PIXELCLOCK 14 // DMA clocks per pixel
 
 #define PLL_M 8
 #define PLL_N 336
@@ -74,7 +73,6 @@
 #define APB_PRESC 2 
 
 #else // default one, use 
-
 // 640 480 non completely VESA on non O/C core (168MHz) - 30kHz, 60fps
 #define VGA_H_PIXELS 640 
 #define VGA_H_FRONTPORCH 16 
