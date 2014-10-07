@@ -145,9 +145,17 @@ void list_roms()
 #else
             fn = fno.fname;
 #endif
-            if (!(fno.fattrib & AM_DIR)) {                    /* It is a directory : do nothing */
-                strcpy(filenames[nb_files],fn);
-                nb_files +=1;
+            if (!(fno.fattrib & AM_DIR)) { // not a dir                  
+            	// assumes non LFN
+            	#if _USE_LFN 
+            	dslkhgsldkg 
+            	#endif
+
+            	// check extension : only keep .bin
+            	if (strstr(fn,".BIN")) {
+                	strcpy(filenames[nb_files],fn);
+                	nb_files +=1;            		
+            	}
             }
         }
         if (res != FR_OK) {
@@ -252,9 +260,11 @@ void display_first_event(void)
 	if (e.type) event_push(e); // put it back
 }
 
-int selected;
+int selected,old_selected=-1;
 int x =5,y=10 , dir_x=1, dir_y=1;
 char old_val=' ';
+char icon_name[13];
+
 void game_frame() 
 {
 	display_first_event();
@@ -272,20 +282,29 @@ void game_frame()
 	if (selected<0) selected=nb_files-1;
 	
 	// XXX try to read game icon if selected is different
-
-
+	
+	if (old_selected != selected)
+	{
+		strcpy(icon_name, filenames[selected]);
+		char *c = strchr(icon_name,'.');
+		strcpy(c,".pbm");
+		int r=read_icon(icon_name);
+		if (r!=FR_OK)
+			r=read_icon("bitbox.pbm"); // missed, try standard one
+	}
+	
 	// Start flashing ?
 	if (flash_done() && (GAMEPAD_PRESSED(0,start) || GAMEPAD_PRESSED(0,A)))
 	{
 		print_at(MSG_X,MSG_Y,"Goldorak GO ! Flashing ");
-		print_at(29,MSG_Y,filenames[selected]);
+		print_at(MSG_X+24,MSG_Y,filenames[selected]);
 
 		if (f_open(&file,filenames[selected],FA_READ)==FR_OK)
 		{
 			flash_start_write(&file);
 		} else {
 			print_at(MSG_X,MSG_Y,"Error reading ");
-			print_at(20,MSG_Y,filenames[selected]);
+			print_at(MSG_X+14,MSG_Y,filenames[selected]);
 		}		
 	}
 
@@ -316,7 +335,7 @@ void game_frame()
 		vram_char[y][x] = '\x02';
 	}
 
-
+	old_selected=selected;
 
 	flash_frame(); // at the end to let it finish 
 }
@@ -359,10 +378,10 @@ void game_line()
 		for (int i=0;i<16;i++) // 16*8=128
 		{
 			// draw a byte worth of pixels
-			*dst++ = lut_data[(*src>>6) & 0x3];
-			*dst++ = lut_data[(*src>>4) & 0x3];
-			*dst++ = lut_data[(*src>>2) & 0x3];
-			*dst++ = lut_data[(*src>>0) & 0x3];
+			*dst++ = lut_data[(~*src>>6) & 0x3];
+			*dst++ = lut_data[(~*src>>4) & 0x3];
+			*dst++ = lut_data[(~*src>>2) & 0x3];
+			*dst++ = lut_data[(~*src>>0) & 0x3];
 
 			src++; // next byte
 		}
