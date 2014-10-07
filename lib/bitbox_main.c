@@ -117,16 +117,20 @@ void main()
 
 		do {
 			oline = vga_line;
+			#ifndef NO_USB
+
 			#ifdef USE_USB_OTG_HS
 				USBH_Process(&USB_OTG_Core, &USB_Host);
 			#endif
 			#ifdef USE_USB_OTG_FS
 				USBH_Process(&USB_OTG_FS_Core, &USB_FS_Host);
 			#endif
+				
+			#endif 
 		} while (oframe==vga_frame);
 		// wait next frame.
 
-		//set_led(button_state());
+		set_led(button_state());
 
 	} 
 }

@@ -92,7 +92,9 @@ ifndef NO_USB
 endif 
 
 # fatfs related files
-ifndef NO_SDCARD
+ifdef NO_SDCARD
+DEFINES += -DNO_SDCARD
+else
 KERNEL_FILES += fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c fatfs/ff.c fatfs/diskio.c
 KERNEL_FILES += stm32f4xx_sdio.c stm32f4xx_dma.c 
 endif 

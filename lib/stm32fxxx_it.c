@@ -35,9 +35,12 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+#ifndef NO_USB
 extern USB_OTG_CORE_HANDLE          USB_OTG_Core;
 extern USB_OTG_CORE_HANDLE          USB_OTG_FS_Core;
 extern USBH_HOST                    USB_Host;
+#endif 
+
 __IO uint32_t icc_tot = 0;
 __IO uint32_t icc_cnt = 0;
 __IO uint32_t icc_max = 0;
