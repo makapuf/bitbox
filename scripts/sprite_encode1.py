@@ -7,7 +7,7 @@ from PIL import Image # using the PIL library, maybe you'll need to install it. 
 # 16 bits format :  nb skip1:7,  RLE:1, eol:1, nb blit1:7
 # encode simply as palette merge + trous
 
-# TODO : multiframe, several frame spritesheets, skip empties !
+# TODO : multiframe, several frame spritesheets
 # nice commandline interface
 # p2 mode
 

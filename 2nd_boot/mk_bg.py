@@ -1,6 +1,5 @@
 ''' an utility to transform a pixmap to a 256 color bg palette'''
-
-from PIL import Image
+from PIL import Image # PIL  is python-imaging package on debian/ubuntu. See http://en.wikipedia.org/wiki/Python_Imaging_Library
 import sys
 
 filename =  sys.argv[1] # '8x16_437.png'

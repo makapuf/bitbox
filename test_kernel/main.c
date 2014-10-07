@@ -29,6 +29,14 @@ void game_frame()
 void game_line()
 // called from VGA kernel
 {	
+
+	// last 15 lines as RGB bits
+	if (vga_line>=480-30){
+		for (int i=0;i<640;i++)
+			draw_buffer[i] = 1<<((vga_line-(480-30))/2);
+		return;		
+	}
+
 	// clear the line with a repeating gradient
 	for (int i=0;i<VGA_H_PIXELS;i++)
 		draw_buffer[i]=(vga_line&0x1f)<<(5*((vga_line/32)&3)); 

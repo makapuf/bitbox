@@ -15,7 +15,7 @@
 #include "bitbox.h"
 #include "flashit.h"
 
-enum {INIT =0, MOUNT=1, OPEN=2, READ=3}; // where we died
+enum {INIT =4, MOUNT=5, OPEN=6, READ=7}; // where we died - bootloader 2
 #define MAX_FILES 20
 #define LIST_Y 6
 #define MSG_X 40
