@@ -366,22 +366,20 @@ static void sprite_u16_frame (object *o, int start_line)
     start_line += o->fr*o->h; // FIXME : frame ? add line offset (used for multiframe sprites ...) to start line
 
     // ffwd current pointer to nearest preceding 16 line start 
-    o->c = (intptr_t)o->data + ((uint16_t*)o->b)[start_line/16]*4;
-
-    /*
-    
-    TODO
-
+    o->c = (intptr_t)o->data + ((uint16_t*)o->b)[start_line/16]*2;
     start_line %= 16; // remainder
+  
+
+    // Skip first lines as needed
     while (start_line) {
-        p = (uint16_t *)o->c; 
-        if (pb_eol(p)) start_line--;
+        uint16_t *p = (uint16_t *)o->c; // shortcut
+        if (*p & 1) start_line--; // EOL ?
+
         // advances pointer to next blit anyway (as integer, so byte offsets)
         o->c += 2; // header
-        o->c += 2*pb_copy(p);
-        if (!pb_skip(p)) o->c += 2; 
+        o->c += ((*p>>1)&0x7f)*2; // datalen nibbles so ceil(x/4)
     }  
-    */
+    
 }
 
 
@@ -419,46 +417,44 @@ static void sprite_p4_frame (object *o, int start_line)
     // start line is how much we need to crop to handle out of screen data
     // also handles skipped lines
 
-    start_line += o->fr*o->h; // FIXME : frame ? add line offset (used for multiframe sprites ...) to start line
-
-    // ffwd current pointer to nearest preceding 16 line start 
-    o->c = (intptr_t)o->data + ((uint16_t*)o->b)[start_line/16]*4;
-
-    /*
+    start_line += o->fr*o->h; 
     
-    TODO
-
+    o->c = (intptr_t)o->data + ((uint16_t*)o->b)[start_line/16]*2;
     start_line %= 16; // remainder
+    
+    //o->c = (intptr_t)o->data;
+
+    // Skip first lines as needed
     while (start_line) {
-        p = (uint16_t *)o->c; 
-        if (pb_eol(p)) start_line--;
+        uint16_t *p = (uint16_t *)o->c; // shortcut
+        if (*p & 1) start_line--; // EOL ?
+
         // advances pointer to next blit anyway (as integer, so byte offsets)
         o->c += 2; // header
-        o->c += 2*pb_copy(p);
-        if (!pb_skip(p)) o->c += 2; 
+        o->c += 2*((3+((*p>>1)&0x7f))/4); // datalen nibbles so ceil(x/4)*sizeof (uint16)
     }  
-    */
 }
 
 
 static void sprite_p4_line (object *o)
 {
+    // XXX force alignment of lines to u32 !
+
     int x=o->x;  // force event 
     int i;
 
     x&=~1;
-    uint16_t *pal = (uint16_t*) o->a; // shortcut
-    uint16_t *p; // sees blit as u16 made of 4 references. p is always the start of the blit
+    uint16_t *restrict pal = (uint16_t*) o->a; // shortcut
+    uint16_t * restrict p; // sees blit as u16 made of 4 references. p is always the start of the blit
     do {
         p = (uint16_t *)o->c; // (shortcut) start/current position of the blit
 
         x += (*p)>>8; // skip : advance x 
-        if (x>1024) while (1) {};
             
         // now, palette blit it 
         uint32_t data_len = (*p>>1)&0x7f; // in pixels
-        uint16_t *src = p+1;
-        uint32_t *dst = (uint32_t*) &draw_buffer[x]; // 2 pixels at a time
+        uint16_t *restrict src = p+1;
+        uint32_t *restrict dst = (uint32_t*) &draw_buffer[x]; // 2 pixels at a time
 
         for (i=data_len;i>4;i-=4)
         {
