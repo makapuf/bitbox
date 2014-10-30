@@ -1,6 +1,17 @@
 #include "system.h"
 #include "bitbox.h"
 
+// very simple profiling statistics 
+#define PROFILE_DECL(name) uint32_t name##_time,name##_min=0xffffffff, name##_max, name##_tot, name##_nb; // stats defs
+#define PROFILE_TIC(name) name##_time= DWT->CYCCNT; 
+#define PROFILE_TOC(name) name##_time = DWT->CYCCNT - name##_time; \
+		if (name##_time>name##_max) name##_max=name##_time; \
+		if (name##_time<name##_min) name##_min=name##_time; \
+		name##_tot += name##_time; \
+		name##_nb++; 
+
+
+
 #ifndef NO_USB
 #include "usb_bsp.h"
 #include "usbh_core.h"
@@ -10,7 +21,11 @@ __ALIGN_BEGIN USB_OTG_CORE_HANDLE           USB_OTG_Core __ALIGN_END ;
 __ALIGN_BEGIN USBH_HOST                     USB_Host __ALIGN_END ;
 __ALIGN_BEGIN USB_OTG_CORE_HANDLE           USB_OTG_FS_Core __ALIGN_END ;
 __ALIGN_BEGIN USBH_HOST                     USB_FS_Host __ALIGN_END ;
+
+PROFILE_DECL(usb);
 #endif
+
+PROFILE_DECL(sound);
 
 // vga init, not public, it's done automatically
 void vga_setup();
@@ -29,6 +44,10 @@ void board_init()
 	// SDIO sense is PC7
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // enable GPIO 
 	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR7_0; // set input / pullup 
+
+	// Profiling
+	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk ; // enable the cycle counter
 }
 
 
@@ -58,10 +77,10 @@ int sdio_sense_state()
 
 
 void message(const char * msg, ...) {
-	// do nothing on bitbox (UART ? write to flash ?)
+	// do nothing on bitbox (UART ? write to flash ? to RAM )
 }
 
-void main()
+int main(void)
 {
 	InitializeSystem();
 	board_init();
@@ -69,34 +88,26 @@ void main()
 
 	/* Init Host Library */
 	#ifndef NO_USB
+
+	#ifdef USE_USB_OTG_HS
 	USBH_Init(
 		&USB_OTG_Core, 
 		USB_OTG_HS_CORE_ID,
 		&USB_Host, 
 		&HID_cb);
-	    // ,&USR_Callbacks);
+	#endif 
 
+	#ifdef USE_USB_OTG_FS
 	/* Init FS Core */
 	USBH_Init(
 		&USB_OTG_FS_Core, 
 		USB_OTG_FS_CORE_ID,
 		&USB_FS_Host,
 		&HID_cb);
-		// &USR_Callbacks);
 	#endif
+	#endif 
 
-				/*
-				#ifdef USE_USB_OTG_HS
-				do { // while (frame < 1000) {
-					 USBH_Process(&USB_OTG_Core, &USB_Host);
-		 USBH_Process(&USB_OTG_FS_Core, &USB_FS_Host);
-	 } while (USBH_Usr_InputDone == 0);
-				#endif
-				*/
-
-	
 	uint32_t oframe;
-	__IO uint32_t oline; // used for debugging
 
 	game_init();
 
@@ -112,24 +123,30 @@ void main()
 		game_frame();
 		
 		// must be finished by the end of frame 
+		PROFILE_TIC(sound);
 		game_snd_buffer(audio_write,BITBOX_SNDBUF_LEN); 
+		PROFILE_TOC(sound);
+
 		oframe=vga_frame;
 
+		// wait next frame.
 		do {
-			oline = vga_line;
 			#ifndef NO_USB
-
-			#ifdef USE_USB_OTG_HS
-				USBH_Process(&USB_OTG_Core, &USB_Host);
-			#endif
 			#ifdef USE_USB_OTG_FS
 				USBH_Process(&USB_OTG_FS_Core, &USB_FS_Host);
 			#endif
-				
+
+			#ifdef USE_USB_OTG_HS
+				set_led(USB_Host.gState == HOST_DEV_DISCONNECTED); 
+				PROFILE_TIC(usb);
+				USBH_Process(&USB_OTG_Core, &USB_Host);
+				PROFILE_TOC(usb);	
+			#endif
 			#endif 
 		} while (oframe==vga_frame);
-		// wait next frame.
 
+
+			
 		set_led(button_state());
 
 	} 

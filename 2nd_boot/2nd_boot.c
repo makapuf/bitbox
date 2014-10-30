@@ -272,6 +272,7 @@ void game_frame()
 	// interpret keyboard as gamepad & discard all other events
 	kbd_emulate_gamepad();
 
+
 	// handle input 
 	if (GAMEPAD_PRESSED(0,down) && vga_frame%4==0)
 		selected +=1;

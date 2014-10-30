@@ -32,7 +32,6 @@ mode as defined in kconf.h values
 
 #include <stdint.h>
 
-
 #include "system.h" // interrupts 
 #include "stm32f4xx.h" // ports, timers, profile
 #include "kconf.h"
@@ -45,10 +44,6 @@ mode as defined in kconf.h values
 #define TIMER_CYCL (SYSCLK/VGA_VFREQ/APB_PRESC)
 #define SYNC_END (VGA_H_SYNC*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
 #define BACKPORCH_END ((VGA_H_SYNC+VGA_H_BACKPORCH)*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
-
-#ifdef SNES_GAMEPAD
- #include "gamepad.h"
-#endif 
 
 #ifdef AUDIO
 #include "audio.h"
@@ -67,7 +62,8 @@ uint32_t line_time,max_line_time, max_line; // maximum time of line
 
 #define MIN(x,y) ((x)<(y)?x:y) 
 
-extern void game_line();
+extern void graph_line(void);
+extern void graph_frame(void);
 
 // public interface
 uint32_t vga_line;
@@ -248,10 +244,7 @@ void vga_setup()
 	NVIC_SetPriority(DMA2_Stream5_IRQn,0);
 
 
-	#ifdef PROFILE
-	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk ; // enable the cycle counter
-	#endif
+
 }
 
 
@@ -297,7 +290,7 @@ static void HSYNCHandler()
 
 	vga_line++;
         // starting from line #1, line #0 already in drawbuffer
-	if (vga_line <= VGA_V_PIXELS) {
+	if (vga_line < VGA_V_PIXELS) {
 
 		// swap display & draw buffers, effectively draws line-1
 		uint16_t *t;
@@ -310,26 +303,24 @@ static void HSYNCHandler()
 		#ifdef PROFILE
 		line_time = DWT->CYCCNT; // reset the perf counter
 		#endif 
-		game_line(); // Game callback !
-		
-                #ifdef PROFILE
+
+		graph_line(); // Game callback !		
+
+        #ifdef PROFILE
 		line_time = DWT->CYCCNT - line_time; // read the counter
 		if (line_time>max_line_time) {
 			max_line_time=line_time;
 			max_line =vga_line;
 		}
 		#endif
+		
 	}  else {
-		if (vga_line== VGA_V_PIXELS+1) vga_frame++; // new frame sync now
-
-		#ifdef SNES_GAMEPAD
-		if (vga_line<=VGA_V_PIXELS+1+VGA_V_BACKPORCH)
-		{
-			gamepad_readstep();
+		if (vga_line== VGA_V_PIXELS) {
+			vga_frame++; // new frame sync now. 
+			graph_frame(); 
 		}
-		#endif
 
-		if(vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) 
+		if (vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) 
 		{
 			// synchronous. buffers shall be ready now
 		    #ifdef AUDIO
@@ -345,7 +336,7 @@ static void HSYNCHandler()
 		else if(vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+VGA_V_SYNC+VGA_V_BACKPORCH)
 		{
 			vga_line=0;
-            game_line();  // first line next frame!
+            graph_line();  // first line next frame!
 		}
 	}
 

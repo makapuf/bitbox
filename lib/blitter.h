@@ -13,7 +13,7 @@ typedef struct object
 	void (*line) (struct object *o); 
 
 	// live data (typically in RAM, stable per frame)
-	int32_t x,y,z;
+	int32_t x,y,z,ry; // ry is real Y, while y is wanted y, which will be activated next frame.
 	uint32_t w,h,fr; // h is one frame height, not full height, frame is frame id
 	intptr_t a,b,c,d; // various 32b used for each blitter as extra parameters or internally
 
@@ -24,16 +24,16 @@ typedef struct object
 
 void fast_fill(uint16_t x1, uint16_t x2, uint16_t c); // utility: fast fill with 16 bits pixels
 
-void blitter_init();
-
-// adds a new object in the , returns a handler. never insert an object twice. generally use new_ functions instead.
-int blitter_insert(object *o);
+void blitter_init(void);
+object *blitter_new(void);
 void blitter_remove(object *o);
 // don't modify an object or add objects during a frame rendering. 
 
-void blitter_frame(); // callback for frames.
-void blitter_line();
+void blitter_frame(void); // callback for frames.
+void blitter_line(void);
 
+// creates a new object, activate it, copy from object.
+object *object_new(const object *from) __attribute__ ((warn_unused_result));
 
 object * rect_new(int16_t x, int16_t y, int16_t w, int16_t h,int16_t z, uint16_t color) __attribute__ ((warn_unused_result));
 object * sprite_new(uint32_t *sprite_data)  __attribute__ ((warn_unused_result)); // XXX passer en void*
@@ -61,7 +61,7 @@ object * tilemap_new (const uint16_t *tileset, int w, int h, uint32_t header, vo
 	tilemap index 0 are always transparent (ie no tile, so first tile in tileset has index 1)
 */
 
-void tmap_blit(object *tm, int x, int y, uint32_t src_header, const void *data);
+void tmap_blit(object *dst, int x, int y, uint32_t src_header, const void *src_data);
 /* 
 	blits a tilemap on the object tilemap at x,y position (x,y in tiles)
  */

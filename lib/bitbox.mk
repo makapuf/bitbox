@@ -50,6 +50,7 @@ C_OPTS = -std=c99 \
     -O3 \
     -mlittle-endian \
     -g \
+    -Wall \
     -fomit-frame-pointer 
         #-funroll-all-loops \
 
@@ -101,7 +102,7 @@ endif
 
 # engine related
 ifdef USE_ENGINE
-KERNEL_FILES += blitter.c 
+KERNEL_FILES += blitter.c blitter_btc.c blitter_sprites.c blitter_tmap.c 
 endif
 
 C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES) 
@@ -180,6 +181,6 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.S
 -include $(OBJS:.o=.d)
 
 
-$(NAME)_emu: $(GAME_C_FILES) $(BITBOX)/lib/emulator.c $(GAME_BINARY_FILES) $(if $(USE_ENGINE),$(BITBOX)/lib/blitter.c)
-	gcc -Og -DEMULATOR $(GAME_C_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(GAME_C_OPTS)  $(if $(USE_ENGINE),$(BITBOX)/lib/blitter.c) -I$(BITBOX)/lib/ $(BITBOX)/lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
+$(NAME)_emu: $(GAME_C_FILES) $(BITBOX)/lib/emulator.c $(GAME_BINARY_FILES) $(if $(USE_ENGINE),$(BITBOX)/lib/blitter.c $(BITBOX)/lib/blitter_btc.c $(BITBOX)/lib/blitter_sprites.c $(BITBOX)/lib/blitter_tmap.c )
+	gcc -Og -DEMULATOR $(GAME_C_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(GAME_C_OPTS)  $(if $(USE_ENGINE),$(BITBOX)/lib/blitter.c $(BITBOX)/lib/blitter_btc.c $(BITBOX)/lib/blitter_sprites.c $(BITBOX)/lib/blitter_tmap.c) -I$(BITBOX)/lib/ $(BITBOX)/lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
 

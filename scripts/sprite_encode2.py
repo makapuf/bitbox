@@ -9,9 +9,10 @@ from PIL import Image # using the PIL library, maybe you'll need to install it. 
 
 # TODO : multiframe, several frame spritesheets
 # nice commandline interface
-# p2 mode
+# p2 mode ; couple modes !
 
 FORCE_MODE = None # 'u16'
+DEBUG = True
 
 modes = {
     'header':0,
@@ -98,27 +99,19 @@ def image_encode(src,f,frame_height,mode) :
     if mode==None : 
         mode='p4' if len(palette)<=16 else 'p8' if len(palette)<=256 else 'u16'
     
-    print len(palette),'colors'
-    print "using mode ",mode
+    print '//',len(palette),'colors ; using mode ',mode
 
     encoders = {'p4':p4_encode, 'u16':u16_encode, 'p8':p8_encode}
-
-    # save header
-    add_record(f,'header',struct.pack("<2I",w,frame_height)) # 1 frame for now
-
-    # save palette
-    if mode in ('p4','p8') : 
-        add_record(f,'palette',struct.pack("<%dH"%len(palette),*palette))
 
     s_blits = [] # stringified blits for all image
     
     start_file = f.tell()
     line16=[] # offsets from start as u16 index on  words 
 
-    for y in xrange(h) :
+    for y in range(h) :
         if y%16==0 : 
             ofs = sum(len(x) for x in s_blits)
-            line16.append(ofs/2) # XXX use /4 but need to align 
+            line16.append(ofs/4) # XXX use /4 but need to align 
 
         skipped=0
         blits=[]
@@ -128,11 +121,18 @@ def image_encode(src,f,frame_height,mode) :
         for c,g in groupby(line, bool) : 
             t = tuple(g)
             if not c : 
-                # XXX if skip too big, split !
                 skipped = len(t)                
+                # if skip too big, split !
+                while (skipped>127) : 
+                    blits.append([127,(),False])
+                    skipped -= 127
             else :
                 # idem 
-                blits.append([skipped,t,False])
+                while t :
+                    blits.append([skipped,t[:127],False])
+                    skipped=0
+                    t=t[127:]
+
 
         # set EOL 
         if blits : 
@@ -143,11 +143,19 @@ def image_encode(src,f,frame_height,mode) :
 
         # now encode line : (header + blit) x n
         for skip, blit, eol in blits :          
-
-            s = encoders[mode](blit,palette=palette) 
-            header=(skip<<8) | (len(blit) << 1) | (1 if eol else 0)
-            s_blits.append(struct.pack('<H', header))
+            header=(skip<<9) | (len(blit) << 1) | (1 if eol else 0)
+            s = struct.pack('<H', header)
+            s+= encoders[mode](blit,palette=palette) 
+            # pad it
+            s+= '\000'*((-len(s))%4)
             s_blits.append(s)
+
+    # save header
+    add_record(f,'header',struct.pack("<2I",w,frame_height)) # 1 frame for now
+
+    # save palette
+    if mode in ('p4','p8') : 
+        add_record(f,'palette',struct.pack("<%dH"%len(palette),*palette))
             
     # write data
     add_record(f,mode,''.join(s_blits))
@@ -185,6 +193,8 @@ def image_decode(f) :
             d= struct.unpack('<%dH'%(size/2),raw_data)
             palette=[rgba(x) for x in d]
             print '(palette)',len(palette),'colors'
+            if DEBUG : print d
+            if DEBUG : print palette
 
         elif record==modes['end'] : 
             pass
@@ -200,9 +210,13 @@ def image_decode(f) :
             line=[]
             while y<h : 
                 header=struct.unpack('<H',raw_data[src:src+2])[0] ; src +=2
-                skip= header>>8
+                skip= header>>9
                 nb  = (header>>1)&0x7f # pixels
                 eol = header&1
+                if DEBUG : 
+                    print 'header(skip=%d,nb=%d,eol=%d)'%(skip,nb,eol),
+                    if (eol) : print
+
 
                 # fill with transpdata
                 if (record==modes['p8']) :
@@ -224,6 +238,8 @@ def image_decode(f) :
                     y += 1
                     tuples +=line
                     line=[]
+                # finish line by skipping bytes
+                src += (-src%4)
 
         else : 
             print "unknown record type:",record

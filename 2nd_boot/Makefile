@@ -5,7 +5,8 @@ GAME_C_FILES = $(NAME).c font.c bg.c flashit.c
 GAME_C_OPTS = -DVGAMODE_640
 include $(BITBOX)/lib/bitbox.mk
 
-# comment to build to flash. This will load boot2 as a normal program in flash
+# comment to build to flash. This will load boot2 as a normal program in flash 
+# BUT obviously cannot program flash anymore
 TO_SRAM=1
 
 ifdef TO_SRAM

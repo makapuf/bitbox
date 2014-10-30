@@ -29,6 +29,9 @@ void audio_init();
 extern uint32_t vga_line; // should be const
 extern volatile uint32_t vga_frame; 
 
+extern void graph_line(void); // user provided graphical 
+extern void graph_frame(void); // user provided graphical blitting algorithms
+
 // 0x0rrrrrgggggbbbbb pixels
 extern uint16_t *draw_buffer; // drawing next line 
 // also check kconf.h for video modes.
@@ -174,7 +177,7 @@ char kbd_map(struct event kbd_e);
     Space : Select,   2C
     Enter : Start,    28
     UDLR arrows : D-pad    52, 51, 50, 4F
-    D     : A button, 07
+    D : A button, 07
     F : B button, 09
     E : X button, 08
     R : Y button, 15
@@ -188,3 +191,5 @@ void die(int where, int cause); // blink leds
 // do nothing on device, printf it on emulator
 // please only %s, %d, %x and %p, no format qualifiers
 void message (const char *fmt, ...); 
+
+

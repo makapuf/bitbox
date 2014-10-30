@@ -106,9 +106,10 @@ static void refresh_screen(SDL_Surface *scr)
     uint16_t *dst = (uint16_t*)scr->pixels;
     
     draw_buffer = &mybuffer1[0];
+    graph_frame();
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
-        game_line(); // using line, updating draw_buffer ...
+        graph_line(); // using line, updating draw_buffer ...
 
         // copy to screen at this position (cheating)
         uint16_t *src = (uint16_t*) &draw_buffer[0];//[MARGIN];
@@ -119,7 +120,6 @@ static void refresh_screen(SDL_Surface *scr)
         // swap lines buffers to simulate double line buffering
         draw_buffer = (draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
     }
-
 }
 static void mixaudio(void * userdata, Uint8 * stream, int len)
 // this callback is called each time we need to fill the buffer
