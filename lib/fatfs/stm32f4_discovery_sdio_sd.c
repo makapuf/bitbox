@@ -1461,7 +1461,7 @@ SD_Error SD_WaitReadOperation(void)
   // SDIO->DCOUNT is at 0x40012c30  
 
   
-  volatile uint32_t x = (uint32_t) &SDIO->DCOUNT;
+ // volatile uint32_t x = (uint32_t) &SDIO->DCOUNT;
   timeout = SD_DATATIMEOUT;
   while(SDIO->DCOUNT && (timeout > 0))
   {

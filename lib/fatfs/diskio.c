@@ -40,7 +40,6 @@ DSTATUS disk_initialize (
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
 	NVIC_Init(&NVIC_InitStructure);
 	
-	SD_Error res = SD_OK;
  	/* Supports only single drive */
 	if (drv)
 	{
