@@ -9,11 +9,13 @@ NO_SDCARD=1
 NO_USB=1
 
 include $(BITBOX)/lib/bitbox.mk
-main.c:build/bg.h
+main.c:bg.h
 
-bg.tset bg_bg.tmap build/bg.h: bg.tmx bg.png ../scripts/tmx.py
-	mkdir build
-	python ../scripts/tmx.py bg.tmx > build/bg.h
+bg.tset bg_bg.tmap bg.h: bg.tmx bg.png 
+	python ../scripts/tmx.py bg.tmx > bg.h
 
 ball.spr : ball/????.png
-	python ../scripts/sprite_encode2.py $@ $? -m p4
+	#python ../scripts/sprite_encode2.py $@ $? -m p4
+	python ../scripts/couples_encode.py $@ $? 
+clean::
+	rm -f *.spr *.spr.png

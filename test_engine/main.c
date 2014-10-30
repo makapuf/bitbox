@@ -2,7 +2,7 @@
 #include <bitbox.h>
 #include <blitter.h>
 
-#include "build/bg.h"
+#include "bg.h"
 
 // #define SPRITE mechant3_16_spr
 #define SPRITE ball_spr
@@ -12,7 +12,7 @@ extern const char SPRITE[];
 
 // x and y  should be volatile since the vga thread must see the changes to x and y 
 // which are runnin in the main thread 
-#define NB 4
+#define NB 5
 #define MOVE_SQUARE 0
 #define MOVE_BALLS 1
 #define ROTATE_BALLS 1
@@ -22,15 +22,14 @@ int vx[NB],vy[NB];
 const int ini_vy []= {-4, 3, 1,-6, 4,-7, 3,-5};
 const int ini_vx []= {-2, 7, 1, 2, 4,-4, 3, 1 ,3};
 const int ini_vz []= {-3,-5,-2,-2,-2, 3, 4, 5};
-const int ini_y []= {-50,50,100,200,0,60,40,30};
+const int ini_y  []= {-50,50,100,200,0,60,40,30};
 
 
 void game_init() {
 	blitter_init();
 
-	bg=tilemap_new(bg_tset,640,65536,bg_header,bg_tmap); 
-	bg->x=bg->y=0;
-	bg->z = 200;
+	bg= tilemap_new (bg_tset, 64*16, 65536,bg_header,bg_tmap);
+	bg->z=200;
 	
 	if (MOVE_SQUARE)
 		square=rect_new (10,10,100,100,150, RGB(0xff,0,0));
@@ -81,12 +80,6 @@ void game_frame()
     
     uint32_t x = ((vga_frame%64)-32);
     bg->y = -x*x;
-    blitter_frame();
 } 
-
-void game_line()
-{	
-	blitter_line();
-}
 
 void game_snd_buffer(uint16_t *buffer, int len) {}

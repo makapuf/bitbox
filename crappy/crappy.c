@@ -105,7 +105,9 @@ void game_frame()
 	// output sound ?
 }
 
-void game_line()
+// my own graphical engine
+void graph_frame() {}
+void graph_line()
 {
 	// draw background as plain color => degrade ? 
 	for (int i=0;i<640;i++) draw_buffer[i] = BGCOLOR + (vga_line/32)*0b10000100000;
