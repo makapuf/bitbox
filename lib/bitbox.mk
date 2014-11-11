@@ -100,12 +100,22 @@ KERNEL_FILES += fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c fatfs
 KERNEL_FILES += stm32f4xx_sdio.c stm32f4xx_dma.c 
 endif 
 
-# engine related
+# Engines related
 ifdef USE_ENGINE
-KERNEL_FILES += blitter.c blitter_btc.c blitter_sprites.c blitter_tmap.c 
+ENGINE_FILES =  blitter.c blitter_btc.c blitter_sprites.c blitter_tmap.c
 endif
 
-C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES) 
+ifdef VGA_SIMPLE_MODE
+GAME_C_OPTS = -DVGA_SIMPLE_MODE=$(VGA_SIMPLE_MODE)
+ENGINE_FILES =  simple.c fonts.c
+# those mode require kernel mode 800x600
+ifneq ($(filter $(VGA_SIMPLE_MODE),1 2 4),)
+GAME_C_OPTS += -DVGAMODE_800
+endif 
+
+endif
+
+C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES) $(ENGINE_FILES)
 S_FILES = memcpy-armv7m.S
 
 
@@ -181,6 +191,6 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.S
 -include $(OBJS:.o=.d)
 
 
-$(NAME)_emu: $(GAME_C_FILES) $(BITBOX)/lib/emulator.c $(GAME_BINARY_FILES) $(if $(USE_ENGINE),$(BITBOX)/lib/blitter.c $(BITBOX)/lib/blitter_btc.c $(BITBOX)/lib/blitter_sprites.c $(BITBOX)/lib/blitter_tmap.c )
-	gcc -Og -DEMULATOR $(GAME_C_FILES) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(GAME_C_OPTS)  $(if $(USE_ENGINE),$(BITBOX)/lib/blitter.c $(BITBOX)/lib/blitter_btc.c $(BITBOX)/lib/blitter_sprites.c $(BITBOX)/lib/blitter_tmap.c) -I$(BITBOX)/lib/ $(BITBOX)/lib/emulator.c  -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
+$(NAME)_emu: $(GAME_C_FILES) $(BITBOX)/lib/emulator.c $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(addprefix $(BITBOX)/lib/, $(ENGINE_FILES))
+	gcc -Og -DEMULATOR  $(GAME_C_OPTS) $? -I$(BITBOX)/lib/ -g -Wall -std=c99 -lm `sdl-config --cflags --libs` -o $(NAME)_emu
 
