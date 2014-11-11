@@ -4,18 +4,17 @@
 
 #include "bg.h"
 
-// #define SPRITE mechant3_16_spr
-#define SPRITE ball_spr
+#define SPRITE ball_small_spr
 
 extern const char SPRITE[];
 
-
 // x and y  should be volatile since the vga thread must see the changes to x and y 
 // which are runnin in the main thread 
-#define NB 5
+#define NB 50
 #define MOVE_SQUARE 0
 #define MOVE_BALLS 1
 #define ROTATE_BALLS 1
+#define TILED_BG 0
 
 object *ball[NB], *bg, *square;
 int vx[NB],vy[NB];
@@ -28,7 +27,11 @@ const int ini_y  []= {-50,50,100,200,0,60,40,30};
 void game_init() {
 	blitter_init();
 
-	bg= tilemap_new (bg_tset, 64*16, 65536,bg_header,bg_tmap);
+	if (TILED_BG)
+		bg= tilemap_new (bg_tset, 64*16, 65535,bg_header,bg_tmap);
+	else
+		bg= rect_new (0,0,640, 480*3,200, RGB(100,100,100));
+
 	bg->z=200;
 	
 	if (MOVE_SQUARE)
@@ -40,7 +43,7 @@ void game_init() {
 		vy[i]=ini_vy[i%9];
 		ball[i] = sprite_new((uint32_t *)&SPRITE);
 		ball[i]->x = i*(640-ball[i]->w)/(NB+1);
-		ball[i]->y = ini_y[i];
+		ball[i]->y = ini_y[i%7];
 		ball[i]->z = i;
 	}
 }
