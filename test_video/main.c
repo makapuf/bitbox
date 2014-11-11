@@ -56,7 +56,7 @@ video_setframe() : file.seek(calculer), attendre frame paire
 void game_init() 
 {
     blitter_init(); // to be removed as engine shall be handled  automatically 
-    unsigned int bytes_read;
+    size_t bytes_read;
 
 	result = f_mount(&fatfs,"",1); //mount now
 	if (result==FR_OK) result = f_open (&video_file,VIDEO_FILENAME,FA_READ); // open file	
@@ -80,11 +80,9 @@ volatile int t_tot; // for all frames
 
 void game_frame() 
 {
-	unsigned int bytes_read;
+	size_t bytes_read;
 	unsigned int bytes_to_read=512;
 	static uint32_t *dst;
-
-	blitter_frame(); // shall be automated with USE ENGINE
 
 	// every 2 frame  (30fps fixed)
 	if (vga_frame%2==0) {
@@ -137,10 +135,7 @@ void game_frame()
 
 } 
 
-void game_line() 
-{
-    blitter_line();
-} 
+
 
 
 void game_snd_buffer(uint16_t *buffer, int len) {}

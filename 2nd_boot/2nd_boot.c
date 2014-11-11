@@ -341,9 +341,13 @@ void game_frame()
 	flash_frame(); // at the end to let it finish 
 }
 
+
+
 extern const uint16_t bg_data[256];
 
-void game_line() 
+void graph_frame() {}
+
+void graph_line() 
 {
 	static uint32_t lut_data[4];
 	// text mode
@@ -361,7 +365,7 @@ void game_line()
 
 	for (int i=0;i<80;i++) // column char
 	{
-		c = font_data[vram_char[vga_line / 16][i]][vga_line%16];
+		c = font_data[(uint8_t)vram_char[vga_line / 16][i]][vga_line%16];
 		// draw a character on this line
 
 		*dst++ = lut_data[(c>>6) & 0x3];

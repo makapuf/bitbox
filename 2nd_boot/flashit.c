@@ -69,7 +69,7 @@ static volatile enum State flash_state=state_idle;
 static FIL *file_to_write;
 static int current_sector;
 static PROGSIZE *src, *dst;
-static int bytes_to_write; // bytes to write on this buffer.
+static unsigned int bytes_to_write; // bytes to write on this buffer.
 static int eof;
 
 //-------------------------------------------------------
@@ -137,7 +137,7 @@ void flash_frame()
 			if ( r != FR_OK ) {
 				strcpy(flash_message,"ERROR Reading :     ");
 				display_byte(r);
-				flash_state == state_error;
+				flash_state = state_error;
 				return;
 			}
 
@@ -182,7 +182,7 @@ void flash_frame()
 				strcpy(flash_message,"ERROR Erasing :     ");
 				display_byte(r);
 
-				flash_state == state_error;
+				flash_state = state_error;
 			} 
 			break;
 

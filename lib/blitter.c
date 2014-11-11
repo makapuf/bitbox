@@ -39,10 +39,12 @@ void blitter_init()
 // append to end of list ; list ends up unsorted now
 object* blitter_new() 
 {
-    if (blt.nb_objects<MAX_OBJECTS)
+    if (blt.nb_objects<MAX_OBJECTS) {
         return blt.objects[blt.nb_objects++]; // index of free object IN !
-    else 
+    } else {
+        message ("Object memory full, too many objects ! Increase MAX_OBJECTS in lib/blitter.h");
         return 0;
+    }
 } 
 
 void blitter_remove(object *o)
@@ -115,8 +117,12 @@ void graph_frame()
     // transfer y to real y ry
     for (int i=0;i<blt.nb_objects;i++)
     {
-        o=blt.objects[i];    
-        o->ry = o->y;
+        o=blt.objects[i];   
+        if (o->y+(int)o->h>=0) 
+            o->ry = o->y;
+        else
+            o->ry = VGA_V_PIXELS+1; 
+            // if hidden above screen, hide below screen (thus activation algorithms will never run)
     }
 
     // ensure objectlist is sorted by y 
@@ -160,6 +166,7 @@ void graph_line()
     // add new active objects
     while (blt.next_to_activate<blt.nb_objects && (int)vga_line>=blt.objects[blt.next_to_activate]->ry)
     {
+        // only if not hidden (Y too negative)
         activelist_add(blt.objects[blt.next_to_activate]);
         //printf("activate %d\n",blt.objects[blt.next_to_activate]->x);
         blt.next_to_activate++;
