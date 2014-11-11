@@ -1,7 +1,9 @@
 #include <stdlib.h> // rand
 #include "simple.h"
 
-void game_init() {}
+void game_init()
+{
+}
 
 void game_frame()
 {
