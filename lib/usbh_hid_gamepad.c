@@ -9,7 +9,7 @@ typedef struct {
     // config
 
     /* hat type : 
-     *   0 : None, use analog
+     *   0 : None, use analog (assumes analog type is not 0 ! )
      *   1 : 7 value hat switch 0-7 0-270 degrees (or 0-315)
      *   2 : LDRU individual bits
      */
@@ -77,6 +77,15 @@ static const USB_Gamepad_descriptor device_table[] = {
         .dpad_bit=2*8+3,
         .analog_X_bit=40, .analog_Y_bit=48,
         .button_bit={16+14,16+15,16+0,16+3,16+13,16+12,16+11,16+10} //  B=X Y=square select start A=O X=tri L R
+    },
+
+    // Logitech Precision Gamepad (by pulkomandy)
+    {
+        .vid=0x046d, .pid=0xc21a,
+        .dpad_type=0,.analog_type=2,.max_button_index=7,
+        .dpad_bit=0,
+        .analog_X_bit=0, .analog_Y_bit=1,
+        .button_bit={17,16,24,25,18,19,20,21} // L2=22 R2=23 
     },
 
     // XBOX 360 wireless : see info from http://free60.org/wiki/index.php?title=GamePad
@@ -172,9 +181,27 @@ static void GAMEPAD_Decode(uint8_t coreID, uint8_t *data)
 
     if (!gp->vid) return; // not configured
 
+    // Analog
+    switch (gp->analog_type) 
+    {
+        case 1 :
+            gamepad_x[coreID] = (int8_t)extract(data, gp->analog_X_bit, 8);
+            gamepad_y[coreID] = (int8_t)extract(data, gp->analog_Y_bit, 8);
+            break;
+        case 2 :
+            gamepad_x[coreID] = (int16_t)extract(data, gp->analog_X_bit, 8) - 127;
+            gamepad_y[coreID] = (int16_t)extract(data, gp->analog_Y_bit, 8) - 127;
+            break;
+        case 0 :
+        default:
+            // do nothing
+            break;
+    }
+
+    // Buttons
     gamepad_buttons[coreID] = 0;
 
-    // Button
+    // XYABLR Buttons
     for (int button=0;button<=gp->max_button_index;button++)
         if (extract(data,gp->button_bit[button],1))
             gamepad_buttons[coreID] |= 1<<button;
@@ -182,6 +209,18 @@ static void GAMEPAD_Decode(uint8_t coreID, uint8_t *data)
     // Hat switch
     switch(gp->dpad_type)
     {
+        case 0 : // Fake it from signed XY values
+            if (gamepad_x[coreID]<-THRESHOLD_HAT) 
+                gamepad_buttons[coreID] |= gamepad_left;
+            if (gamepad_x[coreID]> THRESHOLD_HAT) 
+                gamepad_buttons[coreID] |= gamepad_left;
+
+            if (gamepad_y[coreID]<-THRESHOLD_HAT) 
+                gamepad_buttons[coreID] |= gamepad_up;
+            if (gamepad_y[coreID]> THRESHOLD_HAT) 
+                gamepad_buttons[coreID] |= gamepad_down;
+        break;
+
         case 1 : // 0-7 hat switch + -1 as null value
             val = extract(data, gp->dpad_bit, 4);
             gamepad_buttons[coreID] |= hat_translate[val];             
@@ -199,29 +238,10 @@ static void GAMEPAD_Decode(uint8_t coreID, uint8_t *data)
                 gamepad_buttons[coreID] |= gamepad_up;
         break;
 
-        case 0 : 
+
         default : 
             // do nothing
         break;
     }
 
-    // analog
-    switch (gp->analog_type) 
-    {
-        case 1 :
-            gamepad_x[coreID] = (int8_t)extract(data, gp->analog_X_bit, 8);
-            gamepad_y[coreID] = (int8_t)extract(data, gp->analog_Y_bit, 8);
-            break;
-        case 2 :
-            gamepad_x[coreID] = (int16_t)extract(data, gp->analog_X_bit, 8) - 127;
-            gamepad_y[coreID] = (int16_t)extract(data, gp->analog_Y_bit, 8) - 127;
-            break;
-        case 3 : 
-
-            break;
-        case 0 :
-        default:
-            // do nothing
-            break;
-    }
 }
