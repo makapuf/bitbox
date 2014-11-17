@@ -1,5 +1,7 @@
 #include "usbh_hid_devices.h"
 
+#define THRESHOLD_HAT 30 // value above which an analog is considered commited
+
 // for now no event is fired for joysticks
 volatile uint16_t gamepad_buttons[2]; // simple mapping : ABXY LR Start Select UDLR xxxx
 volatile int8_t gamepad_x[2], gamepad_y[2]; // analog pad values
