@@ -40,9 +40,15 @@ object * sprite_new(uint32_t *sprite_data)  __attribute__ ((warn_unused_result))
 object * btc4_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __attribute__ ((warn_unused_result)); 
 object * btc4_2x_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __attribute__ ((warn_unused_result)); 
 
+#define TSET_16 0
+#define TSET_32 1
 #define TMAP_U8 1
-#define TILEMAP_6464u8 64<<24|64<<16|TMAP_U8
-#define TILEMAP_3232u8 32<<24|32<<16|TMAP_U8
+
+#define TMAP_HEADER(w,h,tilesize,tmaptype) (w<<24|h<<16|tilesize<<8|tmaptype)
+
+#define TILEMAP_6464u8 64<<24|64<<16|TSET_16<<8|TMAP_U8
+#define TILEMAP_3232u8 32<<24|32<<16|TSET_16<<8|TMAP_U8
+#define TILEMAP_6464u832 32<<24|32<<16|TSET_32<<8|TMAP_U8
 
 object * tilemap_new (const uint16_t *tileset, int w, int h, uint32_t header, void *tilemap) __attribute__ ((warn_unused_result));
 /* 
@@ -54,7 +60,7 @@ object * tilemap_new (const uint16_t *tileset, int w, int h, uint32_t header, vo
 	header
 	        u8 : width of tilemap in tiles
 	        u8 : height in tiles
-	        u8 : reserved
+	        u8 : 2 low bits : tilesize. 00 = 16x16, 01 = 32x32 tiles
 	        u8 : tilemap_index_type = 0:u16, 1:u8, 2:i16, 3:i8
 	void * data : tile_index either u8 or u16 ... 
 
