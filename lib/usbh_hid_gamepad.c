@@ -86,7 +86,7 @@ static const USB_Gamepad_descriptor device_table[] = {
         .vid=0x046d, .pid=0xc21a,
         .dpad_type=0,.analog_type=2,.max_button_index=7,
         .dpad_bit=0,
-        .analog_X_bit=0, .analog_Y_bit=1,
+        .analog_X_bit=0, .analog_Y_bit=8,
         .button_bit={17,16,24,25,18,19,20,21} // L2=22 R2=23 
     },
 
