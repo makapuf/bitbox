@@ -13,6 +13,9 @@
 extern const uint8_t font_data [256][16];
 char vram_char  [30][80];
 
+int cx, cy;
+char cbak;
+
 void print_at(int column, int line, const char *msg)
 {
 	strcpy(&vram_char[line][column],msg); 
@@ -44,6 +47,8 @@ void game_init() {
 	print_at(17,3, " BITBOX USB TEST \x01 Hi ! Plug some usb device...");
 	print_at(1, 5, "Gamepad:");
 	print_at(1, 6, "Mouse: X=   Y=   lmr");
+
+	cx = cy = 0;
 }
 
 
@@ -54,62 +59,72 @@ void display_first_event(void)
 
 	struct event e;
 	e=event_get();
-	switch(e.type)
-	{
-		case evt_keyboard_press : 
-			print_at(50,10,"KB pressed      ");
-			vram_char[10][61]=HEX_Digits[e.kbd.key>>4];
-			vram_char[10][62]=HEX_Digits[e.kbd.key&0xf];
-		break;
+	while (e.type != no_event) {
+		switch(e.type)
+		{
+			case evt_keyboard_press : 
+				print_at(50,10,"KB pressed      ");
+				vram_char[10][61]=HEX_Digits[e.kbd.key>>4];
+				vram_char[10][62]=HEX_Digits[e.kbd.key&0xf];
+				break;
 
-		case evt_keyboard_release : 
-			print_at(50,10,"KB released     ");
-			vram_char[10][63]=HEX_Digits[e.kbd.key>>4];
-			vram_char[10][64]=HEX_Digits[e.kbd.key&0xf];
-		break;
+			case evt_keyboard_release : 
+				print_at(50,10,"KB released     ");
+				vram_char[10][63]=HEX_Digits[e.kbd.key>>4];
+				vram_char[10][64]=HEX_Digits[e.kbd.key&0xf];
+				break;
 
-		case evt_device_change:
-			// It seems the disconnect event is not sent currently...
-			if (e.device.type == device_unconnected)
-				print_at(50, 10, "dev. disconnect");
-			else if (e.device.type == device_keyboard)
-				print_at(50, 10, "Keyboard found!");
-			else if (e.device.type == device_mouse)
-				print_at(50, 10, "Mouse found!");
-			else if (e.device.type == device_gamepad)
-				print_at(50, 10, "Gamepad found!");
-			break;
+			case evt_device_change:
+				// It seems the disconnect event is not sent currently...
+				if (e.device.type == device_unconnected)
+					print_at(50, 10, "dev. disconnect");
+				else if (e.device.type == device_keyboard)
+					print_at(50, 10, "Keyboard found!");
+				else if (e.device.type == device_mouse)
+					print_at(50, 10, "Mouse found!");
+				else if (e.device.type == device_gamepad)
+					print_at(50, 10, "Gamepad found!");
+				break;
 
-		case evt_mouse_move:
-			vram_char[6][10]=HEX_Digits[e.mov.x>>4];
-			vram_char[6][11]=HEX_Digits[e.mov.x&0xf];
+			case evt_mouse_move:
+				vram_char[6][10]=HEX_Digits[e.mov.x>>4];
+				vram_char[6][11]=HEX_Digits[e.mov.x&0xf];
 
-			vram_char[6][15]=HEX_Digits[e.mov.y>>4];
-			vram_char[6][16]=HEX_Digits[e.mov.y&0xf];
-			break;
+				vram_char[6][15]=HEX_Digits[e.mov.y>>4];
+				vram_char[6][16]=HEX_Digits[e.mov.y&0xf];
 
-		case evt_mouse_click:
-			// the buttons IDs are NOT mousebut_left/right/middle...
-			if (e.button.id == 0) vram_char[6][18] = 'L';
-			if (e.button.id == 2) vram_char[6][19] = 'M';
-			if (e.button.id == 1) vram_char[6][20] = 'R';
-			break;
+				cx += e.mov.x;
+				cy += e.mov.y;
+				if (cy < 0) cy = 480;
+				else if (cy >= 480) cy = 0;
+				if (cx < 0) cx = 640;
+				else if (cx >= 640) cx = 0;
+				break;
 
-		case evt_mouse_release:
-			if (e.button.id == 0) vram_char[6][18] = 'l';
-			if (e.button.id == 2) vram_char[6][19] = 'm';
-			if (e.button.id == 1) vram_char[6][20] = 'r';
-			break;
+			case evt_mouse_click:
+				// the buttons IDs are NOT mousebut_left/right/middle...
+				if (e.button.id == 0) vram_char[6][18] = 'L';
+				if (e.button.id == 2) vram_char[6][19] = 'M';
+				if (e.button.id == 1) vram_char[6][20] = 'R';
+				break;
 
-		case evt_user:
-			print_at(50, 10, "user event");
-			break;
+			case evt_mouse_release:
+				if (e.button.id == 0) vram_char[6][18] = 'l';
+				if (e.button.id == 2) vram_char[6][19] = 'm';
+				if (e.button.id == 1) vram_char[6][20] = 'r';
+				break;
 
-		case no_event:
-		break;
+			case evt_user:
+				print_at(50, 10, "user event");
+				break;
 
-		default:
-			print_at(50, 10, "UNHANDLED");
+			case no_event:
+				break;
+
+			default:
+				print_at(50, 10, "UNHANDLED");
+		}
+		e=event_get();
 	}
 	//if (e.type) event_push(e); // put it back
 #endif
@@ -117,8 +132,10 @@ void display_first_event(void)
 
 void game_frame() 
 {
+	vram_char[cy / 16][cx / 8] = cbak;
+
 	display_first_event();
-	
+
 	char* val = &vram_char[5][10];
 
 	// handle input 
@@ -136,6 +153,9 @@ void game_frame()
 	val[11] = GAMEPAD_PRESSED(0,R) ? 'R':'r';
 	val[12] = GAMEPAD_PRESSED(0,select) ? 'S':'s';
 	val[13] = GAMEPAD_PRESSED(0,start) ? 'G':'g';
+
+	cbak = vram_char[cy / 16][cx / 8];
+	vram_char[cy / 16][cx / 8] = 127;
 
 }
 
