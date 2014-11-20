@@ -64,10 +64,16 @@ void graph_line()
       if (gamepad_buttons[0] & (1 << i)) draw_buffer[320+i]^=0x7fff;
     }
 
+    // gamepad pointer
     if (vga_line==200+y)
 	{
 		draw_buffer[320+x]^=0x7fff;
 	}
+
+	// gamepad analog  : red point
+	if (vga_line == gamepad_y[0]+240)
+		draw_buffer[gamepad_x[0]+320] = RGB(255,0,0);
+
 
 	// display mouse state as crosshair
 	if (vga_line==data_mouse_y) {

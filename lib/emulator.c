@@ -78,6 +78,9 @@ static SDL_Joystick * sdl_joy = NULL;
 static const int joy_commit_range = 3276;
 static const int gamepad_MAX = 12;
 
+ // XXX FIXME handle them !
+volatile int8_t gamepad_x[2], gamepad_y[2]; // analog pad values
+
 uint32_t time_left(void)
 {
     uint32_t now;
@@ -292,6 +295,7 @@ const char * gamepad_names[] = {
 #define KD(key,code) case SDLK_##key : gamepad_buttons[0] |= gamepad_##code; break;
 #define KU(key,code) case SDLK_##key : gamepad_buttons[0] &= ~gamepad_##code; break;
 
+void kbd_emulate_gamepad (void) {} // XXX
 static bool handle_gamepad()
 {
         SDL_Event event;

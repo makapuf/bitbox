@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
   * @file    usbh_hid_core.c
-  * @author  MCD Application Team
+  * @author  MCD Application Team / makapuf (added report descriptor simple parsing)
   * @version V2.1.0
   * @date    19-March-2012
   * @brief   This file is the HID Layer Handlers for USB Host HID class.
@@ -341,11 +341,11 @@ static USBH_Status USBH_HID_ClassRequest(USB_OTG_CORE_HANDLE *pdev ,
     
     break;     
   case HID_REQ_GET_REPORT_DESC:
-    
-    
+
     /* Get Report Desc */ 
     if (USBH_Get_HID_ReportDescriptor(pdev , pphost, HID_Descs[pdev->cfg.coreID].wItemLength) == USBH_OK)
     {
+      USBH_ParseHIDReportDesc(&gamepad_parsed_descriptor[pdev->cfg.coreID], pdev->host.Rx_Buffer);
       HID_Machine->ctl_state = HID_REQ_SET_IDLE;
     }
     
