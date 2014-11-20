@@ -138,4 +138,6 @@ void game_frame()
 
 
 
-void game_snd_buffer(uint16_t *buffer, int len) {}
+void game_snd_buffer(uint16_t *buffer, int len) {
+	// FIXME sound
+}

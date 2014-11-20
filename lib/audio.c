@@ -71,5 +71,5 @@ void audio_out12(uint32_t valueLR) // use 0-4095 values
 	DAC->DHR12RD = (uint32_t) valueLR;
 }
 
-
-
+// default empty implementation
+__attribute__((weak)) void game_snd_buffer(uint16_t *buffer, int len)  {}

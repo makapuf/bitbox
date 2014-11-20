@@ -393,5 +393,4 @@ void graph_line()
 	}
 }
 
-void game_snd_buffer(uint16_t *buffer, int len) {} // beeps ?
 

@@ -80,8 +80,3 @@ void game_line()
 	if (vga_line/2==420/2) memset(draw_buffer,0,640*2);
 
 }
-
-void game_snd_buffer(uint16_t *buffer, int len) 
-/* generates a 500Hz sound alternating between left & right */
-{
-};

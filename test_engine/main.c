@@ -10,11 +10,11 @@ extern const char SPRITE[];
 
 // x and y  should be volatile since the vga thread must see the changes to x and y 
 // which are runnin in the main thread 
-#define NB 50
+#define NB 20
 #define MOVE_SQUARE 0
 #define MOVE_BALLS 1
 #define ROTATE_BALLS 1
-#define TILED_BG 0
+#define TILED_BG 1
 
 object *ball[NB], *bg, *square;
 int vx[NB],vy[NB];
@@ -85,4 +85,3 @@ void game_frame()
     bg->y = -x*x;
 } 
 
-void game_snd_buffer(uint16_t *buffer, int len) {}

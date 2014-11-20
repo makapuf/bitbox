@@ -220,6 +220,3 @@ void clear()
 }
 
 #endif
-
-// SOUND ---------------------------------------
-void game_snd_buffer(uint16_t *buffer, int len) {}
