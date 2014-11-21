@@ -3,7 +3,8 @@
 
 /* 
     modes 
-    0 - txt 16c 80x25  fg/bg  (16x8 chars)	4k vram + 4k ROM bitmap 
+
+    0 - txt 16c 80x30  fg/bg  (16x8 chars)	4k vram + 4k ROM bitmap 
     1 - txt 16c 132x75 (8x6 chars) 	19k vram+2k ROM bitmap 	
 
     2 - 1BPP 800x600   
@@ -14,7 +15,7 @@
 
 #if   VGA_SIMPLE_MODE==0 
 #define SCREEN_W 80
-#define SCREEN_H 25
+#define SCREEN_H 30
 
 #elif VGA_SIMPLE_MODE==1
 #define SCREEN_W 132
@@ -42,6 +43,9 @@
 
 #endif
 
+// Utilities ------------------------------------------------
+
+void clear();
 
 #ifdef BPP // only for graphical modes
 extern uint32_t vram[];
@@ -50,6 +54,14 @@ extern uint16_t palette[];
 void draw_pixel(int x, int y, int c);
 void draw_line(int x0, int y0, int x1, int y1, int c);
 void clear();
-#else
-extern char vram[];
+
+#else // only for text modes
+
+extern char vram[SCREEN_H][SCREEN_W];
+
+void print_at(int column, int line, const char *msg);
+
+// draws an empty window at this position, asserts x1<x2 && y1<y2
+void window (int x1, int y1, int x2, int y2 );
+
 #endif

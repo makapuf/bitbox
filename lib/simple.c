@@ -14,7 +14,7 @@ void graph_frame() {}
 
 extern const uint8_t font16_data[256][16];
 
-char vram[SCREEN_W*SCREEN_H];
+char vram[SCREEN_H][SCREEN_W];
 uint16_t palette[2]={0,0x56b5}; 
 
 void graph_line() {
@@ -29,7 +29,7 @@ void graph_line() {
 	uint8_t c;
 
 	for (int i=0;i<80;i++) {// column char
-		c = font16_data[(uint8_t) vram[(vga_line / 16)*80+i]][vga_line%16];
+		c = font16_data[(uint8_t) vram[vga_line / 16][i]][vga_line%16];
 		// draw a character on this line
 		*dst++ = lut_data[(c>>6) & 0x3];
 		*dst++ = lut_data[(c>>4) & 0x3];
@@ -44,7 +44,7 @@ void graph_line() {
 extern const uint8_t font8_data[256][8];
 
 uint16_t palette[2]={0,0x56b5}; 
-char vram[SCREEN_W*SCREEN_H];
+char vram[SCREEN_H][SCREEN_W];
 
 void graph_line() {
 	static uint32_t lut_data[4]; // cache couples for faster draws
@@ -58,7 +58,7 @@ void graph_line() {
 	uint8_t c;
 
 	for (int i=0;i<132;i++) {// column char
-		c = font8_data[(uint8_t)vram[(vga_line/8)*132+i]][vga_line%8];
+		c = font8_data[(uint8_t)vram[vga_line/8][i]][vga_line%8];
 		// draw a character on this line - 6 pixels is 3 couples ie 3 u32
 		*dst++ = lut_data[(c>>4) & 0x3];
 		*dst++ = lut_data[(c>>2) & 0x3];
@@ -192,6 +192,13 @@ void graph_line() {
 #endif
 
 // --------------------------------------------------------------
+// utilities 
+
+void clear() 
+{
+   memset(vram, 0, sizeof(vram));
+}
+
 
 #ifdef BPP // this is a graphical mode
 void draw_pixel(int x,int y,int c)
@@ -214,9 +221,29 @@ void draw_line(int x0, int y0, int x1, int y1, int c) {
     if (e2 < dy) { err += dx; y0 += sy; }
   }
 }
-void clear() 
+#else 
+
+void print_at(int column, int line, const char *msg)
 {
-   memset(vram, 0, 400*300/2);
+	strcpy(&vram[line][column],msg);
 }
 
+// draws an empty window at this position, asserts x1<x2 && y1<y2
+void window (int x1, int y1, int x2, int y2 )
+{
+	for (int i=x1+1;i<x2;i++) 
+	{
+		vram[y1][i]='\xCD';
+		vram[y2][i]='\xCD';
+	}
+	for (int i=y1+1;i<y2;i++) 
+	{
+		vram[i][x1]='\xBA';
+		vram[i][x2]='\xBA';
+	}
+	vram[y1][x1] ='\xC9';
+	vram[y1][x2] ='\xBB'; 
+	vram[y2][x1] ='\xC8'; 
+	vram[y2][x2] ='\xBC'; 
+}
 #endif

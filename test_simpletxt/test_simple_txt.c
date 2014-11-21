@@ -10,12 +10,12 @@ const char *lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Do
 void game_init() {
     //  draw ascii set
     for (int i=0;i<256;i++) {
-        vram[(i/16)*SCREEN_W+i%16]=i;
+        vram[i/16][i%16]=i;
     }
 
     // print text (crudely, no \n or \t interpreting)
-    strcpy(&vram[18*SCREEN_W],lorem);
-    strcpy(&vram[5*SCREEN_W+60],"Hello Bitbox simple text !");
+    print_at(0,18,lorem);
+    print_at(60,5, "Hello Bitbox simple text !");
 
 }
 
