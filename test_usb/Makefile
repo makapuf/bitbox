@@ -1,14 +1,8 @@
 #NO_USB=1
 NO_SDCARD=1
+VGA_SIMPLE_MODE=0 # 80x25 VGA-like textmode
 
 NAME = testusb
-GAME_C_FILES = $(NAME).c font.c bg.c
-GAME_C_OPTS = -DVGAMODE_640
+GAME_C_FILES = $(NAME).c
 include $(BITBOX)/lib/bitbox.mk
 
-#.INTERMEDIATE: font.c
-font.c: 8x16_437.png
-	python mk_font.py $< > $@
-
-bg.c: bg.png
-	python mk_bg.py $< > $@

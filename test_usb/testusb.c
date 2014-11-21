@@ -10,15 +10,17 @@
 #include "stm32f4xx.h"
 #endif
 
+#define SCRW 80
+
 extern const uint8_t font_data [256][16];
-char vram_char  [30][80];
+extern char vram[];
 
 int cx, cy;
 char cbak;
 
 void print_at(int column, int line, const char *msg)
 {
-	strcpy(&vram_char[line][column],msg); 
+	strcpy(&vram[line * SCRW + column],msg);
 }
 
 // draws an empty window at this position, asserts x1<x2 && y1<y2
@@ -27,18 +29,18 @@ void window (int x1, int y1, int x2, int y2 )
 {
 	for (int i=x1+1;i<x2;i++) 
 	{
-		vram_char[y1][i]='\xCD';
-		vram_char[y2][i]='\xCD';
+		vram[y1 * SCRW + i]='\xCD';
+		vram[y2 * SCRW + i]='\xCD';
 	}
 	for (int i=y1+1;i<y2;i++) 
 	{
-		vram_char[i][x1]='\xBA';
-		vram_char[i][x2]='\xBA';
+		vram[i * SCRW + x1]='\xBA';
+		vram[i * SCRW + x2]='\xBA';
 	}
-	vram_char[y1][x1] ='\xC9';
-	vram_char[y1][x2] ='\xBB'; 
-	vram_char[y2][x1] ='\xC8'; 
-	vram_char[y2][x2] ='\xBC'; 
+	vram[y1 * SCRW + x1] ='\xC9';
+	vram[y1 * SCRW + x2] ='\xBB'; 
+	vram[y2 * SCRW + x1] ='\xC8'; 
+	vram[y2 * SCRW + x2] ='\xBC'; 
 }
 
 
@@ -64,14 +66,14 @@ void display_first_event(void)
 		{
 			case evt_keyboard_press : 
 				print_at(50,10,"KB pressed      ");
-				vram_char[10][61]=HEX_Digits[e.kbd.key>>4];
-				vram_char[10][62]=HEX_Digits[e.kbd.key&0xf];
+				vram[10 * SCRW + 61]=HEX_Digits[e.kbd.key>>4];
+				vram[10 * SCRW + 62]=HEX_Digits[e.kbd.key&0xf];
 				break;
 
 			case evt_keyboard_release : 
 				print_at(50,10,"KB released     ");
-				vram_char[10][63]=HEX_Digits[e.kbd.key>>4];
-				vram_char[10][64]=HEX_Digits[e.kbd.key&0xf];
+				vram[10 * SCRW + 63]=HEX_Digits[e.kbd.key>>4];
+				vram[10 * SCRW + 64]=HEX_Digits[e.kbd.key&0xf];
 				break;
 
 			case evt_device_change:
@@ -87,11 +89,11 @@ void display_first_event(void)
 				break;
 
 			case evt_mouse_move:
-				vram_char[6][10]=HEX_Digits[e.mov.x>>4];
-				vram_char[6][11]=HEX_Digits[e.mov.x&0xf];
+				vram[6 * SCRW + 10]=HEX_Digits[e.mov.x>>4];
+				vram[6 * SCRW + 11]=HEX_Digits[e.mov.x&0xf];
 
-				vram_char[6][15]=HEX_Digits[e.mov.y>>4];
-				vram_char[6][16]=HEX_Digits[e.mov.y&0xf];
+				vram[6 * SCRW + 15]=HEX_Digits[e.mov.y>>4];
+				vram[6 * SCRW + 16]=HEX_Digits[e.mov.y&0xf];
 
 				cx += e.mov.x;
 				cy += e.mov.y;
@@ -103,15 +105,15 @@ void display_first_event(void)
 
 			case evt_mouse_click:
 				// the buttons IDs are NOT mousebut_left/right/middle...
-				if (e.button.id == 0) vram_char[6][18] = 'L';
-				if (e.button.id == 2) vram_char[6][19] = 'M';
-				if (e.button.id == 1) vram_char[6][20] = 'R';
+				if (e.button.id == 0) vram[6 * SCRW + 18] = 'L';
+				if (e.button.id == 2) vram[6 * SCRW + 19] = 'M';
+				if (e.button.id == 1) vram[6 * SCRW + 20] = 'R';
 				break;
 
 			case evt_mouse_release:
-				if (e.button.id == 0) vram_char[6][18] = 'l';
-				if (e.button.id == 2) vram_char[6][19] = 'm';
-				if (e.button.id == 1) vram_char[6][20] = 'r';
+				if (e.button.id == 0) vram[6 * SCRW + 18] = 'l';
+				if (e.button.id == 2) vram[6 * SCRW + 19] = 'm';
+				if (e.button.id == 1) vram[6 * SCRW + 20] = 'r';
 				break;
 
 			case evt_user:
@@ -132,11 +134,11 @@ void display_first_event(void)
 
 void game_frame() 
 {
-	vram_char[cy / 16][cx / 8] = cbak;
+	vram[(cy / 16) * SCRW + cx / 8] = cbak;
 
 	display_first_event();
 
-	char* val = &vram_char[5][10];
+	char* val = &vram[5 * SCRW + 10];
 
 	// handle input 
 	val[0] = GAMEPAD_PRESSED(0,up) ? 'U':'u';
@@ -154,44 +156,8 @@ void game_frame()
 	val[12] = GAMEPAD_PRESSED(0,select) ? 'S':'s';
 	val[13] = GAMEPAD_PRESSED(0,start) ? 'G':'g';
 
-	cbak = vram_char[cy / 16][cx / 8];
-	vram_char[cy / 16][cx / 8] = 127;
+	cbak = vram[(cy / 16) * SCRW + cx / 8];
+	vram[(cy / 16) * SCRW + cx / 8] = 127;
 
 }
-
-
-
-extern const uint16_t bg_data[256];
-
-void graph_frame() {}
-
-void graph_line() 
-{
-	static uint32_t lut_data[4];
-	// text mode
-
-	// bg effect, just because
-	uint16_t line_color = bg_data[(vga_frame+vga_line)%256];
-	lut_data[0] = 0;
-	lut_data[1] = line_color<<16;
-	lut_data[2] = (uint32_t) line_color;
-	lut_data[3] = line_color * 0x10001;
-	
-
-	uint32_t *dst = (uint32_t *) draw_buffer;
-	char c;
-
-	for (int i=0;i<80;i++) // column char
-	{
-		c = font_data[(uint8_t)vram_char[vga_line / 16][i]][vga_line%16];
-		// draw a character on this line
-
-		*dst++ = lut_data[(c>>6) & 0x3];
-		*dst++ = lut_data[(c>>4) & 0x3];
-		*dst++ = lut_data[(c>>2) & 0x3];
-		*dst++ = lut_data[(c>>0) & 0x3];
-	}
-}
-
-void game_snd_buffer(uint16_t *buffer, int len) {} // beeps ?
 
