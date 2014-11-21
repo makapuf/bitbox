@@ -16,6 +16,10 @@
 #             NO_SDCARD,    - when you don't want to use or compile SDcard or fatfs related functions in the game
 #             USE_ENGINE,   - when you want to use the engine
 #             USE_SD_SENSE  - enabling this will disable being used on rev2 !
+#   Simple mode related : 
+#        VGA_SIMPLE_MODE=0 .. 5 (see simple.h for modes)
+#   Simple Sampler : 
+#        USE_SAMPLER=1
 
 #NAME = yourgame
 #GAME_C_FILES = test_data.c object.c $(NAME).c
@@ -87,6 +91,7 @@ ifndef NO_USB
 	usbh_hid_keybd.c \
 	usbh_hid_mouse.c \
 	usbh_hid_gamepad.c \
+	usbh_hid_parse.c \
 	usbh_ioreq.c \
 	usbh_stdreq.c \
 	stm32fxxx_it.c 
@@ -101,18 +106,24 @@ KERNEL_FILES += stm32f4xx_sdio.c stm32f4xx_dma.c
 endif 
 
 # Engines related
+# - tiles & sprites
 ifdef USE_ENGINE
-ENGINE_FILES =  blitter.c blitter_btc.c blitter_sprites.c blitter_tmap.c
+ENGINE_FILES +=  blitter.c blitter_btc.c blitter_sprites.c blitter_tmap.c
 endif
 
+# - simple modes
 ifdef VGA_SIMPLE_MODE
-GAME_C_OPTS = -DVGA_SIMPLE_MODE=$(VGA_SIMPLE_MODE)
-ENGINE_FILES =  simple.c fonts.c
+GAME_C_OPTS += -DVGA_SIMPLE_MODE=$(VGA_SIMPLE_MODE)
+ENGINE_FILES +=  simple.c fonts.c
 # those mode require kernel mode 800x600
 ifneq ($(filter $(VGA_SIMPLE_MODE),1 2 4),)
 GAME_C_OPTS += -DVGAMODE_800
 endif 
+endif 
 
+# - simple sampler
+ifdef USE_SAMPLER
+ENGINE_FILES += sampler.c
 endif
 
 C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES) $(ENGINE_FILES)
@@ -121,6 +132,7 @@ S_FILES = memcpy-armv7m.S
 
 OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.S=$(BUILD_DIR)/%.o) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%_dat.o) 
 
+$(warning $(OBJS))
 
 ALL_CFLAGS = $(C_OPTS) $(DEFINES) $(CFLAGS) $(GAME_C_OPTS)
 ALL_LDFLAGS = $(LD_FLAGS) -mthumb -mcpu=cortex-m4 -nostartfiles -Wl,-T,$(LINKER_SCRIPT),--gc-sections
@@ -189,7 +201,6 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.S
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 
 -include $(OBJS:.o=.d)
-
 #--- Emulator
 
 HOST = $(shell uname)
