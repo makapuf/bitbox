@@ -74,7 +74,6 @@ FLASH_START = 0x08004000
 
 KERNEL_FILES = startup.c system.c \
 	new_vga.c bitbox_main.c audio.c \
-	evt_queue.c\
 	stm32f4xx_gpio.c \
 	stm32f4xx_rcc.c \
 	stm32f4xx_tim.c \
@@ -105,7 +104,11 @@ KERNEL_FILES += fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c fatfs
 KERNEL_FILES += stm32f4xx_sdio.c stm32f4xx_dma.c 
 endif 
 
-# Engines related
+# Engines related - engines are libs that stay on top of the kernel
+# so they are included in the emulator. Most are optional
+
+# - events
+ENGINE_FILES += evt_queue.c
 # - tiles & sprites
 ifdef USE_ENGINE
 ENGINE_FILES +=  blitter.c blitter_btc.c blitter_sprites.c blitter_tmap.c

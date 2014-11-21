@@ -1,5 +1,7 @@
 #include <stdlib.h>
+
 #include <SDL/SDL.h>
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -160,6 +162,8 @@ void audio_init(void)
 
 }
 
+// default empty implementation
+__attribute__((weak)) void game_snd_buffer(uint16_t *buffer, int len)  {}
 
 void set_mode(int width, int height)
 {
@@ -202,7 +206,7 @@ static void joy_init()
         }   
     }
     
-    /* make sure that Joystick event polling is a go */
+    /* make sure that Joystick sdl_event polling is a go */
     SDL_JoystickEventState(SDL_ENABLE);
 }
 
@@ -232,49 +236,15 @@ int init(void)
 
 void instructions ()
 {
-    printf("Use joystick or following keys : \n");
+    printf("Use Joystick, Mouse or keyboard.");
     printf("       -------\n");
+    printf("Keyboard for some games emulate Gamepad with the following keys \n");
     printf("    Space (Select),   Enter (Start),   Arrows (D-pad)\n");
-    printf("    D (A button),     F (B button),    E (X button),   R (Y button),\n");
-    printf("    Left/Right CTRL (L/R shoulders),   ESC (quit), B (user Button)\n");
+    printf("    D (A button),     F (B button),    E (X button), R (Y button),\n");
+    printf("    Left/Right CTRL (L/R shoulders),   ESC (quit), B (bitbox user Button)\n");
     printf("       -------\n");
 }
 
-
-
-// handle HAT and analog joystick properly.
-
-
-static void handle_joystick(SDL_Event event)
-{
-    int axisval = event.jaxis.value;
-    switch (event.jaxis.axis)
-    {
-    case 0: /* X axis */
-        if (axisval > joy_commit_range)
-            gamepad_buttons[0] |= gamepad_right;
-        else 
-            gamepad_buttons[0] &= ~gamepad_right;
-
-        if (axisval < -(joy_commit_range))
-            gamepad_buttons[0] |= gamepad_left;
-        else 
-            gamepad_buttons[0] &= ~gamepad_left;
-        break;
-        
-    case 1: /* Y axis*/ 
-        if (axisval > joy_commit_range)
-            gamepad_buttons[0] |= gamepad_down;
-        else 
-            gamepad_buttons[0] &= ~gamepad_down;
-
-        if (axisval < -(joy_commit_range))
-            gamepad_buttons[0] |= gamepad_up;
-        else 
-            gamepad_buttons[0] &= ~gamepad_up;
-        break;
-    }
-}
 
 const char * gamepad_names[] = {
     "gamepad_A",
@@ -295,89 +265,93 @@ const char * gamepad_names[] = {
 #define KD(key,code) case SDLK_##key : gamepad_buttons[0] |= gamepad_##code; break;
 #define KU(key,code) case SDLK_##key : gamepad_buttons[0] &= ~gamepad_##code; break;
 
-void kbd_emulate_gamepad (void) {} // XXX
 static bool handle_gamepad()
 {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
+        SDL_Event sdl_event;
+        while (SDL_PollEvent(&sdl_event))
         {
             // check for messages
-            switch (event.type)
+            switch (sdl_event.type)
             {
-                // exit if the window is closed
+            // exit if the window is closed
             case SDL_QUIT:
                 return true;
                 break;
 
-                // check for keypresses
+            // check for keypresses
             case SDL_KEYDOWN:
-                {
-                    switch(event.key.keysym.sym) {
-                        // exit if ESCAPE is pressed
-                        case SDLK_ESCAPE:
-                            return true; // quit now
-                        break;
-                        KD(d,A)
-                        KD(f,B)
-                        KD(e,X)
-                        KD(r,Y)
-                        KD(LCTRL, L)
-                        KD(RCTRL, R)
-                        KD(RETURN, start)
-                        KD(SPACE, select)
-                        KD(LEFT, left)
-                        KD(RIGHT, right)
-                        KD(UP, up)
-                        KD(DOWN, down)
-
-                        case SDLK_b : user_button = 1;
-                        break;
-
-                        default :
-                        break;
+                if (sdl_event.key.keysym.sym == SDLK_ESCAPE)
+                    return true; // quit now
+                
+                event_push((struct event){
+                    .type= evt_keyboard_press,
+                    .kbd={
+                        .key=sdl_event.key.keysym.sym,
+                        .mod=sdl_event.key.keysym.mod
                     }
-                    break;
-                }
-            case SDL_KEYUP:
-                {
-                    switch(event.key.keysym.sym) {
-                        KU(d, A)
-                        KU(f,B)
-                        KU(e,X)
-                        KU(r,Y)
-                        KU(LCTRL, L)
-                        KU(RCTRL, R)
-                        KU(RETURN, start)
-                        KU(SPACE, select)
-                        KU(LEFT, left)
-                        KU(RIGHT, right)
-                        KU(UP, up)
-                        KU(DOWN, down)
+                });
 
-                        case SDLK_b : user_button = 0;
-                        break;
+                break;
 
-                        default :
-                        break;
+            case SDL_KEYUP:               
+                event_push((struct event) {
+                    .type= evt_keyboard_release,
+                    .kbd={
+                        .key=sdl_event.key.keysym.sym,
+                        .mod=sdl_event.key.keysym.mod
                     }
-                    break;
+                });
+                break;
 
+            // joypads
+            case SDL_JOYAXISMOTION: // analog position
+                switch (sdl_event.jaxis.axis) {
+                    case 0: /* X axis */
+                        gamepad_x[0]=sdl_event.jaxis.value>>8;
+                        break;
+                    case 1: /* Y axis*/ 
+                        gamepad_y[0]=sdl_event.jaxis.value>>8;
+                        break;
                 }
-            case SDL_JOYAXISMOTION:
-                handle_joystick(event);
                 break;
-            case SDL_JOYBUTTONUP:
-                if (event.jbutton.button>=gamepad_MAX) break;
-                gamepad_buttons[0] &= ~(1<<event.jbutton.button);
+
+            case SDL_JOYBUTTONUP: // buttons
+                if (sdl_event.jbutton.button>=gamepad_MAX) break;
+                gamepad_buttons[0] &= ~(1<<sdl_event.jbutton.button);
                 break;
+
             case SDL_JOYBUTTONDOWN:
-                if (event.jbutton.button>=gamepad_MAX) break;
-                gamepad_buttons[0] |= 1<<event.jbutton.button;
-                printf ("pressed button %d : %s\n",
-                    event.jbutton.button,
-                    gamepad_names[event.jbutton.button]
-                    );
+                if (sdl_event.jbutton.button>=gamepad_MAX) break;
+                gamepad_buttons[0] |= 1<<sdl_event.jbutton.button;
+
                 break;
+
+            case SDL_JOYHATMOTION: // HAT
+                gamepad_buttons[0] &= ~(gamepad_up|gamepad_down|gamepad_left|gamepad_right);
+                if (sdl_event.jhat.value & SDL_HAT_UP)      gamepad_buttons[0] |= gamepad_up;
+                if (sdl_event.jhat.value & SDL_HAT_DOWN)    gamepad_buttons[0] |= gamepad_down;
+                if (sdl_event.jhat.value & SDL_HAT_LEFT)    gamepad_buttons[0] |= gamepad_left;
+                if (sdl_event.jhat.value & SDL_HAT_RIGHT)   gamepad_buttons[0] |= gamepad_right;
+                break;
+
+            // mouse 
+            case SDL_MOUSEBUTTONDOWN:
+                event_push((struct event){.type=evt_mouse_click, .button={.port=0, .id=sdl_event.button.button-1}});
+                data_mouse_buttons |= 1<<(sdl_event.button.button-1);
+                break;
+            case SDL_MOUSEBUTTONUP:
+                event_push((struct event){.type=evt_mouse_release, .button={.port=0, .id=sdl_event.button.button-1}});
+                data_mouse_buttons &= ~1<<(sdl_event.button.button-1);
+                break;
+            case SDL_MOUSEMOTION :
+                event_push( (struct event){
+                    .type=evt_mouse_move, 
+                    .mov={.port=0, .x=sdl_event.motion.xrel, .y=sdl_event.motion.yrel}
+                });
+                data_mouse_x += sdl_event.motion.xrel;
+                data_mouse_y += sdl_event.motion.yrel;
+                break;
+
             } // end switch
         } // end of message processing
 
