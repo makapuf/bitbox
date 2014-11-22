@@ -12,7 +12,6 @@
 #endif
 
 int cx, cy;
-char cbak;
 
 void game_init() {
 	window(2,2,78,4);
@@ -20,18 +19,22 @@ void game_init() {
 	print_at(1, 6, "Mouse: X=   Y=   lmr");
 
 	print_at(1, 7, "Gamepad:");
+	// "graphical" gamepad
 	window(8, 8, 8+17, 12);
 	print_at(10,8,"[ ]");
 	print_at(4+17,8,"[ ]");
+
+	// analog values
+	window(27, 6, 27+17, 6+9);
+	print_at(28,5,"Analog pad:   x");
 
 	cx = cy = 0;
 }
 
 
+static const char *HEX_Digits = "0123456789ABCDEF";
 void display_first_event(void)
 {
-	static const char *HEX_Digits = "0123456789ABCDEF";
-
 	struct event e;
 	e=event_get();
 	while (e.type != no_event) {
@@ -106,11 +109,14 @@ void display_first_event(void)
 
 void game_frame() 
 {
+	static char cbak;
+	static uint8_t gpx, gpy;
+
 	vram[cy / 16][cx / 8] = cbak;
 
 	display_first_event();
 
-	// handle input 
+	// gamepad buttons
 	vram[9][11] = GAMEPAD_PRESSED(0,up) ? 'U':'u';
 	vram[11][11] = GAMEPAD_PRESSED(0,down) ? 'D':'d';
 	vram[10][9] = GAMEPAD_PRESSED(0,left) ? 'L':'l';
@@ -126,6 +132,21 @@ void game_frame()
 	vram[11][15] = GAMEPAD_PRESSED(0,select) ? 'S':'s';
 	vram[11][18] = GAMEPAD_PRESSED(0,start) ? 'G':'g';
 
+	// analog gamepad
+	vram[5][40]=HEX_Digits[gamepad_x[0]>>4];
+	vram[5][41]=HEX_Digits[gamepad_x[0]&0xf];
+
+	vram[5][43]=HEX_Digits[gamepad_y[0]>>4];
+	vram[5][44]=HEX_Digits[gamepad_y[0]&0xf];
+
+	vram[7 + gpy / 8][28 + gpx / 16] = ' ';
+
+	gpx = gamepad_x[0];
+	gpy = gamepad_y[0];
+
+	vram[7 + gpy / 8][28 + gpx / 16] = '+';
+
+	// mouse cursor
 	cbak = vram[cy / 16][cx / 8];
 	vram[cy / 16][cx / 8] = 127;
 
