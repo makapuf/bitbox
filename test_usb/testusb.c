@@ -110,7 +110,7 @@ void display_first_event(void)
 void game_frame() 
 {
 	static char cbak;
-	static uint8_t gpx, gpy;
+	static int8_t gpx, gpy;
 
 	vram[cy / 16][cx / 8] = cbak;
 
@@ -139,12 +139,12 @@ void game_frame()
 	vram[5][43]=HEX_Digits[gamepad_y[0]>>4];
 	vram[5][44]=HEX_Digits[gamepad_y[0]&0xf];
 
-	vram[7 + gpy / 8][28 + gpx / 16] = ' ';
+	vram[11 + gpy / 32][36 + gpx / 16] = ' ';
 
 	gpx = gamepad_x[0];
 	gpy = gamepad_y[0];
 
-	vram[7 + gpy / 8][28 + gpx / 16] = '+';
+	vram[11 + gpy / 32][36 + gpx / 16] = '+';
 
 	// mouse cursor
 	cbak = vram[cy / 16][cx / 8];
