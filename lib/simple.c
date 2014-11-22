@@ -225,7 +225,8 @@ void draw_line(int x0, int y0, int x1, int y1, int c) {
 
 void print_at(int column, int line, const char *msg)
 {
-	strcpy(&vram[line][column],msg);
+	for(int k = 0; msg[k]; k++)
+		vram[line][column + k] = msg[k];
 }
 
 // draws an empty window at this position, asserts x1<x2 && y1<y2
