@@ -262,8 +262,22 @@ const char * gamepad_names[] = {
     "gamepad_right",
 };
 
-#define KD(key,code) case SDLK_##key : gamepad_buttons[0] |= gamepad_##code; break;
-#define KU(key,code) case SDLK_##key : gamepad_buttons[0] &= ~gamepad_##code; break;
+// reverse mapping to USB BootP
+
+uint8_t key_trans[256] = {
+    [0x6F]=0x52, // up
+    [0x74]=0x51, // down
+    [0x71]=0x50, // left
+    [0x72]=0x4F, // right
+    [0x41]=0x2C, // space
+    [0x18]=0x14,0x1a, 0x08, 0x15, 0x17, 0x1c, 0x04, 0x18, 0x0c, 0x12, 0x13, // azertyuiop / qwertyuiop
+    [0x26]=0x04,0x16, 0x07, 0x09, 0x0a, 0x0b, 0x0d, 0x0e, 0x0f, 0x2f, // asdfghjklm
+    [0x34]=0x1d,0x1c, 0x06, 0x19, 0x05, 0x11, 0x10, 0x36, 0x37, 0x38, // zxcvbnm<>/
+
+    [0x25]=0xe0, // L CTRL
+    [0x69]=0xe4, // R CTRL
+    [0x24]=0x28, // Enter
+};
 
 static bool handle_gamepad()
 {
@@ -282,11 +296,10 @@ static bool handle_gamepad()
             case SDL_KEYDOWN:
                 if (sdl_event.key.keysym.sym == SDLK_ESCAPE)
                     return true; // quit now
-                
                 event_push((struct event){
                     .type= evt_keyboard_press,
                     .kbd={
-                        .key=sdl_event.key.keysym.sym,
+                        .key=key_trans[sdl_event.key.keysym.scancode],
                         .mod=sdl_event.key.keysym.mod
                     }
                 });
@@ -297,7 +310,7 @@ static bool handle_gamepad()
                 event_push((struct event) {
                     .type= evt_keyboard_release,
                     .kbd={
-                        .key=sdl_event.key.keysym.sym,
+                        .key=key_trans[sdl_event.key.keysym.scancode],
                         .mod=sdl_event.key.keysym.mod
                     }
                 });
