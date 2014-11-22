@@ -24,7 +24,7 @@ void audio_init();
 
 
 // --- VGA interface ----------------------------------------------------------------------
-#define RGB(r,g,b)  (((r>>3)&0x1f)<<10 | ((g>>3)&0x1f)<<5 | ((b>>3)&0x1f))
+#define RGB(r,g,b)  ((((r)>>3)&0x1f)<<10 | (((g)>>3)&0x1f)<<5 | (((b)>>3)&0x1f))
 
 extern uint32_t vga_line; // should be const
 extern volatile uint32_t vga_frame; 
