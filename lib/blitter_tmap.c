@@ -38,36 +38,51 @@ void tilemap_u8_line(object *o)
     // TODO : take care of smaller x, don't recalc all each time. case o->x <0 
 
     // use current frame, line, buffer
-    int tilesize = ((o->b)>>8)&3 ? 32:16;
-    int tilemap_w = o->b>>24;
-    int tilemap_h = (o->b >>16) & 0xff;
+    unsigned int tilesize = ((o->b)>>8)&3 ? 32:16;
+    unsigned int tilemap_w = o->b>>24;
+    unsigned int tilemap_h = (o->b >>16) & 0xff;
+    o->x &= ~1; // force even addresses ...
 
-    // line inside tile (pixel), looped.
+    // --- line related 
+    // line inside tilemap (pixel), looped.
     int sprline = (vga_line-o->ry) % (tilemap_h*tilesize); 
-
-    // index of first tile to run in tile map, in pixels
-    int start_tile = o->x%(tilemap_w*tilesize)/tilesize; 
-
-    // which tile to start on 
-    uint8_t *idxptr = (uint8_t *)o->data+(sprline/tilesize) * tilemap_w + start_tile; // all is in nb of tiles
-
     // offset from start of tile (in lines)
     int offset = sprline%tilesize; 
+    // pointer to the beginning of the tilemap line
+    uint8_t *idxptr = (uint8_t *)o->data+(sprline/tilesize) * tilemap_w; // all is in nb of tiles
 
-    uint32_t * restrict dst = (uint32_t*) &draw_buffer[o->x+start_tile*tilesize]; 
-    int right_stop = min(o->x+o->w, VGA_H_PIXELS); // end at which pixel ? 
+    // --- column related
 
-    const uint32_t *dst_max = (uint32_t*) &draw_buffer[right_stop]; // pixel addr of the last pixel
-    // dst = (uint32_t*) ((uint32_t) dst & ~1); // FAULT if x is odd ?
-    
+    // horizontal tile offset in tilemap
+    int tile_x = ((o->x<0?-o->x:0)/tilesize)&(tilemap_w-1);  // positive modulo
+    // positive modulo : i&(tilemap_w-1) if tilemap size is a power of two 
+
+    uint32_t * restrict dst = (uint32_t*) &draw_buffer[o->x<0?0:o->x]; 
+
+    // pixel addr of the last pixel
+    const uint32_t *dst_max = (uint32_t*) &draw_buffer[min(o->x+o->w, VGA_H_PIXELS)]; 
+        
     uint32_t *tiledata = (uint32_t *)o->a;
+    uint32_t * restrict src;
+    
+    // first, finish first tile, 2 pix at a time
+    if (o->x<0) {        
+        if (idxptr[tile_x]) {
+            src = &tiledata[(idxptr[tile_x]*tilesize + offset)*tilesize*2/4 + (-o->x%tilesize)/2];  
+            for (int i=0;i<(32+o->x%tilesize)/2;i++) *dst++ = *src++;
+        } else { // skip the tile
+            dst += tilesize/2; // words per tile
+        }
+        tile_x++; 
+    }
 
-    while (dst<dst_max) 
-    {
+    // blit to end of line (and maybe a little more)
+    while (dst<dst_max) {
+        if (tile_x>=tilemap_w) tile_x-=tilemap_w;
+
         // blit one tile, 2pix=32bits at a time, 8 times = 16pixels, 16 times=32pixels
-        if (*idxptr) {
-            uint32_t * restrict src;
-            src = &tiledata[((*idxptr)*tilesize + offset)*tilesize*2/4];  
+        if (idxptr[tile_x]) {
+            src = &tiledata[(idxptr[tile_x]*tilesize + offset)*tilesize*2/4];  
 
             for (int i=7;i>=0;i--) *dst++=*src++;
             if (tilesize==32)
@@ -76,100 +91,10 @@ void tilemap_u8_line(object *o)
         } else { // skip the tile
             dst += tilesize/2; // words per tile
         }
-        idxptr++;
+        tile_x++; 
+
     }
-}
-
-
-// TODO : integrate as one same line ?
-void tilemap_6464u8_line(object *o)
-{
-    // in this version, we can assume that we don't have a full 
-    // TODO : take care of smaller x, don't recalc all each time. case o->x <0 
-
-    // use current frame, line, buffer
-
-    // line inside tile (pixel), looped.
-    int sprline = (vga_line-o->ry) % (HEIGHT_64*TILESIZE16); 
-
-    // index of first tile to run in tile map, in pixels
-    int start_tile = o->x%(WIDTH_64*TILESIZE16)/TILESIZE16; 
-
-    // which tile to start on 
-    uint8_t *idxptr = (uint8_t *)o->data+(sprline/TILESIZE16) * WIDTH_64 + start_tile; // all is in nb of tiles
-
-    // offset from start of tile (in lines)
-    int offset = sprline%TILESIZE16; 
-
-    // printf("idxptr : %x base : %x, 1st ref = %d\n",idxptr, ot->frames, *idxptr);
-
-    uint32_t * restrict dst = (uint32_t*) &draw_buffer[o->x+start_tile*TILESIZE16]; 
-    int right_stop = min(o->x+o->w, VGA_H_PIXELS); // end at which pixel ? 
-
-    const uint32_t *dst_max = (uint32_t*) &draw_buffer[right_stop]; // pixel addr of the last pixel
-    // dst = (uint32_t*) ((uint32_t) dst & ~1); // FAULT if x is odd ?
-    
-    uint32_t *tiledata = (uint32_t *)o->a;
-
-    while (dst<dst_max) 
-    {
-        // blit one tile, 2pix=32bits at a time, 8times = 16pixels
-        if (*idxptr) {
-            uint32_t * restrict src;
-            src = &tiledata[((*idxptr)*TILESIZE16 + offset)*TILESIZE16*2/4];  
-
-            for (int i=7;i>=0;i--) *dst++=*src++;
-
-        } else { // skip the tile
-            dst += TILESIZE16/2; // words per tile
-        }
-        idxptr++;
-    }
-}
-
-void tilemap_3232u8_line(object *o)
-{
-    // TODO : take care of smaller x, don't recalc all each time. case o->x <0 
-
-    // use current frame, line, buffer
-
-    // line inside tile (pixel), looped.
-    int sprline = (vga_line-o->ry) % (HEIGHT_32*16); 
-
-    // index of first tile to run in tile map, in pixels
-    int start_tile = o->x%(WIDTH_32*16)/16; 
-
-    // which tile to start on 
-    uint8_t *idxptr = (uint8_t *)o->data+(sprline/TILESIZE16) * WIDTH_32 + start_tile; // all is in nb of tiles
-
-    // offset from start of tile (in lines)
-    int offset = sprline%TILESIZE16; 
-
-    // printf("idxptr : %x base : %x, 1st ref = %d\n",idxptr, ot->frames, *idxptr);
-
-    uint32_t * restrict dst = (uint32_t*) &draw_buffer[o->x+start_tile*TILESIZE16]; 
-    int right_stop = min(o->x+o->w, VGA_H_PIXELS); // end at which pixel ? 
-
-    const uint32_t *dst_max = (uint32_t*) &draw_buffer[right_stop]; // pixel addr of the last pixel
-    // dst = (uint32_t*) ((uint32_t) dst & ~1); // FAULT if x is odd ?
-    
-    uint32_t *tiledata = (uint32_t *)o->a;
-
-    while (dst<dst_max) 
-    {
-        // blit one tile, 2pix=32bits at a time, 8times = 16pixels
-        if (*idxptr) {
-            uint32_t * restrict src;
-            src = &tiledata[((*idxptr)*TILESIZE16 + offset)*TILESIZE16*2/4];  
-
-            // force unroll
-            COPY8;
-
-        } else { // skip the tile
-            dst += TILESIZE16/2; // words per tile
-        }
-        idxptr++;
-    }
+   
 }
 
 

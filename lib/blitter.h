@@ -15,7 +15,7 @@ typedef struct object
 	// live data (typically in RAM, stable per frame)
 	int32_t x,y,z,ry; // ry is real Y, while y is wanted y, which will be activated next frame.
 	uint32_t w,h,fr; // h is one frame height, not full height, frame is frame id
-	intptr_t a,b,c,d; // various 32b used for each blitter as extra parameters or internally
+	uintptr_t a,b,c,d; // various 32b used for each blitter as extra parameters or internally
 
 	// inline single linked lists (engine internal)
 	struct object *activelist_next;
