@@ -64,6 +64,7 @@ uint16_t *draw_buffer; // volatile ?
 volatile uint16_t gamepad_buttons[2]; 
 uint32_t vga_line; 
 volatile uint32_t vga_frame;
+volatile int vga_odd;
 
 volatile int data_mouse_x, data_mouse_y;
 volatile uint8_t data_mouse_buttons;
@@ -106,7 +107,7 @@ inline uint16_t pixelconv(uint16_t pixel)
 
 
 static void refresh_screen(SDL_Surface *scr)
-// uses global line
+// uses global line + vga_odd
 {
     uint16_t *dst = (uint16_t*)scr->pixels;
     
@@ -114,7 +115,11 @@ static void refresh_screen(SDL_Surface *scr)
     graph_frame();
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
+        vga_odd=0;
         graph_line(); // using line, updating draw_buffer ...
+        #ifdef VGA_SKIPLINE
+        vga_odd=1; graph_line(); //  a second time for SKIPLINE modes
+        #endif 
 
         // copy to screen at this position (cheating)
         uint16_t *src = (uint16_t*) &draw_buffer[0];//[MARGIN];

@@ -8,7 +8,7 @@ NO_SDCARD=1
 # See lib/simple.h for modes 
 VGA_SIMPLE_MODE=4
 
-NAME = sgraph
+NAME = test_simplegraph
 GAME_C_FILES = $(NAME).c 
 
 # see this file for options

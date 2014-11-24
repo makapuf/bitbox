@@ -28,6 +28,7 @@ void audio_init();
 
 extern uint32_t vga_line; // should be const
 extern volatile uint32_t vga_frame; 
+extern volatile int vga_odd; // in a physical line (on screen) but not a buffer refresh line (only used in 240-height modes)
 
 extern void graph_line(void); // user provided graphical 
 extern void graph_frame(void); // user provided graphical blitting algorithms

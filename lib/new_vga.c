@@ -69,6 +69,10 @@ extern void graph_frame(void);
 uint32_t vga_line;
 volatile uint32_t vga_frame; 
 
+#ifdef VGA_SKIPLINE
+volatile int vga_odd; // only in skipline modes
+#endif 
+
 // aligned on a 1kb boundary , see http://blog.frankvh.com/2011/08/18/stm32f2xx-dma-controllers/
 
 uint16_t LineBuffer1[1024] __attribute__((aligned (1024))); // __attribute__ ((section (".sram")))
@@ -287,16 +291,30 @@ static void HSYNCHandler()
 	"	movs	r0,#0\n"
 	"	strh	r0,[r1,#0xC10]\n"
 	:::"r0","r1");
-
+	
+	#ifdef VGA_SKIPLINE
+	vga_line+=vga_odd;
+	vga_odd=1-vga_odd;
+	#else 
 	vga_line++;
+	#endif 
+
+
+
         // starting from line #1, line #0 already in drawbuffer
 	if (vga_line < VGA_V_PIXELS) {
 
+		#ifdef VGA_SKIPLINE
+		if (!vga_odd) 
+		#endif 
 		// swap display & draw buffers, effectively draws line-1
-		uint16_t *t;
-		t=display_buffer;
-		display_buffer = draw_buffer;
-		draw_buffer = t;
+		{
+			uint16_t *t;
+			t=display_buffer;
+			display_buffer = draw_buffer;
+			draw_buffer = t;
+		}
+		
 
 		prepare_pixel_DMA(); // will be triggered 
 		
@@ -324,6 +342,9 @@ static void HSYNCHandler()
 		{
 			// synchronous. buffers shall be ready now
 		    #ifdef AUDIO
+    		#ifdef VGA_SKIPLINE
+			if (!vga_odd) 
+			#endif 
     		audio_frame();
     		#endif 
 
@@ -339,10 +360,12 @@ static void HSYNCHandler()
             graph_line();  // first line next frame!
 		}
 	}
-
+	#ifdef VGA_SKIPLINE
+	if (!vga_odd) 
 	#ifdef AUDIO
 	if (audio_on) audio_out8(*audio_ptr++);
 	#endif
+	#endif 
 }
 
 static void DMACompleteHandler()

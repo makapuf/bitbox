@@ -119,9 +119,18 @@ ifdef VGA_SIMPLE_MODE
 GAME_C_OPTS += -DVGA_SIMPLE_MODE=$(VGA_SIMPLE_MODE)
 ENGINE_FILES +=  simple.c fonts.c
 # those mode require kernel mode 800x600
-ifneq ($(filter $(VGA_SIMPLE_MODE),1 2 4),)
+ifneq ($(filter $(VGA_SIMPLE_MODE),1 2),)
 GAME_C_OPTS += -DVGAMODE_800
 endif 
+# 400x300 mode
+ifeq ($(VGA_SIMPLE_MODE),4)
+GAME_C_OPTS += -DVGAMODE_400
+endif
+# 320x240 mode
+ifeq ($(VGA_SIMPLE_MODE),5)
+GAME_C_OPTS += -DVGAMODE_320
+endif
+
 endif 
 
 # - simple sampler

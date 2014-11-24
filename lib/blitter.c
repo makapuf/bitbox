@@ -4,6 +4,11 @@
 #include <stddef.h> // NULL
 #include <string.h> // memset
 
+#ifndef EMULATOR
+#include "stm32f4xx.h" // profile
+#endif 
+
+extern int line_time;
 
 typedef struct {
     // list of objects blit.
@@ -143,8 +148,17 @@ void graph_frame()
 
 
 
+
+
 void graph_line()
 {
+    // persist between calls so that one line can continue blitting next frame.
+    static object *o; 
+
+    #ifdef VGA_SKIPLINE
+    if (!vga_odd) { // only on even lines
+    #endif 
+
     // drop past objects from active list.
     object *prev=NULL;
     for (object *o=blt.activelist_head;o;o=o->activelist_next)
@@ -172,13 +186,29 @@ void graph_line()
         blt.next_to_activate++;
     }
 
-
     // now trigger each activelist, in Z descending order
-    for (object *o=blt.activelist_head;o;o=o->activelist_next)
+    for (o=blt.activelist_head;o;o=o->activelist_next)
     {
-        if (vga_line<o->ry+o->h) 
+        if (vga_line<o->ry+o->h) // XXX when/why does that not arrive ?
             o->line(o); 
+
+        #ifndef EMULATOR
+        // stop if cycle counter is big enough, dropping objects on that line - may continue after
+        //if (DWT->CYCCNT - line_time > VGA_H_PIXELS*VGA_PIXELCLOCK-1000) break; 
+        #endif 
+    } 
+
+    #ifdef VGA_SKIPLINE
+    } else {
+        // continue with o 
+        for (;o;o=o->activelist_next)
+        {
+            if (vga_line<o->ry+o->h) // XXX when/why does that arrive ?
+                o->line(o); 
+        } 
     }
+    #endif
+
 }
 
 

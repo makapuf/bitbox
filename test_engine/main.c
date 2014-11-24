@@ -30,7 +30,7 @@ void game_init() {
 	if (TILED_BG)
 		bg= tilemap_new (bg_tset, 64*16, 65535,bg_header,bg_tmap);
 	else
-		bg= rect_new (0,0,640, 480*3,200, RGB(100,100,100));
+		bg= rect_new (0,0,VGA_H_PIXELS, VGA_H_PIXELS*3,200, RGB(100,100,100));
 
 	bg->z=200;
 	
@@ -42,7 +42,7 @@ void game_init() {
 		vx[i]=ini_vx[i%8];
 		vy[i]=ini_vy[i%9];
 		ball[i] = sprite_new((uint32_t *)&SPRITE);
-		ball[i]->x = i*(640-ball[i]->w)/(NB+1);
+		ball[i]->x = i*(VGA_H_PIXELS-ball[i]->w)/(NB+1);
 		ball[i]->y = ini_y[i%7];
 		ball[i]->z = i;
 	}
@@ -62,10 +62,10 @@ void game_frame()
 	{
 	    for (int i=0;i<NB;i++)
 	    {	
-		    if (ball[i]->x + vx[i] >= (640-ball[i]->w) || ball[i]->x <0 )
+		    if (ball[i]->x + vx[i] >= (VGA_H_PIXELS-ball[i]->w) || ball[i]->x <0 )
 		      	vx[i] = -vx[i];
 		    
-		    if ((ball[i]->y + vy[i]) >= 480-(int32_t)ball[i]->h )
+		    if ((ball[i]->y + vy[i]) >= VGA_H_PIXELS-(int32_t)ball[i]->h )
 		    	vy[i] = -vy[i]+1;
 
 
