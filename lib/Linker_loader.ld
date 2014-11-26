@@ -49,6 +49,7 @@ SECTIONS
         . = ALIGN(4);
         *(COMMON)
         _ebss = .;
+		end = . ;
     } > sram
 
     

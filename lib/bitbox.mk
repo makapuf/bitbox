@@ -47,6 +47,7 @@ DEFINES += -DUSE_STDPERIPH_DRIVER
 C_OPTS = -std=c99 \
 	-mthumb \
 	-mcpu=cortex-m4 \
+	-mfpu=fpv4-sp-d16 \
 	-I$(BITBOX)/lib/ \
 	-I$(BITBOX)/lib/CMSIS/Include \
 	-I$(BITBOX)/lib/StdPeriph \
@@ -142,7 +143,7 @@ C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES) $(ENGINE_FILES)
 S_FILES = memcpy-armv7m.S
 
 
-OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.S=$(BUILD_DIR)/%.o) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%_dat.o) 
+OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(GAME_CPP_FILES:%.cpp=$(BUILD_DIR)/%.o) $(S_FILES:%.S=$(BUILD_DIR)/%.o) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%_dat.o) 
 
 $(warning $(OBJS))
 
@@ -205,6 +206,10 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CC) -fno-exceptions -fno-rtti -Wno-multichar $(subst -std=c99,-std=c++11,$(ALL_CFLAGS)) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 
@@ -223,5 +228,5 @@ else
 endif
 
 
-$(NAME)_emu: $(GAME_C_FILES) $(BITBOX)/lib/emulator.c $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(addprefix $(BITBOX)/lib/, $(ENGINE_FILES))
-	gcc -Og -DEMULATOR  $(GAME_C_OPTS) $^ -I$(BITBOX)/lib/ -g -Wall -std=c99 $(HOSTLIBS) `sdl-config --cflags --libs` -o $(NAME)_emu
+$(NAME)_emu: $(GAME_C_FILES) $(GAME_CPP_FILES) $(BITBOX)/lib/emulator.c $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(addprefix $(BITBOX)/lib/, $(ENGINE_FILES))
+	gcc -Og -DEMULATOR  $(GAME_C_OPTS) $^ -I$(BITBOX)/lib/ -g -Wall -std=c99 $(HOSTLIBS) `sdl-config --cflags --libs` -lstdc++ -o $(NAME)_emu
