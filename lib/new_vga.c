@@ -362,10 +362,10 @@ static void HSYNCHandler()
 	}
 	#ifdef VGA_SKIPLINE
 	if (!vga_odd) 
+	#endif 
 	#ifdef AUDIO
 	if (audio_on) audio_out8(*audio_ptr++);
 	#endif
-	#endif 
 }
 
 static void DMACompleteHandler()
