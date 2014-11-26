@@ -42,13 +42,13 @@ void display_first_event(void)
 		{
 			case evt_keyboard_press : 
 				print_at(1,15,"KB pressed      ");
-				vram[15][14]=HEX_Digits[e.kbd.key>>4];
+				vram[15][14]=HEX_Digits[(e.kbd.key>>4) & 0xF];
 				vram[15][15]=HEX_Digits[e.kbd.key&0xf];
 				break;
 
 			case evt_keyboard_release : 
 				print_at(1,15,"KB released     ");
-				vram[15][14]=HEX_Digits[e.kbd.key>>4];
+				vram[15][14]=HEX_Digits[(e.kbd.key>>4) & 0xF];
 				vram[15][15]=HEX_Digits[e.kbd.key&0xf];
 				break;
 
@@ -65,10 +65,10 @@ void display_first_event(void)
 				break;
 
 			case evt_mouse_move:
-				vram[6][10]=HEX_Digits[e.mov.x>>4];
+				vram[6][10]=HEX_Digits[(e.mov.x>>4) & 0xF];
 				vram[6][11]=HEX_Digits[e.mov.x&0xf];
 
-				vram[6][15]=HEX_Digits[e.mov.y>>4];
+				vram[6][15]=HEX_Digits[(e.mov.y>>4) & 0xF];
 				vram[6][16]=HEX_Digits[e.mov.y&0xf];
 
 				cx += e.mov.x;
@@ -133,10 +133,10 @@ void game_frame()
 	vram[11][18] = GAMEPAD_PRESSED(0,start) ? 'G':'g';
 
 	// analog gamepad
-	vram[5][40]=HEX_Digits[gamepad_x[0]>>4];
+	vram[5][40]=HEX_Digits[(gamepad_x[0]>>4) & 0xF];
 	vram[5][41]=HEX_Digits[gamepad_x[0]&0xf];
 
-	vram[5][43]=HEX_Digits[gamepad_y[0]>>4];
+	vram[5][43]=HEX_Digits[(gamepad_y[0]>>4) & 0xF];
 	vram[5][44]=HEX_Digits[gamepad_y[0]&0xf];
 
 	vram[11 + gpy / 32][36 + gpx / 16] = ' ';
