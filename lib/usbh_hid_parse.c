@@ -60,14 +60,17 @@ int USBH_ParseHIDReportDesc(USB_Gamepad_descriptor *desc, uint8_t *data) {
 								if (i<16)
 									usages[i]=usages[0];
 							nb_usages=nb_rep;
-						} 
+						} else if (nb_usages==0) {
+							nb_usages=1;
+							usages[0]=0; // default value
+						}
 
 						#ifdef DEBUG_HIDPARSER
 						if (nb_rep != nb_usages && !locals[2])  
 							printf("### ??");
 						printf ("----------\n");
 						printf(" -- input %x @%d nb=%d size=%d ",value, bitpos, nb_rep,size_rep);
-						printf(" usages: [");
+						printf(" usages(%d): [",nb_usages);
 						for (int i=0;i<nb_usages;i++) 
 							printf("0x%x,",usages[i]);
 						printf("] ");
@@ -94,7 +97,7 @@ int USBH_ParseHIDReportDesc(USB_Gamepad_descriptor *desc, uint8_t *data) {
 
 							bitpos += size_rep*nb_rep;
 						} else if (globals[0]==1) {
-							// generic desktop usage page
+							// generic desktop usage page (and usage != 0)
 
 							int datatype=0; // defaults to none
 							if (size_rep==8 && globals[1]==0 && globals[2]==255) datatype=2; // u8 0:255
@@ -150,7 +153,7 @@ int USBH_ParseHIDReportDesc(USB_Gamepad_descriptor *desc, uint8_t *data) {
 				
 				// reset locals 
 				nb_usages=0;
-				memset(&locals, 0, sizeof(locals));
+				memset(locals, 0, sizeof(locals));
 			break;
 			
 			case 4 : // global variable
@@ -202,19 +205,11 @@ int main(void)
 {
 	USB_Gamepad_descriptor ram_descr;
 
-	for (int i=0;i<5;i++) {
+	for (int i=0;i<6;i++) {
 		if (!USBH_ParseHIDReportDesc(&ram_descr,sample_reports[i])) { // pass by value
 			print_desc(&ram_descr);
 			printf("--------------------------------------------------------------\n");
 		}
 	}
-	// reference
-	print_desc(& (USB_Gamepad_descriptor) {
-	    // Thrustmaster Firestorm - no select/start button
-        .vid=0x044f,.pid=0xb315,.pid2=0xb301,.pid3=0xb300,
-        .dpad_type=1,.analog_type=1,.max_button_index=7,
-        .dpad_bit=20,.analog_X_bit=24,.analog_Y_bit=32,
-        .button_bit={0,1,2,3,4,5,6,7}       
-    });	
 }
 #endif 

@@ -21,7 +21,15 @@ const USB_Gamepad_descriptor *gamepad_descriptor[2]; // currently used gamepad t
 // static table Gamepads definition. 
 // Allows us to avoid implementing a full descriptor parser.
 static const USB_Gamepad_descriptor device_table[] = {
-
+    
+    // Thrustmaster Firestorm - no select/start button
+    {
+        .vid=0x044f,.pid=0xb315,.pid2=0xb301,.pid3=0xb300,
+        .dpad_type=0,.analog_type=1,.max_button_index=7,
+        .dpad_bit=20,.analog_X_bit=24,.analog_Y_bit=32,
+        .button_bit={0,1,2,3,4,5,6,7}       
+    },
+    
     // Trust GXT 24 
     {
         .vid=0x0079,.pid=0x0006,.pid2=0x0006,.pid3=0x0006,
@@ -179,7 +187,7 @@ static void GAMEPAD_Decode(uint8_t coreID, uint8_t *data)
             if (gamepad_x[coreID]<-THRESHOLD_HAT) 
                 gamepad_buttons[coreID] |= gamepad_left;
             if (gamepad_x[coreID]> THRESHOLD_HAT) 
-                gamepad_buttons[coreID] |= gamepad_left;
+                gamepad_buttons[coreID] |= gamepad_right;
 
             if (gamepad_y[coreID]<-THRESHOLD_HAT) 
                 gamepad_buttons[coreID] |= gamepad_up;

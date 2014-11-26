@@ -1,18 +1,21 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdint.h>
+#ifndef DEBUG_HIDPARSER
 #include "usb_conf.h"
 #include "usbh_hid_core.h"
-
-// external interface of devices
 #include "bitbox.h"
+// external interface of devices
 
 
 extern HID_cb_TypeDef HID_KEYBRD_cb;
 extern HID_cb_TypeDef HID_GAMEPAD_cb;
 extern HID_cb_TypeDef HID_MOUSE_cb;
+#endif 
 
 typedef struct {
+
 	// FIXME ! more general for other kind of devices, define _type_ of device , do not assume gamepad?
 	// discriminator + union ..
 
