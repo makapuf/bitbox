@@ -26,7 +26,7 @@
 #GAME_H_FILES = test_data.h kernel.h object.h test_object.h
 
 #MCU  = cortex-m4
-#FPU = -mfloat-abi=hard -mfpu=fpv4-sp-d16 -D__FPU_USED=1
+#FPU = -mfloat-abi=hard -mfpu=fpv4-sp-d16 
 #OPT = -O3 -falign-functions=16 -fno-inline -fomit-frame-pointer -funroll-loops
 
 CC = arm-none-eabi-gcc
@@ -44,21 +44,26 @@ endif
 
 DEFINES += -DUSE_STDPERIPH_DRIVER 
 
+MCU = -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -march=armv7e-m 
+
 C_OPTS = -std=c99 \
-	-mthumb \
-	-mcpu=cortex-m4 \
+	$(MCU) \
+	-D__FPU_USED=1 \
+	-mlittle-endian \
 	-I$(BITBOX)/lib/ \
 	-I$(BITBOX)/lib/CMSIS/Include \
 	-I$(BITBOX)/lib/StdPeriph \
 	-Werror \
-    -O3 \
-    -mlittle-endian \
-    -g \
-    -Wall \
-    -fomit-frame-pointer 
-        #-funroll-all-loops \
+	-O3 -g \
+	-Wall \
+	-ffast-math \
+	-fallow-single-precision \
+	-fsingle-precision-constant \
+	-fomit-frame-pointer 
+	#-funroll-all-loops \
 
-LIBS =	-lm
+LD_FLAGS = $(MCU) -nostartfiles
+LIBS =	-lm -lc
 
 SOURCE_DIR =.
 
@@ -144,10 +149,8 @@ S_FILES = memcpy-armv7m.S
 
 OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.S=$(BUILD_DIR)/%.o) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%_dat.o) 
 
-$(warning $(OBJS))
-
 ALL_CFLAGS = $(C_OPTS) $(DEFINES) $(CFLAGS) $(GAME_C_OPTS)
-ALL_LDFLAGS = $(LD_FLAGS) -mthumb -mcpu=cortex-m4 -nostartfiles -Wl,-T,$(LINKER_SCRIPT),--gc-sections
+ALL_LDFLAGS = $(LD_FLAGS) -Wl,-T,$(LINKER_SCRIPT),--gc-sections
 #-specs Terrible.specs
 
 AUTODEPENDENCY_CFLAGS=-MMD -MF$(@:.o=.d) -MT$@
