@@ -360,12 +360,12 @@ static void HSYNCHandler()
             graph_line();  // first line next frame!
 		}
 	}
+	#ifdef AUDIO
 	#ifdef VGA_SKIPLINE
 	if (!vga_odd) 
-	#endif 
-	#ifdef AUDIO
-	if (audio_on) audio_out8(*audio_ptr++);
 	#endif
+	if (audio_on) audio_out8(*audio_ptr++);
+	#endif 
 }
 
 static void DMACompleteHandler()
