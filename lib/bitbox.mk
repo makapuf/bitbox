@@ -45,7 +45,6 @@ endif
 DEFINES += -DUSE_STDPERIPH_DRIVER 
 
 MCU = -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -march=armv7e-m 
-
 C_OPTS = -std=c99 \
 	$(MCU) \
 	-D__FPU_USED=1 \
@@ -148,6 +147,8 @@ S_FILES = memcpy-armv7m.S
 
 OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.S=$(BUILD_DIR)/%.o) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%_dat.o) 
 
+
+
 ALL_CFLAGS = $(C_OPTS) $(DEFINES) $(CFLAGS) $(GAME_C_OPTS)
 ALL_LDFLAGS = $(LD_FLAGS) -Wl,-T,$(LINKER_SCRIPT),--gc-sections
 #-specs Terrible.specs
@@ -206,6 +207,9 @@ $(BUILD_DIR)/%.o: $(LIB_SOURCE_DIR)/%.S
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CC) -fno-exceptions -fno-rtti -Wno-multichar $(subst -std=c99,-std=c++11,$(ALL_CFLAGS)) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
@@ -225,5 +229,5 @@ else
 endif
 
 
-$(NAME)_emu: $(GAME_C_FILES) $(BITBOX)/lib/emulator.c $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(addprefix $(BITBOX)/lib/, $(ENGINE_FILES))
-	gcc -Og -DEMULATOR  $(GAME_C_OPTS) $^ -I$(BITBOX)/lib/ -g -Wall -std=c99 $(HOSTLIBS) `sdl-config --cflags --libs` -o $(NAME)_emu
+$(NAME)_emu: $(GAME_C_FILES) $(GAME_CPP_FILES) $(BITBOX)/lib/emulator.c $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(addprefix $(BITBOX)/lib/, $(ENGINE_FILES))
+	gcc -Og -DEMULATOR  $(GAME_C_OPTS) $^ -I$(BITBOX)/lib/ -g -Wall -std=c99 $(HOSTLIBS) `sdl-config --cflags --libs` -lstdc++ -o $(NAME)_emu

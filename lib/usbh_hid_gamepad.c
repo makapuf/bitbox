@@ -163,8 +163,11 @@ static void GAMEPAD_Decode(uint8_t coreID, uint8_t *data)
             gamepad_y[coreID] = (int8_t)extract(data, gp->analog_Y_bit, 8);
             break;
         case 2 :
-            gamepad_x[coreID] = (int16_t)extract(data, gp->analog_X_bit, 8) - 127;
-            gamepad_y[coreID] = (int16_t)extract(data, gp->analog_Y_bit, 8) - 127;
+            gamepad_x[coreID] = (int8_t)extract(data, gp->analog_X_bit, 8) - 128;
+            gamepad_y[coreID] = (int8_t)extract(data, gp->analog_Y_bit, 8) - 128;
+            // little tweak to force "almost zero" (but negative) to zero for rest values.
+            if (gamepad_x[coreID] == -1) gamepad_x[coreID] = 0;
+            if (gamepad_y[coreID] == -1) gamepad_y[coreID] = 0;
             break;
         case 0 :
         default:
