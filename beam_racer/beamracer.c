@@ -231,15 +231,15 @@ void graph_line() {
 	// horizon
 	//
 	// But for now, we draw just the player's car...
-	if (vga_line > 240 - 70) {
+	if (vga_line > 240 - 56) {
 		// The car is stored as 16-bit data for direct copy currently.
 		// No palette lookup here, but a "magic pink" (uh white) test to make
 		// the car sprite transparent. There are better ways to handle this,
 		// as the sprite is (currently) convex and symetric
-		extern uint16_t carsprite[70][80];
-		uint16_t* sl = carsprite[(vga_line - 170)];
-		for (int i = 0; i < 80; i++) {
-			if (sl[i] != 0x7FFF) draw_buffer[114 + i] = sl[i];
+		extern uint16_t carsprite[56][75];
+		uint16_t* sl = carsprite[(vga_line - 184)];
+		for (int i = 0; i < 75; i++) {
+			if (sl[i] != RGB(255,0,255)) draw_buffer[122 + i] = sl[i];
 		}
 	}
 };

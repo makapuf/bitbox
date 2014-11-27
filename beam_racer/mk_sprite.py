@@ -6,6 +6,7 @@ filename =  sys.argv[1]
 
 src = Image.open(filename)
 dim = src.size
+src = src.convert("RGB") # Un-paletize
 
 print "/* *** File : %s *** */ "%filename
 print "#include <stdint.h>"
