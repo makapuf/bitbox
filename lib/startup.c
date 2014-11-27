@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "stm32f4xx.h"
 
 static uint8_t stack[8192]  __attribute__ ((section (".ccm")));
 
@@ -15,6 +16,11 @@ int main();
 
 void Reset_Handler()
 {
+	// enable hard FPU
+	#if (__FPU_USED == 1)    
+	SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));    /* set CP10 and CP11 Full Access */
+	#endif
+
 	// Copy the data segment initializers from flash to SRAM.
 	uint32_t *src=_sidata;
 	for(uint32_t *dest=_sdata;dest<_edata;dest++) *dest=*src++;
