@@ -57,7 +57,6 @@ C_OPTS = -std=c99 \
 	-O3 -g \
 	-Wall \
 	-ffast-math \
-	-fallow-single-precision \
 	-fsingle-precision-constant \
 	-fomit-frame-pointer 
 	#-funroll-all-loops \
