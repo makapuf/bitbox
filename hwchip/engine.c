@@ -66,12 +66,12 @@ uint16_t gen_sample()
 		osc[i].phase += osc[i].freq / 4;
 
 		// Mix it in the appropriate output channel
-		acc[i & 2] += value * osc[i].volume; // rhs = [-8160,7905]
+		acc[i & 1] += value * osc[i].volume; // rhs = [-8160,7905]
 	}
 	// Now put the two channels together in the output word
 	// acc [-32640,31620]
-	uint16_t ret = 128 + (acc[1] >> 7);	// [1,251]
-	ret |= (128 + (acc[0] >> 7)) << 8;	// [1,251]
+	uint16_t ret = 128 + (acc[0] >> 7);	// [1,251]
+	ret |= (128 + (acc[1] >> 7)) << 8;	// [1,251]
 
 	return ret;
 }

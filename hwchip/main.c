@@ -198,94 +198,82 @@ void runcmd(u8 ch, u8 cmd, u8 param) {
 }
 
 void game_frame() {			// called at 50 Hz
+	if (!playsong) game_init();
+
+
 	u8 ch;
-	u8 lights;
 
-	if(playsong) {
-		if(trackwait) {
-			trackwait--;
-		} else {
-			trackwait = 4;
+	if(trackwait) {
+		trackwait--;
+	} else {
+		trackwait = 4;
 
-			if(!trackpos) {
-				if(playsong) {
-					if(songpos >= SONGLEN) {
-						playsong = 0;
-					} else {
-						for(ch = 0; ch < 4; ch++) {
-							u8 gottransp;
-							u8 transp;
-
-							gottransp = readchunk(&songup, 1);
-							channel[ch].tnum = readchunk(&songup, 6);
-							if(gottransp) {
-								transp = readchunk(&songup, 4);
-								if(transp & 0x8) transp |= 0xf0;
-							} else {
-								transp = 0;
-							}
-							channel[ch].transp = (s8) transp;
-							if(channel[ch].tnum) {
-								initup(&channel[ch].trackup, resources[16 + channel[ch].tnum - 1]);
-							}
-						}
-						songpos++;
-					}
-				}
-			}
-
+		if(!trackpos) {
 			if(playsong) {
-				for(ch = 0; ch < 4; ch++) {
-					if(channel[ch].tnum) {
-						u8 note, instr, cmd, param;
-						u8 fields;
+				if(songpos >= SONGLEN) {
+					playsong = 0;
+				} else {
+					for(ch = 0; ch < 4; ch++) {
+						u8 gottransp;
+						u8 transp;
 
-						fields = readchunk(&channel[ch].trackup, 3);
-						note = 0;
-						instr = 0;
-						cmd = 0;
-						param = 0;
-						if(fields & 1) note = readchunk(&channel[ch].trackup, 7);
-						if(fields & 2) instr = readchunk(&channel[ch].trackup, 4);
-						if(fields & 4) {
-							cmd = readchunk(&channel[ch].trackup, 4);
-							param = readchunk(&channel[ch].trackup, 8);
+						gottransp = readchunk(&songup, 1);
+						channel[ch].tnum = readchunk(&songup, 6);
+						if(gottransp) {
+							transp = readchunk(&songup, 4);
+							if(transp & 0x8) transp |= 0xf0;
+						} else {
+							transp = 0;
 						}
-						if(note) {
-							channel[ch].tnote = note + channel[ch].transp;
-							if(!instr) instr = channel[ch].lastinstr;
+						channel[ch].transp = (s8) transp;
+						if(channel[ch].tnum) {
+							initup(&channel[ch].trackup, resources[16 + channel[ch].tnum - 1]);
 						}
-						if(instr) {
-							if(instr == 2) light[1] = 5;
-							if(instr == 1) {
-								light[0] = 5;
-								if(channel[ch].tnum == 4) {
-									light[0] = light[1] = 3;
-								}
-							}
-							if(instr == 7) {
-								light[0] = light[1] = 30;
-							}
-							channel[ch].lastinstr = instr;
-							channel[ch].inum = instr;
-							channel[ch].iptr = 0;
-							channel[ch].iwait = 0;
-							channel[ch].bend = 0;
-							channel[ch].bendd = 0;
-							channel[ch].volumed = 0;
-							channel[ch].dutyd = 0;
-							channel[ch].vdepth = 0;
-						}
-						if(cmd) runcmd(ch, cmd, param);
 					}
+					songpos++;
 				}
-
-				trackpos++;
-				trackpos &= 31;
 			}
 		}
-	} else {
-		audio_on=0;
+
+		if(playsong) {
+			for(ch = 0; ch < 4; ch++) {
+				if(channel[ch].tnum) {
+					u8 note, instr, cmd, param;
+					u8 fields;
+
+					fields = readchunk(&channel[ch].trackup, 3);
+					note = 0;
+					instr = 0;
+					cmd = 0;
+					param = 0;
+					if(fields & 1) note = readchunk(&channel[ch].trackup, 7);
+					if(fields & 2) instr = readchunk(&channel[ch].trackup, 4);
+					if(fields & 4) {
+						cmd = readchunk(&channel[ch].trackup, 4);
+						param = readchunk(&channel[ch].trackup, 8);
+					}
+					if(note) {
+						channel[ch].tnote = note + channel[ch].transp;
+						if(!instr) instr = channel[ch].lastinstr;
+					}
+					if(instr) {
+						channel[ch].lastinstr = instr;
+						channel[ch].inum = instr;
+						channel[ch].iptr = 0;
+						channel[ch].iwait = 0;
+						channel[ch].bend = 0;
+						channel[ch].bendd = 0;
+						channel[ch].volumed = 0;
+						channel[ch].dutyd = 0;
+						channel[ch].vdepth = 0;
+					}
+					if(cmd) runcmd(ch, cmd, param);
+				}
+			}
+
+			trackpos++;
+			trackpos &= 31;
+		}
 	}
 
 	for(ch = 0; ch < 4; ch++) {
@@ -336,17 +324,6 @@ void game_frame() {			// called at 50 Hz
 
 		channel[ch].vpos += channel[ch].vrate;
 	}
-
-	lights = 0;
-	if(light[0]) {
-		light[0]--;
-		lights |= 0x02;
-	}
-	if(light[1]) {
-		light[1]--;
-		lights |= 0x10;
-	}
-	PORTC = lights;
 }
 
 void game_init() {
@@ -382,8 +359,6 @@ void graph_frame() {}
 void graph_line() {
 	if ((vga_line) != 0) return;
 	memset(draw_buffer, 0, 512);
-	for (int i = 0; i < 8; i++)
-		draw_buffer[i<<4] = (PORTC & (1<<i)) ? 0xFFFF : 0;
 	draw_buffer[trackpos] ^= 0xFF;
 	draw_buffer[songpos] ^= 0xFF00;
 }
