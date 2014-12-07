@@ -7,22 +7,21 @@
 #include <stdint.h>
 #include "engine.h"
 
-uint32_t noiseseed = 1;
 
 volatile struct oscillator osc[4];
 
 // This function generates one audio sample for all 4 oscillators. The returned
 // value is a 2*8bit stereo audio sample ready for putting in the audio buffer.
-uint16_t gen_sample()
+static inline uint16_t gen_sample()
 {
-	uint8_t i;
 	int16_t acc[2]; // accumulators for each channel
+	static uint32_t noiseseed = 1;
 
 	// This is a simple noise generator based on an LFSR (linear feedback shift
 	// register). It is fast and simple and works reasonably well for audio.
 	// Note that we always run this so the noise is not dependant on the
 	// oscillators frequencies.
-	uint8_t newbit;
+	uint32_t newbit;
 	newbit = 0;
 	if(noiseseed & 0x80000000L) newbit ^= 1;
 	if(noiseseed & 0x01000000L) newbit ^= 1;
@@ -33,7 +32,7 @@ uint16_t gen_sample()
 	acc[0] = 0;
 	acc[1] = 0;
 	// Now compute the value of each oscillator and mix them
-	for(i = 0; i < 4; i++) {
+	for(int i = 0; i < 4; i++) {
 		int8_t value; // [-32,31]
 
 		switch(osc[i].waveform) {
@@ -69,11 +68,8 @@ uint16_t gen_sample()
 		acc[i & 1] += value * osc[i].volume; // rhs = [-8160,7905]
 	}
 	// Now put the two channels together in the output word
-	// acc [-32640,31620]
-	uint16_t ret = 128 + (acc[0] >> 7);	// [1,251]
-	ret |= (128 + (acc[1] >> 7)) << 8;	// [1,251]
-
-	return ret;
+	// acc [-32640,31620] > ret 2*[1,251]
+	return (128 + (acc[0] >> 7)) | ((128 + (acc[1] >> 7)) << 8);	// [1,251]
 }
 
 void game_snd_buffer(uint16_t* buffer, int len) {
