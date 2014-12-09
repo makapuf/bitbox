@@ -12,6 +12,7 @@ void game_init() {
 
 void game_frame()
 {
+    kbd_emulate_gamepad ();
 
     if (GAMEPAD_PRESSED(0,up) && y>-240) y--;
     if (GAMEPAD_PRESSED(0,down) && y<240) y++;
