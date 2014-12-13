@@ -16579,23 +16579,17 @@ Source: 3M</description>
 <part name="R2" library="resistor" deviceset="R-EU_" device="R0603" value="2150r 1%"/>
 <part name="R3" library="resistor" deviceset="R-EU_" device="R0603" value="4300r 1%"/>
 <part name="R4" library="resistor" deviceset="R-EU_" device="R0603" value="8660r 1%"/>
-<part name="R8" library="resistor" deviceset="R-EU_" device="R0603" value="75r (unpopulated)"/>
 <part name="GND1" library="supply1" deviceset="GND" device=""/>
-<part name="GND2" library="supply1" deviceset="GND" device=""/>
 <part name="R9" library="resistor" deviceset="R-EU_" device="R0603" value="1070r 1%"/>
 <part name="R10" library="resistor" deviceset="R-EU_" device="R0603" value="2150r 1%"/>
 <part name="R11" library="resistor" deviceset="R-EU_" device="R0603" value="4300r 1%"/>
 <part name="R12" library="resistor" deviceset="R-EU_" device="R0603" value="8660r 1%"/>
-<part name="R16" library="resistor" deviceset="R-EU_" device="R0603" value="75r (unpopulated)"/>
-<part name="GND3" library="supply1" deviceset="GND" device=""/>
 <part name="R17" library="resistor" deviceset="R-EU_" device="R0603" value="1070r 1%"/>
 <part name="R18" library="resistor" deviceset="R-EU_" device="R0603" value="2150r 1%"/>
 <part name="R19" library="resistor" deviceset="R-EU_" device="R0603" value="4300r 1%"/>
 <part name="R20" library="resistor" deviceset="R-EU_" device="R0603" value="8660r 1%"/>
-<part name="R24" library="resistor" deviceset="R-EU_" device="R0603" value="75r (unpopulated)"/>
-<part name="GND4" library="supply1" deviceset="GND" device=""/>
 <part name="LED1" library="led" deviceset="LED" device="CHIPLED_0805"/>
-<part name="R25" library="resistor" deviceset="R-EU_" device="R0603" value="237"/>
+<part name="R25" library="resistor" deviceset="R-EU_" device="R0603" value="220"/>
 <part name="RESET" library="adafruit" deviceset="SPST_TACT" device="-EVQQ2"/>
 <part name="GND10" library="supply1" deviceset="GND" device=""/>
 <part name="C2" library="resistor" deviceset="C-EU" device="C0603" value=".1u"/>
@@ -16604,7 +16598,7 @@ Source: 3M</description>
 <part name="C6" library="resistor" deviceset="C-EU" device="C0603" value=".1u"/>
 <part name="C7" library="resistor" deviceset="CPOL-EU" device="153CLV-0505" value="22u"/>
 <part name="C8" library="resistor" deviceset="C-EU" device="C0603" value=".1u"/>
-<part name="R26" library="resistor" deviceset="R-EU_" device="R0603" value="500"/>
+<part name="R26" library="resistor" deviceset="R-EU_" device="R0603" value="536r"/>
 <part name="GND7" library="supply1" deviceset="GND" device=""/>
 <part name="JP3_SWD" library="SparkFun-Connectors" deviceset="M04" device="PTH"/>
 <part name="GND9" library="supply1" deviceset="GND" device=""/>
@@ -16621,26 +16615,26 @@ Source: 3M</description>
 <part name="R5" library="resistor" deviceset="R-EU_" device="R0603" value="220r"/>
 <part name="U1" library="SparkFun-Connectors" deviceset="USD-SOCKET" device="NEW"/>
 <part name="GND16" library="supply1" deviceset="GND" device=""/>
-<part name="C10" library="resistor" deviceset="C-EU" device="C1206" value="10u"/>
-<part name="C11" library="resistor" deviceset="C-EU" device="C1206" value="10u"/>
+<part name="C10" library="resistor" deviceset="CPOL-EU" device="SMCA" value="10u"/>
+<part name="C11" library="resistor" deviceset="CPOL-EU" device="SMCA" value="10u"/>
 <part name="GND18" library="supply1" deviceset="GND" device=""/>
 <part name="PWR" library="SparkFun-Connectors" deviceset="M02" device="PTH"/>
-<part name="R6" library="resistor" deviceset="R-EU_" device="R0603" value="1k"/>
+<part name="R6" library="resistor" deviceset="R-EU_" device="R0603" value="1070r"/>
 <part name="IC3" library="v-reg" deviceset="LM317?*" device="MSTT3" value="LM317MSTT3"/>
-<part name="R7" library="resistor" deviceset="R-EU_" device="R0603" value="237"/>
+<part name="R7" library="resistor" deviceset="R-EU_" device="R0603" value="220"/>
 <part name="LED2" library="led" deviceset="LED" device="CHIPLED_0805"/>
 <part name="GND19" library="supply1" deviceset="GND" device=""/>
-<part name="C12" library="resistor" deviceset="CPOL-EU" device="SMCB" value="2.2uF"/>
-<part name="C13" library="resistor" deviceset="CPOL-EU" device="SMCB" value="2.2uF"/>
+<part name="C12" library="resistor" deviceset="CPOL-EU" device="SMCA" value="2.2uF"/>
+<part name="C13" library="resistor" deviceset="CPOL-EU" device="SMCA" value="2.2uF"/>
 <part name="GND21" library="supply1" deviceset="GND" device=""/>
 <part name="U2" library="SparkFun-Connectors" deviceset="AUDIO-JACK" device="PTH"/>
 <part name="GND23" library="supply1" deviceset="GND" device=""/>
 <part name="USER_BUT" library="adafruit" deviceset="SPST_TACT" device="-EVQQ2"/>
 <part name="C4" library="resistor" deviceset="CPOL-EU" device="153CLV-0505" value="22u"/>
 <part name="C14" library="resistor" deviceset="C-EU" device="C0603" value=".1u"/>
-<part name="R15" library="resistor" deviceset="R-EU_" device="R0603" value="500"/>
+<part name="R15" library="resistor" deviceset="R-EU_" device="R0603" value="536r"/>
 <part name="GND13" library="supply1" deviceset="GND" device=""/>
-<part name="R21" library="resistor" deviceset="R-EU_" device="R0603" value="1k"/>
+<part name="R21" library="resistor" deviceset="R-EU_" device="R0603" value="1070r"/>
 <part name="R22" library="resistor" deviceset="R-EU_" device="R0603" value="536r 1%"/>
 <part name="R23" library="resistor" deviceset="R-EU_" device="R0603" value="536r 1%"/>
 <part name="R27" library="resistor" deviceset="R-EU_" device="R0603" value="536r 1%"/>
@@ -16682,36 +16676,25 @@ Source: 3M</description>
 <text x="-10.16" y="203.2" size="1.778" layer="91">OTG_FS_VBUS</text>
 <text x="-87.884" y="254.254" size="6.4516" layer="91">BitBox Rev2</text>
 <text x="-109.22" y="233.68" size="3.81" layer="91">(c) makapuf2@gmail.com - CC BY SA NC</text>
+<text x="20.32" y="15.24" size="1.778" layer="91">changed the sdio sense
+todo :change orientation sd
+change orientation sound ?
+decaler &amp; renverser boot pins</text>
 </plain>
 <instances>
 <instance part="R1" gate="G$1" x="177.8" y="223.52" rot="R90"/>
 <instance part="R2" gate="G$1" x="187.96" y="223.52" rot="R90"/>
 <instance part="R3" gate="G$1" x="198.12" y="223.52" rot="R90"/>
 <instance part="R4" gate="G$1" x="208.28" y="223.52" rot="R90"/>
-<instance part="R8" gate="G$1" x="213.36" y="218.44" smashed="yes" rot="R180">
-<attribute name="NAME" x="217.17" y="216.9414" size="1.778" layer="95" rot="R180"/>
-<attribute name="VALUE" x="229.87" y="221.742" size="1.778" layer="96" rot="R180"/>
-</instance>
 <instance part="GND1" gate="1" x="86.36" y="99.06"/>
-<instance part="GND2" gate="1" x="220.98" y="213.36"/>
 <instance part="R9" gate="G$1" x="165.1" y="195.58" rot="R90"/>
 <instance part="R10" gate="G$1" x="175.26" y="195.58" rot="R90"/>
 <instance part="R11" gate="G$1" x="185.42" y="195.58" rot="R90"/>
 <instance part="R12" gate="G$1" x="195.58" y="195.58" rot="R90"/>
-<instance part="R16" gate="G$1" x="200.66" y="190.5" smashed="yes" rot="R180">
-<attribute name="NAME" x="204.47" y="189.0014" size="1.778" layer="95" rot="R180"/>
-<attribute name="VALUE" x="219.71" y="193.802" size="1.778" layer="96" rot="R180"/>
-</instance>
-<instance part="GND3" gate="1" x="208.28" y="185.42"/>
 <instance part="R17" gate="G$1" x="157.48" y="167.64" rot="R90"/>
 <instance part="R18" gate="G$1" x="167.64" y="167.64" rot="R90"/>
 <instance part="R19" gate="G$1" x="177.8" y="167.64" rot="R90"/>
 <instance part="R20" gate="G$1" x="187.96" y="167.64" rot="R90"/>
-<instance part="R24" gate="G$1" x="198.12" y="162.56" smashed="yes" rot="R180">
-<attribute name="NAME" x="201.93" y="161.0614" size="1.778" layer="95" rot="R180"/>
-<attribute name="VALUE" x="214.63" y="165.862" size="1.778" layer="96" rot="R180"/>
-</instance>
-<instance part="GND4" gate="1" x="208.28" y="160.02"/>
 <instance part="LED1" gate="G$1" x="86.36" y="106.68"/>
 <instance part="R25" gate="G$1" x="86.36" y="114.3" rot="R270"/>
 <instance part="RESET" gate="G$1" x="20.32" y="104.14"/>
@@ -16852,21 +16835,6 @@ Source: 3M</description>
 <pinref part="LED1" gate="G$1" pin="C"/>
 </segment>
 <segment>
-<pinref part="R8" gate="G$1" pin="1"/>
-<pinref part="GND2" gate="1" pin="GND"/>
-<wire x1="220.98" y1="215.9" x2="218.44" y2="218.44" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="R16" gate="G$1" pin="1"/>
-<pinref part="GND3" gate="1" pin="GND"/>
-<wire x1="208.28" y1="187.96" x2="205.74" y2="190.5" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="R24" gate="G$1" pin="1"/>
-<pinref part="GND4" gate="1" pin="GND"/>
-<wire x1="208.28" y1="162.56" x2="203.2" y2="162.56" width="0.1524" layer="91"/>
-</segment>
-<segment>
 <pinref part="RESET" gate="G$1" pin="P"/>
 <pinref part="GND10" gate="1" pin="GND"/>
 <pinref part="RESET" gate="G$1" pin="P1"/>
@@ -16911,26 +16879,22 @@ Source: 3M</description>
 <wire x1="33.02" y1="53.34" x2="33.02" y2="45.72" width="0.1524" layer="91"/>
 <pinref part="GND16" gate="1" pin="GND"/>
 <pinref part="U1" gate="G$1" pin="SHIELD@3"/>
+<wire x1="48.26" y1="53.34" x2="45.72" y2="55.88" width="0.1524" layer="91"/>
+<wire x1="45.72" y1="55.88" x2="35.56" y2="55.88" width="0.1524" layer="91"/>
+<wire x1="35.56" y1="55.88" x2="33.02" y2="53.34" width="0.1524" layer="91"/>
+<wire x1="48.26" y1="53.34" x2="50.8" y2="55.88" width="0.1524" layer="91"/>
 <pinref part="U1" gate="G$1" pin="SHIELD@1"/>
 <pinref part="U1" gate="G$1" pin="GND"/>
 <wire x1="63.5" y1="53.34" x2="60.96" y2="50.8" width="0.1524" layer="91"/>
 <wire x1="60.96" y1="50.8" x2="55.88" y2="50.8" width="0.1524" layer="91"/>
 <wire x1="55.88" y1="50.8" x2="53.34" y2="53.34" width="0.1524" layer="91"/>
-<junction x="53.34" y="53.34"/>
-<wire x1="53.34" y1="53.34" x2="50.8" y2="53.34" width="0.1524" layer="91"/>
-<pinref part="U1" gate="G$1" pin="SHIELD@2"/>
-<junction x="50.8" y="53.34"/>
-<wire x1="50.8" y1="53.34" x2="48.26" y2="53.34" width="0.1524" layer="91"/>
-<wire x1="48.26" y1="53.34" x2="45.72" y2="55.88" width="0.1524" layer="91"/>
-<wire x1="45.72" y1="55.88" x2="35.56" y2="55.88" width="0.1524" layer="91"/>
-<wire x1="35.56" y1="55.88" x2="33.02" y2="53.34" width="0.1524" layer="91"/>
-<junction x="48.26" y="53.34"/>
+<wire x1="50.8" y1="55.88" x2="53.34" y2="53.34" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="C10" gate="G$1" pin="2"/>
+<pinref part="C10" gate="G$1" pin="-"/>
 <pinref part="GND18" gate="1" pin="GND"/>
 <wire x1="109.22" y1="99.06" x2="116.84" y2="99.06" width="0.1524" layer="91"/>
-<pinref part="C11" gate="G$1" pin="2"/>
+<pinref part="C11" gate="G$1" pin="-"/>
 <wire x1="116.84" y1="99.06" x2="127" y2="99.06" width="0.1524" layer="91"/>
 <pinref part="PWR" gate="G$1" pin="1"/>
 <wire x1="127" y1="99.06" x2="142.24" y2="99.06" width="0.1524" layer="91"/>
@@ -17069,7 +17033,7 @@ Source: 3M</description>
 <junction x="58.42" y="106.68"/>
 </segment>
 <segment>
-<pinref part="C11" gate="G$1" pin="1"/>
+<pinref part="C11" gate="G$1" pin="+"/>
 <wire x1="134.62" y1="106.68" x2="142.24" y2="106.68" width="0.1524" layer="91"/>
 <wire x1="142.24" y1="106.68" x2="149.86" y2="106.68" width="0.1524" layer="91"/>
 <label x="144.78" y="106.68" size="1.778" layer="95"/>
@@ -17106,6 +17070,17 @@ Source: 3M</description>
 <pinref part="U$1" gate="G$1" pin="VDDA"/>
 <wire x1="30.48" y1="271.78" x2="27.94" y2="271.78" width="0.1524" layer="91"/>
 <wire x1="27.94" y1="271.78" x2="27.94" y2="261.62" width="0.1524" layer="91"/>
+<pinref part="U$1" gate="G$1" pin="VREF+"/>
+<wire x1="30.48" y1="274.32" x2="27.94" y2="274.32" width="0.1524" layer="91"/>
+<wire x1="27.94" y1="274.32" x2="27.94" y2="271.78" width="0.1524" layer="91"/>
+<junction x="27.94" y="261.62"/>
+<junction x="27.94" y="259.08"/>
+<junction x="27.94" y="256.54"/>
+<junction x="27.94" y="254"/>
+<junction x="27.94" y="271.78"/>
+<junction x="27.94" y="274.32"/>
+<junction x="27.94" y="251.46"/>
+<junction x="27.94" y="248.92"/>
 </segment>
 <segment>
 <pinref part="U$1" gate="G$1" pin="VBAT"/>
@@ -17152,9 +17127,7 @@ Source: 3M</description>
 <net name="VGA_R" class="0">
 <segment>
 <pinref part="R4" gate="G$1" pin="1"/>
-<pinref part="R8" gate="G$1" pin="2"/>
 <junction x="208.28" y="218.44"/>
-<pinref part="R8" gate="G$1" pin="2"/>
 <junction x="208.28" y="218.44"/>
 <label x="198.12" y="215.9" size="1.778" layer="95"/>
 <pinref part="R1" gate="G$1" pin="1"/>
@@ -17179,9 +17152,7 @@ Source: 3M</description>
 <segment>
 <label x="185.42" y="187.96" size="1.778" layer="95"/>
 <pinref part="R12" gate="G$1" pin="1"/>
-<pinref part="R16" gate="G$1" pin="2"/>
 <junction x="195.58" y="190.5"/>
-<pinref part="R16" gate="G$1" pin="2"/>
 <junction x="195.58" y="190.5"/>
 <pinref part="R9" gate="G$1" pin="1"/>
 <pinref part="R10" gate="G$1" pin="1"/>
@@ -17203,22 +17174,19 @@ Source: 3M</description>
 <net name="VGA_B" class="0">
 <segment>
 <pinref part="R20" gate="G$1" pin="1"/>
-<pinref part="R24" gate="G$1" pin="2"/>
-<junction x="193.04" y="162.56"/>
-<pinref part="R24" gate="G$1" pin="2"/>
-<junction x="193.04" y="162.56"/>
 <label x="177.8" y="160.02" size="1.778" layer="95"/>
 <pinref part="R17" gate="G$1" pin="1"/>
 <pinref part="R18" gate="G$1" pin="1"/>
 <wire x1="157.48" y1="162.56" x2="167.64" y2="162.56" width="0.1524" layer="91"/>
 <pinref part="R19" gate="G$1" pin="1"/>
 <wire x1="167.64" y1="162.56" x2="177.8" y2="162.56" width="0.1524" layer="91"/>
-<wire x1="177.8" y1="162.56" x2="193.04" y2="162.56" width="0.1524" layer="91"/>
+<wire x1="177.8" y1="162.56" x2="187.96" y2="162.56" width="0.1524" layer="91"/>
 <junction x="167.64" y="162.56"/>
 <junction x="177.8" y="162.56"/>
 <pinref part="R27" gate="G$1" pin="1"/>
 <wire x1="149.86" y1="162.56" x2="157.48" y2="162.56" width="0.1524" layer="91"/>
 <wire x1="193.04" y1="162.56" x2="187.96" y2="162.56" width="0.1524" layer="91"/>
+<junction x="157.48" y="162.56"/>
 </segment>
 <segment>
 <pinref part="X1" gate="-3" pin="F"/>
@@ -17505,7 +17473,7 @@ Source: 3M</description>
 </net>
 <net name="VIN" class="0">
 <segment>
-<pinref part="C10" gate="G$1" pin="1"/>
+<pinref part="C10" gate="G$1" pin="+"/>
 <wire x1="109.22" y1="106.68" x2="119.38" y2="106.68" width="0.1524" layer="91"/>
 <wire x1="109.22" y1="106.68" x2="101.6" y2="106.68" width="0.1524" layer="91"/>
 <label x="104.14" y="106.68" size="1.778" layer="95"/>
@@ -17525,6 +17493,8 @@ Source: 3M</description>
 <wire x1="-78.74" y1="73.66" x2="-78.74" y2="48.26" width="0.1524" layer="91"/>
 <pinref part="U$2" gate="G$1" pin="VBUS2"/>
 <wire x1="-58.42" y1="48.26" x2="-78.74" y2="48.26" width="0.1524" layer="91"/>
+<junction x="-78.74" y="73.66"/>
+<junction x="-78.74" y="91.44"/>
 </segment>
 <segment>
 <pinref part="U$1" gate="G$1" pin="PA9/USART1_TX(5T)"/>
@@ -17840,8 +17810,13 @@ Source: 3M</description>
 </segment>
 <segment>
 <pinref part="U1" gate="G$1" pin="SHIELD@4"/>
-<wire x1="45.72" y1="53.34" x2="45.72" y2="73.66" width="0.1524" layer="91"/>
+<wire x1="45.72" y1="53.34" x2="45.72" y2="58.42" width="0.1524" layer="91"/>
 <label x="45.72" y="60.96" size="1.778" layer="95" rot="R90"/>
+<pinref part="U1" gate="G$1" pin="SHIELD@2"/>
+<wire x1="45.72" y1="58.42" x2="45.72" y2="73.66" width="0.1524" layer="91"/>
+<wire x1="50.8" y1="53.34" x2="48.26" y2="55.88" width="0.1524" layer="91"/>
+<wire x1="48.26" y1="55.88" x2="48.26" y2="58.42" width="0.1524" layer="91"/>
+<wire x1="48.26" y1="58.42" x2="45.72" y2="58.42" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$5" class="0">
@@ -18002,4 +17977,10 @@ Source: 3M</description>
 </errors>
 </schematic>
 </drawing>
+<compatibility>
+<note version="6.3" minversion="6.2.2" severity="warning">
+Since Version 6.2.2 text objects can contain more than one line,
+which will not be processed correctly with this version.
+</note>
+</compatibility>
 </eagle>
