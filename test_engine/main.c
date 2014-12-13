@@ -41,10 +41,8 @@ void game_init() {
 	{
 		vx[i]=ini_vx[i%8];
 		vy[i]=ini_vy[i%9];
-		ball[i] = sprite_new((uint32_t *)&SPRITE);
-		ball[i]->x = i*(VGA_H_PIXELS-ball[i]->w)/(NB+1);
-		ball[i]->y = ini_y[i%7];
-		ball[i]->z = i;
+		ball[i] = sprite_new((uint32_t *)&SPRITE, 0,ini_y[i%7], i);
+		ball[i]->x = i*(VGA_H_PIXELS-ball[i]->w)/(NB+1); // fix X after the fact
 	}
 }
 
