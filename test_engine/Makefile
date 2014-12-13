@@ -19,11 +19,11 @@ bg.tset bg_bg.tmap bg.h: bg.tmx bg.png
 
 ball.spr : ball/????.png
 	#python ../scripts/sprite_encode2.py $@ $? -m p4
-	python ../scripts/couples_encode.py $@ $? 
+	python ../scripts/couples_encode.py $@ $^ 
 
 ball_small.spr : ball_small/????.png
 	#python ../scripts/sprite_encode2.py $@ $? -m p4
-	python ../scripts/couples_encode.py $@ $? 
+	python ../scripts/couples_encode.py $@ $^ 
 
 
 clean::
