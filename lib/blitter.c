@@ -55,7 +55,7 @@ object* blitter_new()
 void blitter_remove(object *o)
 {
     // ! Should do that between frames (only frame-based variables will be updated)
-    o->ry = INT16_MAX; 
+    o->y = INT16_MAX; 
 }
 
 // http://en.wikipedia.org/wiki/Insertion_sort
@@ -122,8 +122,8 @@ void graph_frame()
     // transfer y to real y ry
     for (int i=0;i<blt.nb_objects;i++)
     {
-        o=blt.objects[i];   
-        if (o->y+(int)o->h>=0) 
+        o=blt.objects[i];  
+        if (o->y==INT16_MAX || o->y+(int)o->h>=0) 
             o->ry = o->y;
         else
             o->ry = VGA_V_PIXELS+1; 

@@ -9,6 +9,7 @@ DEBUG=False
 
 import sys,struct
 from itertools import chain, groupby
+from sprite_encode2 import add_record
 
 from PIL import Image # using the PIL library, maybe you'll need to install it. python should come with t.
 ALPHA_T=127
@@ -17,26 +18,6 @@ ALPHA_T=127
 # passer command line avec multiple frames , generer contenus objet par defaut ? (ie ROM data, abcd aussi & copier direct ..
 # reduce  first : ecrase 3 dernier bits (faire mieux dehors)
 # ameliorer vector quantization
-modes = {
-    'header':0,
-    'palette':1,
-    'line16':2,
-    'palette_couple':3,
-    'u16':1001,
-    'p4':1002,
-    'p8':1003,
-    'c8':1004,
-    'rle':1005,
-    'end':32767,
-}
-
-def add_record(f,type,data) : 
-    f.write(struct.pack('<2I',modes[type],len(data))) # write real size, but will add up the 3 bytes if unaligned
-    f.write(data)
-    padding = '\0'*(-f.tell()%4)
-    f.write(padding) # padding
-    print "record %20s,  %d bytes"%(type,len(data)+8),'padding : %d'%len(padding) if padding else ''
-    assert f.tell()%4==0,'unaligned entry' # always align
 
 def avg(l) : return sum(l)/float(len(l)) if l else 0
 def stddev(l,avg) : return sum(((x-avg)*(x-avg)) for x in l)/float(len(l))

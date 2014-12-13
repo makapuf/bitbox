@@ -54,12 +54,12 @@ enum sprite_recordID {
     sprite_recordID__line16=2,
     sprite_recordID__palette_couple=3,
     sprite_recordID__u16=1001,
-    sprite_recordID__c8=1004,
-    // + tard ...
     sprite_recordID__p4=1002,
-    sprite_recordID__p8=1003,
+    sprite_recordID__c8=1004,
     sprite_recordID__rle=1005,
     sprite_recordID__end=32767,
+    
+    sprite_recordID__p8=1003,
 };
 
 static void sprite_frame(object *o, int start_line);
@@ -76,8 +76,10 @@ static void sprite_p8_line(object *o) {}
 #define SKIP(x) ((x>>9) & 0x7f)
 #define EXTRA(x) (x>>16) 
 
-object * sprite_new(uint32_t *sprite_data) 
+object * sprite_new(const void *p, int x, int y, int z) 
 {
+    uint32_t *sprite_data=(uint32_t*) p;
+
     object *o = blitter_new();
     if (!o) return 0; // error : no room left
 
@@ -154,7 +156,12 @@ object * sprite_new(uint32_t *sprite_data)
                 break;
         }
     }
-    o->c = (uintptr_t) o->data; // y=0 !
+    o->ry=0;
+    o->c = (uintptr_t) o->data; // ry=0 !
+    // 
+    o->x=x;
+    o->y=y;
+    o->z=z;
     return o;
 }
 
@@ -212,18 +219,17 @@ static void sprite_rle_line (object *o)
 {
     int x=o->x;  
     uint32_t *p; // see blit as words. p is always the start of the current blit
+    // data format : nb:13,2:RFU,1 EOL ; u16 color 
     do {
         p = (uint32_t *)o->c; // (shortcut) start/current position of the blit
-
-        x += SKIP(*p); // skip : advance x , in pixels
-
-        uint32_t data_len = LEN(*p);
-        fast_fill(x,x+data_len,EXTRA(*p));
-
-        x += data_len;
+        int len = (*p & 0xffff)>>3;
+        if (*p & 0x80000000)
+            fast_fill(x,x+len,*p >> 16);
+        x += len;
         o->c += 4;
-    } while (!EOL(*p)); // stop if it was an eol
+    } while (!(*p & 1)); // stop if it was an eol
 }
+
 
 static void sprite_p4_line (object *o)
 {

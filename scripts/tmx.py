@@ -8,10 +8,24 @@
 
 
 """TODO : u16, semi transp, signed integer
-use struct instead of array
+use struct instead of array ? 
 
-allows tset zlib encoding ? 
+ne pas exported les tilesets ou layers commencant par _
+
+accepter des tilesets commencant par _ (ne pas exporter)
+
+export layer objects ! 
+	tiles ou autres objets : 1 liste
+	filename_layername[3][] = {{x,y,type},{x,y,type}, ...}
+		type = id type, a definir comme types, enum filename_object_XXX, filename_object_YYY
+
+	paths : // besoin de nom sinon crie
+		2 lists i16 layername_pathname_x[],layername_pathname_y[]
+
+
 better multilayer : array of ptrs with its own header?
+
+
 """
 
 from PIL import Image # using the PIL library, maybe you'll need to install it. python should come with t.

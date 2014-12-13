@@ -18,11 +18,15 @@ modes = {
     'header':0,
     'palette':1,
     'line16':2,
+    'palette_couple':3,
     'u16':1001,
     'p4':1002,
     'p8':1003,
+    'c8':1004,
+    'rle':1005,
     'end':32767,
 }
+
 
 def add_record(f,type,data) : 
     f.write(struct.pack('<2I',modes[type],len(data))) # write real size, but will add up the 3 bytes if unaligned
@@ -248,34 +252,34 @@ def image_decode(f) :
     img.putdata(tuples)
     return img
 
+if __name__=='__main__' : 
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file_out",help="Output file name. Usually .spr")
+    parser.add_argument('file_in', nargs='+', help="Input files in order as frames.")
+    parser.add_argument("-m","--mode",help="Encoding mode",choices=('u16','p4'))
+    args = parser.parse_args()
 
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument("file_out",help="Output file name. Usually .spr")
-parser.add_argument('file_in', nargs='+', help="Input files in order as frames.")
-parser.add_argument("-m","--mode",help="Encoding mode",choices=('u16','p4'))
-args = parser.parse_args()
+    print '\n***',args.file_in,'to',args.file_out,  args
 
-print '\n***',args.file_in,'to',args.file_out,  args
+    # prepare input as vertically stacked images
+    srcs = [Image.open(filein).convert('RGBA') for filein in args.file_in]
 
-# prepare input as vertically stacked images
-srcs = [Image.open(filein).convert('RGBA') for filein in args.file_in]
+    Width,Height = srcs[0].size
+    if not all(im.size == (Width,Height) for im in srcs) : 
+        print "All images must be the same size !"
+        sys.exit(0)
 
-Width,Height = srcs[0].size
-if not all(im.size == (Width,Height) for im in srcs) : 
-    print "All images must be the same size !"
-    sys.exit(0)
+    src = Image.new("RGBA", (Width,Height*len(srcs)))
+    for i,im in enumerate(srcs) : 
+        src.paste(im,(0,i*Height))
 
-src = Image.new("RGBA", (Width,Height*len(srcs)))
-for i,im in enumerate(srcs) : 
-    src.paste(im,(0,i*Height))
+    # output 
+    f = open(args.file_out,'wb+')
+    image_encode(src,f,Height,args.mode)
 
-# output 
-f = open(args.file_out,'wb+')
-image_encode(src,f,Height,args.mode)
-
-f.seek(0)
-image_decode(f).save(args.file_out+'.png') #note that only the first is written (but all are decoded)
+    f.seek(0)
+    image_decode(f).save(args.file_out+'.png') #note that only the first is written (but all are decoded)
 
 
 
