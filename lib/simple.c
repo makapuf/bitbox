@@ -13,6 +13,7 @@ void graph_frame() {}
 #if VGA_SIMPLE_MODE==0 // text mode 80x25 
 
 extern const uint8_t font16_data[256][16];
+uint8_t font16_data_cached[256][16]  __attribute__ ((section (".ccm")));
 
 char vram[SCREEN_H][SCREEN_W];
 uint16_t palette[2]={0,0x56b5}; 
@@ -29,7 +30,7 @@ void graph_line() {
 	uint8_t c;
 
 	for (int i=0;i<80;i++) {// column char
-		c = font16_data[(uint8_t) vram[vga_line / 16][i]][vga_line%16];
+		c = font16_data_cached[(uint8_t) vram[vga_line / 16][i]][vga_line%16];
 		// draw a character on this line
 		*dst++ = lut_data[(c>>6) & 0x3];
 		*dst++ = lut_data[(c>>4) & 0x3];
@@ -42,6 +43,7 @@ void graph_line() {
 #elif VGA_SIMPLE_MODE==1 // mini text mode 132x75, chars 8x6, base 800
 
 extern const uint8_t font8_data[256][8];
+uint8_t font8_data_cached[256][8]  __attribute__ ((section (".ccm")));
 
 uint16_t palette[2]={0,0x56b5}; 
 char vram[SCREEN_H][SCREEN_W];
@@ -58,7 +60,7 @@ void graph_line() {
 	uint8_t c;
 
 	for (int i=0;i<132;i++) {// column char
-		c = font8_data[(uint8_t)vram[vga_line/8][i]][vga_line%8];
+		c = font8_data_cached[(uint8_t)vram[vga_line/8][i]][vga_line%8];
 		// draw a character on this line - 6 pixels is 3 couples ie 3 u32
 		*dst++ = lut_data[(c>>4) & 0x3];
 		*dst++ = lut_data[(c>>2) & 0x3];
@@ -66,10 +68,11 @@ void graph_line() {
 	}
 }
 
+
 // --------------------------------------------------------------
 #elif VGA_SIMPLE_MODE==2 // 800x600 1bpp - base 800
 
-uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
+uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] __attribute__ ((section (".ccm")));
 uint16_t palette[2] = {0, RGB(0xAA, 0xAA, 0xAA)};
 
 void graph_line() {
@@ -99,7 +102,7 @@ void graph_line() {
 
 #elif VGA_SIMPLE_MODE==3 // 640x400 2BPP + bandes noires (one drawn at 620!)
 
-uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
+uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] __attribute__ ((section (".ccm")));
 uint16_t palette[1<<BPP] = {RGB(0,0,0), RGB(0x55, 0xff, 0xff), RGB(0xff, 0x55, 0x55), RGB(0xff, 0xff, 0xff)};
 
 void graph_line() {
@@ -143,7 +146,7 @@ void graph_line() {
 
 #elif VGA_SIMPLE_MODE==4 // 4BPP 400x300, base 400x300
 
-uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
+uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] __attribute__ ((section (".ccm")));
 uint16_t palette[1<<BPP] = {
 	RGB(   0,   0,   0), RGB(   0,   0,0xAA), RGB(   0,0xAA,   0), RGB(   0,0xAA,0xAA),
 	RGB(0xAA,   0,   0), RGB(0xAA,   0,0xAA), RGB(0xAA,0x55,   0), RGB(0xAA,0xAA,0xAA),
@@ -170,7 +173,7 @@ void graph_line() {
 
 #elif VGA_SIMPLE_MODE==5 // 8BPP 320x200 - base 320x240  
 
-uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
+uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] __attribute__ ((section (".ccm")));
 uint16_t palette[1<<BPP] = { // 256 colors standard VGA palette
 	0x0000, 0x0015, 0x02a0, 0x02b5, 0x5400, 0x5415, 0x5540, 0x56b5, 
 	0x294a, 0x295f, 0x2bea, 0x2bff, 0x7d4a, 0x7d5f, 0x7fea, 0x7fff, 
@@ -222,19 +225,117 @@ void graph_line() {
 		*dst++ = palette[(w>>24) & 0xff]<<16 | palette[(w>>16)&0xff];
 	}
 }
+// --------------------------------------------------------------
+#elif VGA_SIMPLE_MODE==10 // text mode 80x30 with colors 
 
+extern const uint8_t font16_data[256][16];
+uint8_t font16_data_cached[256][16]  __attribute__ ((section (".ccm")));
+
+char vram[SCREEN_H][SCREEN_W];
+char vram_attr[SCREEN_H][SCREEN_W];
+uint32_t palette[256]; // BG<<16 | FG couples (default values : 16c BG, 16c FG)
+
+void graph_line() {
+	uint32_t lut_data[4]; // cache couples for faster draws
+
+	uint32_t *dst = (uint32_t *) draw_buffer;
+	uint8_t prev_attr = 0xff; // what if it's just that ?
+
+	for (int i=0;i<SCREEN_W;i++) { // column char
+		// draw a character on this line
+		uint8_t p = font16_data_cached[(uint8_t) vram[vga_line / 16][i]][vga_line%16];
+		uint8_t attr = vram_attr[vga_line/16][i];
+		if (attr != prev_attr) {
+			uint32_t c = palette[attr];
+
+			lut_data[0] = (c&0xffff)*0x10001; // AA
+			lut_data[1] = c; // AB
+			lut_data[2] = (c<<16 | c>>16); // BA
+			lut_data[3] = (c>>16)*0x10001; // BB
+
+			prev_attr = attr;
+		}
+
+		// draw a character on this line
+		*dst++ = lut_data[(p>>6) & 0x3];
+		*dst++ = lut_data[(p>>4) & 0x3];
+		*dst++ = lut_data[(p>>2) & 0x3];
+		*dst++ = lut_data[(p>>0) & 0x3];
+	}
+}
+
+// --------------------------------------------------------------
+#elif VGA_SIMPLE_MODE==11 // text mode 132x75 with colors 
+
+extern const uint8_t font8_data[256][8];
+uint8_t font8_data_cached[256][8]  __attribute__ ((section (".ccm")));
+
+char vram[SCREEN_H][SCREEN_W];
+char vram_attr[SCREEN_H][SCREEN_W];
+uint32_t palette[256]; // BG<<16 | FG couples (default values : 16c BG, 16c FG)
+
+void graph_line( void ) 
+{
+	uint32_t lut_data[4]; // cache couples for faster draws
+
+	uint32_t *dst = (uint32_t *) draw_buffer;
+	uint8_t prev_attr = 0xff; // what if it's just that ?
+
+	for (int i=0;i<SCREEN_W/2;i++) { // column char
+		// draw a character on this line
+		uint8_t attr = vram_attr[vga_line/8][i*2];
+		if (attr != prev_attr) {
+			uint32_t c = palette[attr];
+
+			lut_data[0] = (c&0xffff)*0x10001; // AA
+			lut_data[1] = c; // AB
+			lut_data[2] = (c<<16 | c>>16); // BA
+			lut_data[3] = (c>>16)*0x10001; // BB
+
+			prev_attr = attr;
+		}
+
+		uint8_t p = font8_data_cached[(uint8_t) vram[vga_line / 8][i*2]][vga_line%8];
+		// draw a character on this line
+		*dst++ = lut_data[(p>>4) & 0x3];
+		*dst++ = lut_data[(p>>2) & 0x3];
+		*dst++ = lut_data[(p>>0) & 0x3];
+
+
+		attr = vram_attr[vga_line/8][i*2+1];
+		if (attr != prev_attr) {
+			uint32_t c = palette[attr];
+
+			lut_data[0] = (c&0xffff)*0x10001; // AA
+			lut_data[1] = c; // AB
+			lut_data[2] = (c<<16 | c>>16); // BA
+			lut_data[3] = (c>>16)*0x10001; // BB
+
+			prev_attr = attr;
+		}
+
+		p = font8_data_cached[(uint8_t) vram[vga_line / 8][i*2+1]][vga_line%8];
+		// draw a character on this line
+		*dst++ = lut_data[(p>>4) & 0x3];
+		*dst++ = lut_data[(p>>2) & 0x3];
+		*dst++ = lut_data[(p>>0) & 0x3];
+	}
+}
+
+// --------------------------------------------------------------
 #endif
 
 // --------------------------------------------------------------
 // utilities 
+
+
+#ifdef BPP // this is a graphical mode
 
 void clear() 
 {
    memset(vram, 0, sizeof(vram));
 }
 
-
-#ifdef BPP // this is a graphical mode
 void draw_pixel(int x,int y,int c)
 {	
 	int pixel=x+y*SCREEN_W; // number of the pixel
@@ -255,30 +356,64 @@ void draw_line(int x0, int y0, int x1, int y1, int c) {
     if (e2 < dy) { err += dx; y0 += sy; }
   }
 }
+
 #else 
+
+#ifdef COLOR_TEXT
+uint8_t text_color; // current attribute value of the drawn text 
+#endif 
+
+void clear() 
+{
+   memset(vram, 0, sizeof(vram));
+   #if VGA_SIMPLE_MODE==0 
+   memcpy(font16_data_cached, font16_data, sizeof(font16_data_cached));
+   #elif VGA_SIMPLE_MODE==1 
+   memcpy(font8_data_cached, font8_data, sizeof(font8_data_cached));
+   #elif VGA_SIMPLE_MODE==10 
+   memcpy(font16_data_cached, font16_data, sizeof(font16_data_cached));
+   memset(vram_attr, 0, sizeof(vram_attr));
+   #elif VGA_SIMPLE_MODE==11 
+   memcpy(font8_data_cached, font8_data, sizeof(font8_data_cached));
+   memset(vram_attr, 0, sizeof(vram_attr));
+   #endif 
+}
 
 void print_at(int column, int line, const char *msg)
 {
-	for(int k = 0; msg[k]; k++)
+	for(int k = 0; msg[k] && (k+column+line*SCREEN_W<SCREEN_H*SCREEN_W); k++) {
 		vram[line][column + k] = msg[k];
+		#ifdef COLOR_TEXT
+		vram_attr[line][column + k] = text_color;
+		#endif 
+  	}
 }
 
 // draws an empty window at this position, asserts x1<x2 && y1<y2
-void window (int x1, int y1, int x2, int y2 )
+void window (int x1, int y1, int x2, int y2)
 {
 	for (int i=x1+1;i<x2;i++) 
 	{
-		vram[y1][i]='\xCD';
-		vram[y2][i]='\xCD';
+		vram[y2][i]=vram[y1][i]='\xCD';
+		#ifdef COLOR_TEXT
+	    vram_attr[y1][i]=vram_attr[y2][i]=text_color;
+		#endif
+
 	}
 	for (int i=y1+1;i<y2;i++) 
 	{
-		vram[i][x1]='\xBA';
-		vram[i][x2]='\xBA';
+		vram[i][x1]=vram[i][x2]='\xBA';
+		#ifdef COLOR_TEXT
+    	vram_attr[i][x1]=vram_attr[i][x2]=text_color;
+		#endif
 	}
+
 	vram[y1][x1] ='\xC9';
 	vram[y1][x2] ='\xBB'; 
 	vram[y2][x1] ='\xC8'; 
 	vram[y2][x2] ='\xBC'; 
+	#ifdef COLOR_TEXT
+	vram_attr[y1][x1] =vram_attr[y1][x2]=vram_attr[y2][x1]=vram_attr[y2][x2]=text_color;
+	#endif 
 }
 #endif
