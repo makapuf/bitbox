@@ -8,14 +8,20 @@ const char *lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Do
   "Quisque eu dui leo. Nam tempus nec sem quis placerat. In ornare elementum posuere. Curabitur congue dapibus diam. Aliquam gravida nibh consectetur elit porttitor, nec rutrum neque pretium. Nam venenatis, leo in sagittis fermentum, augue dolor aliquet sem, id commodo nulla lacus sed elit. Morbi pulvinar ac diam ultricies facilisis. Nulla feugiat odio non tempus congue. Duis tempor commodo ligula vitae elementum. Sed pellentesque lorem semper, semper enim sed, volutpat urna. Donec orci leo, sodales ut tristique at, vulputate at elit. Vivamus eleifend enim at dolor bibendum, quis hendrerit nulla viverra. In eu nunc eget mauris lacinia placerat. \n";
 
 void game_init() {
-    //  draw ascii set
+    clear();
+
+    window(0,0,17,17);
+
+    //  draw ascii set with attribute 2
     for (int i=0;i<256;i++) {
-        vram[i/16][i%16]=i;
+        vram[1+i/16][1+i%16]=i;
     }
 
     // print text (crudely, no \n or \t interpreting)
     print_at(0,18,lorem);
-    print_at(60,5, "Hello Bitbox simple text !");
+    print_at(30,5, "Hello Bitbox simple text !");
+    for (int i=0;i<16;i++)
+      print_at(28+2*i,6,"##");
 
 }
 

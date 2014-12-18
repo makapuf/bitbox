@@ -1,6 +1,4 @@
 # simple makefile
-BITBOX:=..
-
 NO_USB=1
 NO_SDCARD=1
 
