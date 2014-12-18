@@ -121,10 +121,16 @@ endif
 ifdef VGA_SIMPLE_MODE
 GAME_C_OPTS += -DVGA_SIMPLE_MODE=$(VGA_SIMPLE_MODE)
 ENGINE_FILES +=  simple.c fonts.c
-# those mode require kernel mode 800x600
+# those modes require kernel mode 800x600
 ifneq ($(filter $(VGA_SIMPLE_MODE),1 2),)
 GAME_C_OPTS += -DVGAMODE_800
 endif 
+
+# 800x600 O/C 192 to achieve this mode
+ifneq ($(filter $(VGA_SIMPLE_MODE),11 ),)
+GAME_C_OPTS += -DVGAMODE_800_OVERCLOCK
+endif 
+
 # 400x300 mode
 ifeq ($(VGA_SIMPLE_MODE),4)
 GAME_C_OPTS += -DVGAMODE_400

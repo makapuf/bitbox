@@ -41,6 +41,15 @@
 #define SCREEN_H 200
 #define BPP 8
 
+#elif VGA_SIMPLE_MODE==10
+#define SCREEN_W 80
+#define SCREEN_H 30
+#define COLOR_TEXT
+
+#elif VGA_SIMPLE_MODE==11
+#define SCREEN_W 120
+#define SCREEN_H 75
+#define COLOR_TEXT
 #endif
 
 // Utilities ------------------------------------------------
@@ -59,9 +68,15 @@ void clear();
 
 extern char vram[SCREEN_H][SCREEN_W];
 
+#ifdef COLOR_TEXT  // color attributes
+extern char vram_attr[SCREEN_H][SCREEN_W];
+extern uint32_t palette[256];
+extern uint8_t text_color; 
+#endif 
+
 void print_at(int column, int line, const char *msg);
 
 // draws an empty window at this position, asserts x1<x2 && y1<y2
-void window (int x1, int y1, int x2, int y2 );
+void window (int x1, int y1, int x2, int y2);
 
 #endif

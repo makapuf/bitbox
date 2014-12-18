@@ -49,6 +49,30 @@
 #define PLL_Q 15
 #define APB_PRESC 2 
 
+#elif defined(VGAMODE_800_OVERCLOCK)
+
+// 800 600 non VESA O/C core (192Hz) - ~ 34kHz, 56fps
+
+#define VGA_H_PIXELS 800 
+#define VGA_H_FRONTPORCH 32 
+#define VGA_H_SYNC 80
+#define VGA_H_BACKPORCH 50
+
+#define VGA_V_PIXELS 600
+#define VGA_V_FRONTPORCH 1
+#define VGA_V_SYNC 4
+#define VGA_V_BACKPORCH 14
+
+#define VGA_FPS 56
+#define VGA_PIXELCLOCK 6 // DMA clocks per pixel
+
+#define PLL_M 4
+#define PLL_N 192
+#define PLL_P 2
+#define PLL_Q 8
+#define APB_PRESC 2 
+
+
 #elif defined(VGAMODE_400)
 // 400x300 based on 800x600 + skipline / non VESA on lightly O/C core (180MHz) - ~ 30kHz, 56fps
 
