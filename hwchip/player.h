@@ -1,9 +1,13 @@
-// How to use:
-// * call ply_init to reset the song at the start
-// * call ply_update in your game_frame (or graph_frame) to run the player
-//
-// Currently you can use only one song. Soon you will be able to use more...
-// To stop playing, stop calling ply_update and reset the oscillators to an
-// invalid waveform yourself.
-void ply_init();
-void ply_update();
+/** Initialize the player to play the given song.
+ * - Oscillators are reset to silence
+ * - Song position is reset to 0
+ * - Tracks and instruments are loaded from the song.
+ *
+ * Pass NULL to stop playing and not load a new song.
+ */
+void ply_init(const unsigned char* song);
+
+/** Update the player status. This must be called once per frame as long as the
+ * song is running.
+ */
+void ply_update(); // Call this once per frame.

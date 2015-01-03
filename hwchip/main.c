@@ -3,9 +3,14 @@
 
 #include <string.h>
 
+extern const unsigned char songdata[];
 void game_frame() {
+	// Apparently starting the song immediately at boot cuts part of the first
+	// pattern out. So we delay it to the 10th VGA frame and then things run
+	// stable. This is a bit unexpected...
 	if (vga_frame == 10) {
-		ply_init();
+		ply_init(songdata);
+
 	}
 
 	if (vga_frame > 10)

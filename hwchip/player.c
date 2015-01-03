@@ -92,6 +92,8 @@ uint16_t resources[16 + MAXTRACK];
 
 struct unpacker songup;
 
+static const uint8_t* song_data;
+
 static inline uint8_t readsongbyte(uint16_t offset) {
 	extern const uint8_t songdata[];
 	return songdata[offset];
@@ -183,9 +185,9 @@ static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param) {
 	}
 }
 
-void ply_init() {
+void ply_init(const unsigned char* data) {
 	uint8_t i;
-	struct unpacker up;
+	struct unpacker up = {0};
 
 	trackwait = 0;
 	trackpos = 0;
@@ -201,11 +203,22 @@ void ply_init() {
 	osc[3].volume = 0;
 	channel[3].inum = 0;
 
+	song_data = data;
+	// Note: if given NULL, readsongbyte will return 0 for everything. This
+	// means:
+	// * The song will be made of endless repetition of track 0 without
+	//	transposition
+	// * Track 0 will be filled with blank lines
+	// * And even if an instrument tries to play, it will be silence.
+
+	// Initialize the resources decompressor from the start of the song
 	initup(&up, 0);
+	// Get the offsets to the song, the 15 instruments, and the tracks
 	for(i = 0; i < 16 + MAXTRACK; i++) {
 		resources[i] = readchunk(&up, 13);
 	}
 
+	// Get ready to read the song data
 	initup(&songup, resources[0]);
 }
 
@@ -336,5 +349,8 @@ void ply_update()
 		channel[ch].vpos += channel[ch].vrate;
 	}
 
-	if (!playsong) ply_init();
+	// Done? No problem, let's reinit with the same song so it loops!
+	// Note: it would be better if the song could have a loop position, or
+	// track jump commands.
+	if (!playsong) ply_init(song_data);
 }
