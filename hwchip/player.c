@@ -15,23 +15,19 @@
  * was designed with an AVR8 in mind. Maybe the code could be made simpler.
  */
 
+#include <stdint.h>
+ 
 #include "engine.h"
 #include "exported.h"
 
 #define TRACKLEN 32
 
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef signed char s8;
-typedef short s16;
-typedef unsigned int u32;
+uint8_t trackwait;
+uint8_t trackpos;
+uint8_t playsong;
+uint8_t songpos;
 
-u8 trackwait;
-u8 trackpos;
-u8 playsong;
-u8 songpos;
-
-static const u16 freqtable[] = {
+static const uint16_t freqtable[] = {
 	0x010b, 0x011b, 0x012c, 0x013e, 0x0151, 0x0165, 0x017a, 0x0191, 0x01a9,
 	0x01c2, 0x01dd, 0x01f9, 0x0217, 0x0237, 0x0259, 0x027d, 0x02a3, 0x02cb,
 	0x02f5, 0x0322, 0x0352, 0x0385, 0x03ba, 0x03f3, 0x042f, 0x046f, 0x04b2,
@@ -44,7 +40,7 @@ static const u16 freqtable[] = {
 	0x70a3, 0x7756, 0x7e6f
 };
 
-static const s8 sinetable[] = {
+static const int8_t sinetable[] = {
 	0, 12, 25, 37, 49, 60, 71, 81, 90, 98, 106, 112, 117, 122, 125, 126,
 	127, 126, 125, 122, 117, 112, 106, 98, 90, 81, 71, 60, 49, 37, 25, 12,
 	0, -12, -25, -37, -49, -60, -71, -81, -90, -98, -106, -112, -117, -122,
@@ -52,13 +48,13 @@ static const s8 sinetable[] = {
 	-71, -60, -49, -37, -25, -12
 };
 
-static const u8 validcmds[] = "0dfijlmtvw~+=";
+static const uint8_t validcmds[] = "0dfijlmtvw~+=";
 
 struct trackline {
-	u8	note;
-	u8	instr;
-	u8	cmd[2];
-	u8	param[2];
+	uint8_t	note;
+	uint8_t	instr;
+	uint8_t	cmd[2];
+	uint8_t	param[2];
 };
 
 struct track {
@@ -66,48 +62,48 @@ struct track {
 };
 
 struct unpacker {
-	u16	nextbyte;
-	u8	buffer;
-	u8	bits;
+	uint16_t	nextbyte;
+	uint8_t	buffer;
+	uint8_t	bits;
 };
 
 struct channel {
 	struct unpacker		trackup;
-	u8			tnum;
-	s8			transp;
-	u8			tnote;
-	u8			lastinstr;
-	u8			inum;
-	u16			iptr;
-	u8			iwait;
-	u8			inote;
-	s8			bendd;
-	s16			bend;
-	s8			volumed;
-	s16			dutyd;
-	u8			vdepth;
-	u8			vrate;
-	u8			vpos;
-	s16			inertia;
-	u16			slur;
+	uint8_t			tnum;
+	int8_t			transp;
+	uint8_t			tnote;
+	uint8_t			lastinstr;
+	uint8_t			inum;
+	uint16_t			iptr;
+	uint8_t			iwait;
+	uint8_t			inote;
+	int8_t			bendd;
+	int16_t			bend;
+	int8_t			volumed;
+	int16_t			dutyd;
+	uint8_t			vdepth;
+	uint8_t			vrate;
+	uint8_t			vpos;
+	int16_t			inertia;
+	uint16_t			slur;
 } channel[4];
 
-u16 resources[16 + MAXTRACK];
+uint16_t resources[16 + MAXTRACK];
 
 struct unpacker songup;
 
-static inline u8 readsongbyte(u16 offset) {
-	extern const u8 songdata[];
+static inline uint8_t readsongbyte(uint16_t offset) {
+	extern const uint8_t songdata[];
 	return songdata[offset];
 }
 
-static void initup(struct unpacker *up, u16 offset) {
+static void initup(struct unpacker *up, uint16_t offset) {
 	up->nextbyte = offset;
 	up->bits = 0;
 }
 
-static u8 readbit(struct unpacker *up) {
-	u8 val;
+static uint8_t readbit(struct unpacker *up) {
+	uint8_t val;
 
 	if(!up->bits) {
 		up->buffer = readsongbyte(up->nextbyte++);
@@ -121,9 +117,9 @@ static u8 readbit(struct unpacker *up) {
 	return val;
 }
 
-static u16 readchunk(struct unpacker *up, u8 n) {
-	u16 val = 0;
-	u8 i;
+static uint16_t readchunk(struct unpacker *up, uint8_t n) {
+	uint16_t val = 0;
+	uint8_t i;
 
 	for(i = 0; i < n; i++) {
 		if(readbit(up)) {
@@ -134,12 +130,12 @@ static u16 readchunk(struct unpacker *up, u8 n) {
 	return val;
 }
 
-static inline void readinstr(u8 num, u8 pos, u8 *dest) {
+static inline void readinstr(uint8_t num, uint8_t pos, uint8_t *dest) {
 	dest[0] = readsongbyte(resources[num] + 2 * pos + 0);
 	dest[1] = readsongbyte(resources[num] + 2 * pos + 1);
 }
 
-static void runcmd(u8 ch, u8 cmd, u8 param) {
+static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param) {
 	switch(cmd) {
 		case 0: // 0 = note off
 			channel[ch].inum = 0;
@@ -188,7 +184,7 @@ static void runcmd(u8 ch, u8 cmd, u8 param) {
 }
 
 void ply_init() {
-	u8 i;
+	uint8_t i;
 	struct unpacker up;
 
 	trackwait = 0;
@@ -216,7 +212,7 @@ void ply_init() {
 
 void ply_update()
 {
-	u8 ch;
+	uint8_t ch;
 
 	if(trackwait) {
 		trackwait--;
@@ -229,8 +225,8 @@ void ply_update()
 					playsong = 0;
 				} else {
 					for(ch = 0; ch < 4; ch++) {
-						u8 gottransp;
-						u8 transp;
+						uint8_t gottransp;
+						uint8_t transp;
 
 						gottransp = readchunk(&songup, 1);
 						channel[ch].tnum = readchunk(&songup, 6);
@@ -240,7 +236,7 @@ void ply_update()
 						} else {
 							transp = 0;
 						}
-						channel[ch].transp = (s8) transp;
+						channel[ch].transp = (int8_t) transp;
 						if(channel[ch].tnum) {
 							initup(&channel[ch].trackup, resources[16 + channel[ch].tnum - 1]);
 						}
@@ -253,8 +249,8 @@ void ply_update()
 		if(playsong) {
 			for(ch = 0; ch < 4; ch++) {
 				if(channel[ch].tnum) {
-					u8 note, instr, cmd, param;
-					u8 fields;
+					uint8_t note, instr, cmd, param;
+					uint8_t fields;
 
 					fields = readchunk(&channel[ch].trackup, 3);
 					note = 0;
@@ -292,12 +288,12 @@ void ply_update()
 	}
 
 	for(ch = 0; ch < 4; ch++) {
-		s16 vol;
-		u16 duty;
-		u16 slur;
+		int16_t vol;
+		uint16_t duty;
+		uint16_t slur;
 
 		while(channel[ch].inum && !channel[ch].iwait) {
-			u8 il[2];
+			uint8_t il[2];
 
 			readinstr(channel[ch].inum, channel[ch].iptr, il);
 			channel[ch].iptr++;
@@ -307,7 +303,7 @@ void ply_update()
 		if(channel[ch].iwait) channel[ch].iwait--;
 
 		if(channel[ch].inertia) {
-			s16 diff;
+			int16_t diff;
 
 			slur = channel[ch].slur;
 			diff = freqtable[channel[ch].inote] - slur;

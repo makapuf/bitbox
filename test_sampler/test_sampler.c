@@ -5,12 +5,15 @@
 #include "sampler.h"
 #include "bitbox.h" // gamepad
 
-const char *instrs[5] = {
+const char *instrs[8] = {
   "This is a demonstration of Bitbox simple sampler with sound in flash ",
   "(opposed to sounds streamed from sdcard)",
-  "press ABXY / UDLR buttons on the gamepad (or the emulated version on the",
+  "",
+  "Press ABXY / UDLR buttons on the gamepad (or the emulated version ",
   "keyboard) and play with the sounds (sound output needs to be plugged ",
-  "of course). Check the source to see how to integrate sounds in your games"
+  "in of course).",
+  "",
+  "Check the source to see how to integrate sounds in your games."
 };
 
 extern const int8_t snd_diam_raw[], 
@@ -33,12 +36,11 @@ extern const unsigned int snd_diam_raw_len,
 
 
 void game_init() {
-    // draw text
-    for (int i=0;i<5;i++)
-        strcpy(&vram[(2+i)*SCREEN_W+4],instrs[i]);
-    
-    audio_on=1;
-
+    // instructions
+    clear(); // necessary 
+    window(3,1,76,10);
+    for (int i=0;i<8;i++)
+        print_at(5, 2+i, instrs[i]);
 }
 
 #define ifplay(but,sndname) \
@@ -48,7 +50,7 @@ void game_init() {
 void game_frame() {
     static uint16_t last_buts;
 
-    kbd_emulate_gamepad ();
+    kbd_emulate_gamepad();
 
     ifplay(A,bitbox_rules);
     ifplay(B,monster);

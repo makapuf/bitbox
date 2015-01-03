@@ -6,7 +6,6 @@ volatile int x,y, snd_vol;
 // which are runnin in the main thread 
 
 void game_init() {
-	audio_on=1;
 	snd_vol=0; // 0-31 volume
 }
 

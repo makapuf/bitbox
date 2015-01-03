@@ -134,8 +134,7 @@ static void refresh_screen(SDL_Surface *scr)
 static void mixaudio(void * userdata, Uint8 * stream, int len)
 // this callback is called each time we need to fill the buffer
 {
-    if (audio_on)
-        game_snd_buffer((uint16_t *)stream,len/2); 
+    game_snd_buffer((uint16_t *)stream,len/2); // no audio_on ?
 }
 
 void audio_init(void)

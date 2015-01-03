@@ -29,7 +29,7 @@ PROFILE_DECL(sound);
 
 // vga init, not public, it's done automatically
 void vga_setup();
-extern uint16_t *audio_write; // draw sound buffer. accessible by mùain thread.
+extern uint16_t *audio_write; // draw sound buffer. accessible by main thread.
 
 void board_init()
 {
@@ -121,11 +121,6 @@ int main(void)
 	{
 
 		game_frame();
-		
-		// must be finished by the end of frame 
-		PROFILE_TIC(sound);
-		game_snd_buffer(audio_write,BITBOX_SNDBUF_LEN); 
-		PROFILE_TOC(sound);
 
 		oframe=vga_frame;
 

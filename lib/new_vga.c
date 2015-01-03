@@ -45,12 +45,6 @@ mode as defined in kconf.h values
 #define SYNC_END (VGA_H_SYNC*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
 #define BACKPORCH_END ((VGA_H_SYNC+VGA_H_BACKPORCH)*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
 
-#ifdef AUDIO
-#include "audio.h"
-void audio_out8(uint16_t value); 
-extern uint16_t *audio_ptr; // only used through this inline
-#endif 
-
 
 #ifdef PROFILE
 // from http://forums.arm.com/index.php?/topic/13949-cycle-count-in-cortex-m3/
@@ -299,8 +293,6 @@ static void HSYNCHandler()
 	vga_line++;
 	#endif 
 
-
-
         // starting from line #1, line #0 already in drawbuffer
 	if (vga_line < VGA_V_PIXELS) {
 
@@ -340,14 +332,6 @@ static void HSYNCHandler()
 
 		if (vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) 
 		{
-			// synchronous. buffers shall be ready now
-		    #ifdef AUDIO
-    		#ifdef VGA_SKIPLINE
-			if (!vga_odd) 
-			#endif 
-    		audio_frame();
-    		#endif 
-
 			GPIOA->BSRRH|=(1<<0); // lower VSync line
 		}
 		else if(vga_line==VGA_V_PIXELS+1+VGA_V_FRONTPORCH+VGA_V_SYNC)
@@ -360,12 +344,6 @@ static void HSYNCHandler()
             graph_line();  // first line next frame!
 		}
 	}
-	#ifdef AUDIO
-	#ifdef VGA_SKIPLINE
-	if (!vga_odd) 
-	#endif
-	if (audio_on) audio_out8(*audio_ptr++);
-	#endif 
 }
 
 static void DMACompleteHandler()

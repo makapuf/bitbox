@@ -8,20 +8,16 @@
 // user-provided
 void game_init();
 void game_frame();
-void game_line();
-void game_snd_buffer(uint16_t *buffer, int len); // **buffer plutot ?
-// user provided : fill a buffer with 8bit L/R sound data
 
 // --- Audio ----------------------------------------------------------------------------
 
-#define BITBOX_SAMPLERATE VGA_VFREQ 
-#define BITBOX_SNDBUF_LEN (BITBOX_SAMPLERATE/VGA_FPS+1) // 525
+#define BITBOX_SAMPLERATE 32000 
+#define BITBOX_SNDBUF_LEN 512 // 16ms latency (double buffering is used)
 #define BITBOX_SAMPLE_BITDEPTH 8 // 8bit output 
 
-extern int audio_on; 
-
 void audio_init();
-
+// user provided : fill a buffer with 8bit L/R sound data
+void game_snd_buffer(uint16_t *buffer, int len); 
 
 // --- VGA interface ----------------------------------------------------------------------
 #define RGB(r,g,b)  ((((r)>>3)&0x1f)<<10 | (((g)>>3)&0x1f)<<5 | (((b)>>3)&0x1f))
