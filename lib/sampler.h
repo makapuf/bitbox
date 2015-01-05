@@ -2,7 +2,7 @@
 
 plays a number of sounds, 
  - directly from data in memory 
- - from a raw file 
+ - from a raw file (i8 raw)
 
 
 to use it, 
@@ -10,42 +10,38 @@ to use it,
  - init the engine
  - 
  */
-#ifndef NO_SDCARD
-#include "fatfs/ff.h" // FIL
-#endif 
+
+#include <stdint.h>
 
 #define MAX_VOICES 64
 
 
 /* plays a sound once stored from data in memory. 
 
-   data, data_len is an array of sound data as uint8_t
-   vol_left and vol_right define the panning from 0 to 255 (as 1-256 / 256)
+   data, data_len is an array of sound data as int8_t
+   vol_left and vol_right define the panning from 0 to 255. Setting volume to 0,0 frees the note.
 
-   returns a voice_id, useful for stopping it
+   returns a voice_id - useful for stopping it, or setting volume by example
    if no free voice is found, the sound is not played and a negative value is returned
    
    */
-int play_mono_from_memory(const int8_t *data, int data_len, uint8_t vol_left, uint8_t vol_right);
 
-#ifndef NO_SDCARD
-/* plays a sound streamed from a file 
-	the RAM buffer should be sufficient to allow skip free operation
-	of course it shall not be shared between voices.
-	
-	The file should be already opened and seek'd to the right position
+int play_sample(const int8_t *data, int data_len, uint16_t speed, int loop_pos, uint8_t vol_left, uint8_t vol_right);
 
-	vol_right and left are for panning in the global mix.
-
-	returns a voice_id
-   	if no free voice is found, the sound is not played and a negative value is returned
-	
-	*/
-int play_mono_from_raw_file(FIL *f, int8_t *buffer, int buffer_len, uint8_t vol_left, uint8_t vol_right);
-#endif 
+void set_vol(int voice_id, uint8_t vol_left, uint8_t vol_right);
 
 // stop all samples from playing
-void stop_all_samples();
+void stop_all_samples( void );
 
 // stop a given sample (other samples continue playing)
 void stop_sample(int voice_id);
+
+// reading and playing songs
+struct NoteEvent {
+	uint16_t tick; // as 96 PPQ since last one.
+	int8_t note; // midi note. <0 are special ones.
+	uint8_t vel; // velocity. set to zero for note off.
+};
+
+void play_track (int nb_events, int tempo, const struct NoteEvent *events, 
+	const int8_t *sound_data, int sound_loop, int data_len, int c4freq);

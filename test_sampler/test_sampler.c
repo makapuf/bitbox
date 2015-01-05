@@ -20,47 +20,71 @@ extern const int8_t snd_diam_raw[],
     snd_bitbox_rules_raw[], 
     snd_pouet_raw[], 
     snd_guitar_raw[],
-    snd_piano_raw[],
     snd_sax_raw[], 
     snd_monster_raw[], 
-    snd_warplevel_raw[];
+    snd_warplevel_raw[],
+    snd_piano_note_raw[];
 
 extern const unsigned int snd_diam_raw_len, 
     snd_bitbox_rules_raw_len, 
     snd_pouet_raw_len, 
     snd_guitar_raw_len,
-    snd_piano_raw_len,
     snd_sax_raw_len, 
     snd_monster_raw_len, 
-    snd_warplevel_raw_len;
+    snd_warplevel_raw_len, 
+    snd_piano_note_raw_len;
+
+extern const struct NoteEvent track_piano[];
+extern const int track_piano_len;
 
 
 void game_init() {
+    const int tempo=80;
+    const int piano_loop=-1; // don't ?
+    
     // instructions
     clear(); // necessary 
     window(3,1,76,10);
     for (int i=0;i<8;i++)
         print_at(5, 2+i, instrs[i]);
+    
+    play_track (
+        track_piano_len,
+        tempo,
+        track_piano,
+
+        snd_piano_note_raw, 
+        piano_loop,
+        snd_piano_note_raw_len,
+        44100);
 }
 
-#define ifplay(but,sndname) \
+#define ifplay(but,sndname, speed) \
     if((gamepad_buttons[0] & ~last_buts) & gamepad_##but) \
-        play_mono_from_memory(snd_##sndname##_raw, snd_##sndname##_raw_len,40,40)
+        play_sample(snd_##sndname##_raw, snd_##sndname##_raw_len,speed,-1, 40,40); // no loop
 
 void game_frame() {
     static uint16_t last_buts;
-
+    uint16_t speed; 
+    
     kbd_emulate_gamepad();
 
-    ifplay(A,bitbox_rules);
-    ifplay(B,monster);
-    ifplay(X,pouet);
-    ifplay(Y,guitar);
+    if (GAMEPAD_PRESSED(0,L)) 
+        speed = 0x80;
+    else if (GAMEPAD_PRESSED(0,R))
+        speed = 0x180;
+    else 
+        speed=0x100;
 
-    ifplay(up,sax);
-    ifplay(down,piano);
-    ifplay(left,warplevel);
-    ifplay(right,diam);
+    ifplay(A,bitbox_rules,speed);
+    ifplay(B,monster,speed);
+    ifplay(X,pouet,speed);
+    ifplay(Y,guitar,speed);
+
+    ifplay(up,sax,speed);
+    ifplay(down,piano_note,speed);
+    ifplay(left,warplevel,speed);
+    ifplay(right,diam,speed);
        
     last_buts = gamepad_buttons[0];
 }
