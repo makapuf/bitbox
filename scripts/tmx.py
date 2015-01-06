@@ -41,7 +41,7 @@ def error(msg) :
 	print msg
 	sys.exit(1)
 
-base_name = sys.argv[1].rsplit('.',1)[0]
+base_name = os.path.basename(sys.argv[1].rsplit('.',1)[0])
 
 tilesets = root.findall('tileset')
 ts = tilesets[0]
