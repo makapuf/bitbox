@@ -72,8 +72,7 @@ volatile uint8_t data_mouse_buttons;
 int user_button=0; 
 
 // sound
-uint16_t audio_buffer[BITBOX_SNDBUF_LEN]; // stereo, 31khz 1frame
-int audio_on;
+// uint16_t audio_buffer[BITBOX_SNDBUF_LEN]; // stereo, 31khz 1frame
 
 // joystick handling.
 static int sdl_joy_num;
@@ -134,7 +133,7 @@ static void refresh_screen(SDL_Surface *scr)
 static void mixaudio(void * userdata, Uint8 * stream, int len)
 // this callback is called each time we need to fill the buffer
 {
-    game_snd_buffer((uint16_t *)stream,len/2); // no audio_on ?
+    game_snd_buffer((uint16_t *)stream,len/2); 
 }
 
 void audio_init(void)
@@ -158,7 +157,7 @@ void audio_init(void)
 
     //if (SDL_OpenAudio(&desired, &obtained) != 0) {
    if (SDL_OpenAudio(&desired, NULL) != 0) {
-     printf("Error in opening audi peripheral: %s\n", SDL_GetError());
+     printf("Error in opening audio peripheral: %s\n", SDL_GetError());
      return ; // return anyways even with no sound
    }
    printf("Audio parameters desired (after): format %d,%d canaux, fs=%d, %d samples.\n",

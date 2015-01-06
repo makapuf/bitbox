@@ -59,7 +59,6 @@ void audio_init()
   	// debug DMA with p *((DMA_Stream_TypeDef *) 0x40026088)
 	DMA1_Stream5->CR &= ~DMA_SxCR_EN;
 	
-	// garbles VGA ??
 	NVIC_DisableIRQ(DMA1_Stream5_IRQn);
 	InstallInterruptHandler(DMA1_Stream5_IRQn,DMAAudioCompleteHandler);
 	NVIC_EnableIRQ(DMA1_Stream5_IRQn);
