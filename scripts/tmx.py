@@ -73,8 +73,7 @@ print "extern const uint16_t %s_tset[]; // from %s"%(base_name,img)
 def reduce(c) : 
     return (1<<15 | (c[0]>>3)<<10 | (c[1]>>3)<<5 | c[2]>>3) if c[3]>127 else 0 
 
-
-src = Image.open(os.path.join(os.path.dirname(sys.argv[1]),img)).convert('RGBA')
+src = Image.open(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])),img)).convert('RGBA')
 pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples. 
 w,h = src.size
 tsname = base_name+'.tset'
