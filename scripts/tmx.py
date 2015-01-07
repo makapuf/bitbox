@@ -41,7 +41,7 @@ def error(msg) :
 	print msg
 	sys.exit(1)
 
-base_name = sys.argv[1].rsplit('.',1)[0]
+base_name = os.path.basename(sys.argv[1].rsplit('.',1)[0])
 
 tilesets = root.findall('tileset')
 ts = tilesets[0]
@@ -73,8 +73,7 @@ print "extern const uint16_t %s_tset[]; // from %s"%(base_name,img)
 def reduce(c) : 
     return (1<<15 | (c[0]>>3)<<10 | (c[1]>>3)<<5 | c[2]>>3) if c[3]>127 else 0 
 
-
-src = Image.open(os.path.join(os.path.dirname(sys.argv[1]),img)).convert('RGBA')
+src = Image.open(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])),img)).convert('RGBA')
 pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples. 
 w,h = src.size
 tsname = base_name+'.tset'
