@@ -254,7 +254,8 @@ def encode_file(name, options) :
         encoded_header.tofile(outfile)
         encoded_pal.tofile(outfile)
         encoded_u32.tofile(outfile)
-        if (options.pad) : outfile.write('*'*(-outfile.tell()%512))
+        if (options.pad) : 
+            outfile.write('*'*(-outfile.tell()%512))
         outfile.close()
 
 
