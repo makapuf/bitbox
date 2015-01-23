@@ -56,6 +56,7 @@ static uint32_t next_time;
 
 // Video
 int fullscreen; // shall run fullscreen
+int quiet;
 
 SDL_Surface* screen;
 uint16_t mybuffer1[LINE_BUFFER];
@@ -138,30 +139,34 @@ static void mixaudio(void * userdata, Uint8 * stream, int len)
 
 void audio_init(void)
 {
-   SDL_AudioSpec desired;
+    SDL_AudioSpec desired;
 
-   desired.freq = BITBOX_SAMPLERATE;
-   desired.format = AUDIO_U8;
-   desired.channels = 2; 
+    desired.freq = BITBOX_SAMPLERATE;
+    desired.format = AUDIO_U8;
+    desired.channels = 2; 
 
-   /* Le tampon audio contiendra at least one vga_frame worth samples */
-   desired.samples = BITBOX_SNDBUF_LEN*2; // XXX WHY is it halved ??
+    /* Le tampon audio contiendra at least one vga_frame worth samples */
+    desired.samples = BITBOX_SNDBUF_LEN*2; // XXX WHY is it halved ??
 
-   /* Mise en place de la fonction de rappel et des données utilisateur */
-   desired.callback = &mixaudio;
-   desired.userdata = NULL;
+    /* Mise en place de la fonction de rappel et des données utilisateur */
+    desired.callback = &mixaudio;
+    desired.userdata = NULL;
    
-   printf("sndbuflen : %d\n",BITBOX_SNDBUF_LEN);
-   printf("Paramètres audio desired (before): format %d,%d canaux, fs=%d, %d samples.\n",
-     desired.format , desired.channels, desired.freq, desired.samples);
+    if (!quiet) {
+       printf("sndbuflen : %d\n",BITBOX_SNDBUF_LEN);
+       printf("Paramètres audio desired (before): format %d,%d canaux, fs=%d, %d samples.\n",
+            desired.format , desired.channels, desired.freq, desired.samples);
+    }
 
     //if (SDL_OpenAudio(&desired, &obtained) != 0) {
-   if (SDL_OpenAudio(&desired, NULL) != 0) {
-     printf("Error in opening audio peripheral: %s\n", SDL_GetError());
-     return ; // return anyways even with no sound
-   }
-   printf("Audio parameters desired (after): format %d,%d canaux, fs=%d, %d samples.\n",
-     desired.format , desired.channels, desired.freq, desired.samples);
+    if (SDL_OpenAudio(&desired, NULL) != 0) {
+        printf("Error in opening audio peripheral: %s\n", SDL_GetError());
+        return ; // return anyways even with no sound
+    }
+
+    if (!quiet)
+        printf("Audio parameters desired (after): format %d,%d canaux, fs=%d, %d samples.\n",
+        desired.format , desired.channels, desired.freq, desired.samples);
 
 }
 
@@ -476,8 +481,12 @@ int main ( int argc, char** argv )
     else 
         printf("Invoke with --slow argument to run slower (fullscreen not supported).\n");
 
-    instructions();
-    printf(" - Starting\n");
+    quiet = (argc>1 && !strcmp(argv[1],"--quiet"));
+
+    if (!quiet) {
+        instructions();
+        printf(" - Starting\n");        
+    }
 
     gamepad_buttons[0] = 0; // all up
     if (init()) return 1;
@@ -508,7 +517,8 @@ int main ( int argc, char** argv )
     } // end main loop
 
     // all is well ;)
-    printf(" - Exited cleanly\n");
+    if (!quiet)
+        printf(" - Exited cleanly\n");
     return 0;
 }
 
