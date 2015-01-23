@@ -9,7 +9,7 @@
 #		  they can be used to define specific kernel resolution. 
 #
 #   	- In particular, define one of VGAMODE_640, VGAMODE_800, VGAMODE_320 or VGA_640_OVERCLOCK
-#   	  to set up a resolution ion the kernel (those will be used in kconf.h)
+#   	  to set up a resolution in the kernel (those will be used in kconf.h)
 #
 #       - Other specific flags : 
 #             NO_USB,       - when you don't want to use USB input related function)
@@ -33,7 +33,7 @@ CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 
-DEFINES += -DARM_MATH_CM4 -DOVERCLOCK -DAUDIO -DPROFILE 
+DEFINES += -DARM_MATH_CM4  -DAUDIO -DPROFILE 
 
 # USB defines
 ifdef NO_USB
@@ -179,7 +179,7 @@ stlink: $(NAME).bin
 
 # double colon to allow extra cleaning
 clean::
-	rm -rf $(BUILD_DIR) $(NAME).elf $(NAME).bin $(NAME)_emu *.btc 
+	rm -rf $(BUILD_DIR) $(NAME).elf $(NAME).bin $(NAME)_emu 
 
 $(NAME).bin: $(NAME).elf
 	$(OBJCOPY) -O binary $(NAME).elf $(NAME).bin
