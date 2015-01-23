@@ -14,6 +14,8 @@
 int cx, cy;
 
 void game_init() {
+	clear(); 
+	
 	window(2,2,78,4);
 	print_at(17,3, " BITBOX USB TEST \x01 Hi ! Plug some usb device...");
 	print_at(1, 6, "Mouse: X=   Y=   lmr");
