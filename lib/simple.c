@@ -5,7 +5,6 @@
 #include <stdlib.h> // abs
 #include <string.h> // memset
 
-// TODO : text attr (ie 16 colors BG / FG)
 // default palettes
 
 void graph_frame() {}
@@ -72,8 +71,8 @@ void graph_line() {
 // --------------------------------------------------------------
 #elif VGA_SIMPLE_MODE==2 // 800x600 1bpp - base 800
 
-uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] __attribute__ ((section (".ccm")));
-uint16_t palette[2] = {0, RGB(0xAA, 0xAA, 0xAA)};
+uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
+uint16_t palette[2]  __attribute__ ((section (".ccm"))) = {0, RGB(0xAA, 0xAA, 0xAA)};
 
 void graph_line() {
 	unit32_t *dst=(uint32_t)draw_buffer;
@@ -102,8 +101,8 @@ void graph_line() {
 
 #elif VGA_SIMPLE_MODE==3 // 640x400 2BPP + bandes noires (one drawn at 620!)
 
-uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] __attribute__ ((section (".ccm")));
-uint16_t palette[1<<BPP] = {RGB(0,0,0), RGB(0x55, 0xff, 0xff), RGB(0xff, 0x55, 0x55), RGB(0xff, 0xff, 0xff)};
+uint32_t vram[SCREEN_W*SCREEN_H*BPP/32]; 
+uint16_t palette[1<<BPP]  __attribute__ ((section (".ccm"))) = {RGB(0,0,0), RGB(0x55, 0xff, 0xff), RGB(0xff, 0x55, 0x55), RGB(0xff, 0xff, 0xff)};
 
 void graph_line() {
 	// letterbox
@@ -146,8 +145,8 @@ void graph_line() {
 
 #elif VGA_SIMPLE_MODE==4 // 4BPP 400x300, base 400x300
 
-uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] __attribute__ ((section (".ccm")));
-uint16_t palette[1<<BPP] = {
+uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
+uint16_t palette[1<<BPP]  __attribute__ ((section (".ccm"))) = {
 	RGB(   0,   0,   0), RGB(   0,   0,0xAA), RGB(   0,0xAA,   0), RGB(   0,0xAA,0xAA),
 	RGB(0xAA,   0,   0), RGB(0xAA,   0,0xAA), RGB(0xAA,0x55,   0), RGB(0xAA,0xAA,0xAA),
 	RGB(0x55,0x55,0x55), RGB(0x55,0x55,0xFF), RGB(0x55,0xFF,0x55), RGB(0x55,0xFF,0xFF),
@@ -173,8 +172,8 @@ void graph_line() {
 
 #elif VGA_SIMPLE_MODE==5 // 8BPP 320x200 - base 320x240  
 
-uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] __attribute__ ((section (".ccm")));
-uint16_t palette[1<<BPP] = { // 256 colors standard VGA palette
+uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] ;
+uint16_t palette[1<<BPP]  __attribute__ ((section (".ccm")))= { // 256 colors standard VGA palette
 	0x0000, 0x0015, 0x02a0, 0x02b5, 0x5400, 0x5415, 0x5540, 0x56b5, 
 	0x294a, 0x295f, 0x2bea, 0x2bff, 0x7d4a, 0x7d5f, 0x7fea, 0x7fff, 
 	0x0000, 0x0842, 0x1084, 0x14a5, 0x1ce7, 0x2108, 0x294a, 0x318c, 

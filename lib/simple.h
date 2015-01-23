@@ -62,7 +62,6 @@ extern uint16_t palette[];
 
 void draw_pixel(int x, int y, int c);
 void draw_line(int x0, int y0, int x1, int y1, int c);
-void clear();
 
 #else // only for text modes
 
