@@ -54,7 +54,7 @@ int USBH_ParseHIDReportDesc(USB_Gamepad_descriptor *desc, uint8_t *data) {
 
 						// ** USAGES
 						// usage_max defined ? then it's a usage range
-						if (nb_usages==1 && nb_rep>1) { 
+						if (nb_usages<=1 && nb_rep>1) { 
 							// fill usages per report
 							for (int i=nb_usages;i<nb_rep;i++)
 								if (i<16)
@@ -62,7 +62,7 @@ int USBH_ParseHIDReportDesc(USB_Gamepad_descriptor *desc, uint8_t *data) {
 							nb_usages=nb_rep;
 						} else if (nb_usages==0) {
 							nb_usages=1;
-							usages[0]=0; // default value
+							usages[0]=0; // default value for all
 						}
 
 						#ifdef DEBUG_HIDPARSER
@@ -90,9 +90,23 @@ int USBH_ParseHIDReportDesc(USB_Gamepad_descriptor *desc, uint8_t *data) {
 							// asserts size_rep==1 && locals[1]==1 && nb_rep == locals[2]-locals[1] ?
 
 							desc->max_button_index = locals[2]-locals[1]<=7?locals[2]-locals[1]:7;
+							
+							if (locals[2]-locals[1] == 9) {
+								// standard snes on 10 buttons ...
+								desc->button_bit[0] = 1+bitpos;
+								desc->button_bit[1] = 2+bitpos;
+								desc->button_bit[2] = 0+bitpos;
+								desc->button_bit[3] = 3+bitpos;
+								desc->button_bit[4] = 4+bitpos;
+								desc->button_bit[5] = 5+bitpos;
+								desc->button_bit[6] = 8+bitpos;
+								desc->button_bit[7] = 9+bitpos;
+							} else {
+								for (int i=0;i<desc->max_button_index+1;i++) 
+									desc->button_bit[i]=bitpos+i;								
+							}
 
-							for (int i=0;i<desc->max_button_index+1;i++) 
-								desc->button_bit[i]=bitpos+i;
+
 							// should we recognize certain "good" patterns ? (if 10 buttons use 9&10 as start/sel ...)
 
 							bitpos += size_rep*nb_rep;
@@ -154,6 +168,7 @@ int USBH_ParseHIDReportDesc(USB_Gamepad_descriptor *desc, uint8_t *data) {
 				// reset locals 
 				nb_usages=0;
 				memset(locals, 0, sizeof(locals));
+				memset(usages, 0, sizeof(usages));
 			break;
 			
 			case 4 : // global variable
