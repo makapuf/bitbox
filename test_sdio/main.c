@@ -30,8 +30,6 @@ FRESULT result;
 volatile int state=0; // from 0 to 5 according to step
 
 void game_init() {
-	audio_on=0;
-
 	// open file , load raw u16 frame from frame.bin
 	state=0;
 	result = f_mount(&fatfs,"",1); //mount now
@@ -60,8 +58,8 @@ void game_frame()
 		} 
 	}
 } 
-
-void game_line()
+void graph_frame() {}
+void graph_line()
 // called from VGA kernel
 {	
 	// display image at (0,0) if loaded
