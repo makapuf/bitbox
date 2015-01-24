@@ -76,10 +76,8 @@ int user_button=0;
 // uint16_t audio_buffer[BITBOX_SNDBUF_LEN]; // stereo, 31khz 1frame
 
 // joystick handling.
-static int sdl_joy_num;
-static SDL_Joystick * sdl_joy = NULL;
-static const int joy_commit_range = 3276;
-static const int gamepad_MAX = 12;
+static const int gamepad_max_buttons = 12;
+static const int gamepad_max_pads = 2;
 
  // XXX FIXME handle them !
 volatile int8_t gamepad_x[2], gamepad_y[2]; // analog pad values
@@ -203,15 +201,10 @@ static void joy_init()
     if (!joy_count)
         return;
 
-    /* now try and open one. If, for some reason it fails, move on to the next one */
+    /* Open all joysticks, assignement is in opening order */
     for (i = 0; i < joy_count; i++)
     {
-        sdl_joy = SDL_JoystickOpen(i);
-        if (sdl_joy)
-        {
-            sdl_joy_num = i;
-            break;
-        }   
+        SDL_JoystickOpen(i);
     }
     
     /* make sure that Joystick sdl_event polling is a go */
@@ -337,22 +330,26 @@ static bool handle_gamepad()
                 break;
 
             case SDL_JOYBUTTONUP: // buttons
-                if (sdl_event.jbutton.button>=gamepad_MAX) break;
-                gamepad_buttons[0] &= ~(1<<sdl_event.jbutton.button);
+                if (sdl_event.jbutton.button>=gamepad_max_buttons || sdl_event.jbutton.which>=gamepad_max_pads)
+                    break;
+                gamepad_buttons[sdl_event.jbutton.which] &= ~(1<<sdl_event.jbutton.button);
                 break;
 
             case SDL_JOYBUTTONDOWN:
-                if (sdl_event.jbutton.button>=gamepad_MAX) break;
-                gamepad_buttons[0] |= 1<<sdl_event.jbutton.button;
+                if (sdl_event.jbutton.button>=gamepad_max_buttons || sdl_event.jbutton.which>=gamepad_max_pads)
+                    break;
+                gamepad_buttons[sdl_event.jbutton.which] |= 1<<sdl_event.jbutton.button;
 
                 break;
 
             case SDL_JOYHATMOTION: // HAT
-                gamepad_buttons[0] &= ~(gamepad_up|gamepad_down|gamepad_left|gamepad_right);
-                if (sdl_event.jhat.value & SDL_HAT_UP)      gamepad_buttons[0] |= gamepad_up;
-                if (sdl_event.jhat.value & SDL_HAT_DOWN)    gamepad_buttons[0] |= gamepad_down;
-                if (sdl_event.jhat.value & SDL_HAT_LEFT)    gamepad_buttons[0] |= gamepad_left;
-                if (sdl_event.jhat.value & SDL_HAT_RIGHT)   gamepad_buttons[0] |= gamepad_right;
+                if (sdl_event.jbutton.which>=gamepad_max_pads)
+                    break;
+                gamepad_buttons[sdl_event.jbutton.which] &= ~(gamepad_up|gamepad_down|gamepad_left|gamepad_right);
+                if (sdl_event.jhat.value & SDL_HAT_UP)      gamepad_buttons[sdl_event.jbutton.which] |= gamepad_up;
+                if (sdl_event.jhat.value & SDL_HAT_DOWN)    gamepad_buttons[sdl_event.jbutton.which] |= gamepad_down;
+                if (sdl_event.jhat.value & SDL_HAT_LEFT)    gamepad_buttons[sdl_event.jbutton.which] |= gamepad_left;
+                if (sdl_event.jhat.value & SDL_HAT_RIGHT)   gamepad_buttons[sdl_event.jbutton.which] |= gamepad_right;
                 break;
 
             // mouse 
@@ -489,6 +486,8 @@ int main ( int argc, char** argv )
     }
 
     gamepad_buttons[0] = 0; // all up
+    gamepad_buttons[1] = 0;
+    
     if (init()) return 1;
     game_init();
 
