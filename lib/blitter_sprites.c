@@ -162,6 +162,7 @@ object * sprite_new(const void *p, int x, int y, int z)
     o->x=x;
     o->y=y;
     o->z=z;
+    o->fr=0;
     return o;
 }
 

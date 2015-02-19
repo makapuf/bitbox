@@ -15,6 +15,7 @@ typedef struct object
 	// live data (typically in RAM, stable per frame)
 	int32_t x,y,z,ry; // ry is real Y, while y is wanted y, which will be activated next frame.
 	uint32_t w,h,fr; // h is one frame height, not full height, frame is frame id
+	
 	uintptr_t a,b,c,d; // various 32b used for each blitter as extra parameters or internally
 
 	// inline single linked lists (engine internal)
@@ -51,9 +52,9 @@ object *btc4_2x_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __att
 #define TILEMAP_3232u8 TMAP_HEADER(32,32,TSET_16, TMAP_U8)
 #define TILEMAP_6464u832 TMAP_HEADER(32,32,TSET_32,TMAP_U8)
 
-object *tilemap_new (const uint16_t *tileset, int w, int h, uint32_t header, void *tilemap) __attribute__ ((warn_unused_result));
+object *tilemap_new (const uint16_t *tileset, int w, int h, uint32_t header, const void *tilemap) __attribute__ ((warn_unused_result));
 /* 
-	- tileset is a list of 16x16 u16 pixels. It will be 1-indexed by tilemap.
+	- tileset is a list of 16x16 u16 pixels. It will be 1-indexed by tilemap (or 32x32)
     - width and height are displayed sizes, can be bigger/smaller than tilemap, in which case it will loop
 	tilemap size can be 32x32, 64x32, 64x32, (or any other, but need to be standard). 
 

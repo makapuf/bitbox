@@ -165,7 +165,7 @@ void tilemap_u16_line(object *o)
 }
 
 
-object *tilemap_new(const uint16_t *tileset, int w, int h, uint32_t header, void *tilemap)
+object *tilemap_new(const uint16_t *tileset, int w, int h, uint32_t header, const void *tilemap)
 {
     object *o = blitter_new();    
     if (!o) return 0; // error
