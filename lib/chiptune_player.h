@@ -5,7 +5,7 @@
  *
  * Pass NULL to stop playing and not load a new song.
  */
-void ply_init(const unsigned char* song);
+void ply_init(const uint8_t songlen, const unsigned char* song);
 
 /** Update the player status. This must be called once per frame as long as the
  * song is running.

@@ -1,7 +1,9 @@
 #include "bitbox.h"
-#include "player.h"
+#include "chiptune_player.h"
 
 #include <string.h>
+
+#include "exported.h"  
 
 extern const unsigned char songdata[];
 void game_frame() {
@@ -9,7 +11,7 @@ void game_frame() {
 	// pattern out. So we delay it to the 10th VGA frame and then things run
 	// stable. This is a bit unexpected...
 	if (vga_frame == 10) {
-		ply_init(songdata);
+		ply_init(SONGLEN,songdata);
 
 	}
 

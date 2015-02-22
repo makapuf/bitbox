@@ -5,7 +5,7 @@
  */
 
 #include <stdint.h>
-#include "engine.h"
+#include "chiptune_engine.h"
 
 
 volatile struct oscillator osc[4];

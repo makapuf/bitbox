@@ -17,15 +17,17 @@
 
 #include <stdint.h>
  
-#include "engine.h"
-#include "exported.h"
-
+#include "chiptune_engine.h"
+// #include "exported.h"
+#define MAXTRACK	0x15 
 #define TRACKLEN 32
 
 uint8_t trackwait;
 uint8_t trackpos;
 uint8_t playsong;
 uint8_t songpos;
+
+uint8_t songlen; // now a variable 
 
 static const uint16_t freqtable[] = {
 	0x010b, 0x011b, 0x012c, 0x013e, 0x0151, 0x0165, 0x017a, 0x0191, 0x01a9,
@@ -185,7 +187,7 @@ static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param) {
 	}
 }
 
-void ply_init(const unsigned char* data) {
+void ply_init(const uint8_t songlength, const unsigned char* data) {
 	uint8_t i;
 	struct unpacker up = {0};
 
@@ -203,6 +205,7 @@ void ply_init(const unsigned char* data) {
 	osc[3].volume = 0;
 	channel[3].inum = 0;
 
+	songlen = songlength;
 	song_data = data;
 	// Note: if given NULL, readsongbyte will return 0 for everything. This
 	// means:
@@ -234,7 +237,7 @@ void ply_update()
 
 		if(!trackpos) {
 			if(playsong) {
-				if(songpos >= SONGLEN) {
+				if(songpos >= songlen) {
 					playsong = 0;
 				} else {
 					for(ch = 0; ch < 4; ch++) {
@@ -352,5 +355,5 @@ void ply_update()
 	// Done? No problem, let's reinit with the same song so it loops!
 	// Note: it would be better if the song could have a loop position, or
 	// track jump commands.
-	if (!playsong) ply_init(song_data);
+	if (!playsong) ply_init(songlen, song_data);
 }
