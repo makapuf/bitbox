@@ -7,10 +7,6 @@
 #include "bitbox.h"
 #include "simple.h"
 
-#ifndef EMULATOR
-#include "stm32f4xx.h"
-#endif
-
 int cx, cy;
 
 void game_init() {
