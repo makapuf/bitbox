@@ -5,7 +5,7 @@
 
 typedef void InterruptHandler();
 
-void InitializeSystem();
+void system_init();
 
 void InstallInterruptHandler(IRQn_Type interrupt,InterruptHandler handler);
 void RemoveInterruptHandler(IRQn_Type interrupt,InterruptHandler handler);

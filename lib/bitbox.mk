@@ -57,6 +57,7 @@ C_OPTS = -std=c99 \
 	-Wall \
 	-ffast-math \
 	-fsingle-precision-constant \
+	-ffunction-sections -fdata-sections \
 	-fomit-frame-pointer 
 	#-funroll-all-loops \
 
@@ -75,7 +76,7 @@ FLASH_START = 0x08004000
 #FLASH_START = 0x08000000
 #LINKER_SCRIPT = lib/Linker_raw.ld
 
-KERNEL_FILES = startup.c system.c \
+KERNEL_FILES = startup.c system.c board.c \
 	new_vga.c bitbox_main.c audio.c \
 	stm32f4xx_gpio.c \
 	stm32f4xx_rcc.c \
@@ -147,6 +148,12 @@ ifdef USE_SAMPLER
 ENGINE_FILES += sampler.c
 endif
 
+# - chiptune engine
+ifdef USE_CHIPTUNE 
+ENGINE_FILES += chiptune_engine.c chiptune_player.c
+endif
+
+
 C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES) $(ENGINE_FILES)
 S_FILES = memcpy-armv7m.S
 
@@ -203,7 +210,7 @@ $(BUILD_DIR)/%_dat.o: $(SOURCE_DIR)/%
 	@mkdir -p $(dir $@)
 	xxd -i $< | sed "s/unsigned/const unsigned/" > $(BUILD_DIR)/$*.c
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c build/$*.c -o $@
-
+	
 # ---------------------------------
 
 $(BUILD_DIR)/%.o: $(LIB_SOURCE_DIR)/%.S

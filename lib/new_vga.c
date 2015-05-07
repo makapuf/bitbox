@@ -279,13 +279,8 @@ static void prepare_pixel_DMA()
 
 static void HSYNCHandler()
 {
-	// TIM5->SR=0;
-	__asm__ volatile(
-	"	mov.w	r1,#0x40000000\n"
-	"	movs	r0,#0\n"
-	"	strh	r0,[r1,#0xC10]\n"
-	:::"r0","r1");
-	
+	TIM5->SR=0; // clear pending interrupts 
+
 	#ifdef VGA_SKIPLINE
 	vga_line+=vga_odd;
 	vga_odd=1-vga_odd;

@@ -1,5 +1,7 @@
 #include <stdint.h>
 #include "stm32f4xx.h"
+#include "system.h"
+#include "kconf.h"
 
 static uint8_t stack[8192]  __attribute__ ((section (".ccm")));
 
@@ -12,7 +14,74 @@ extern uint32_t _ebss[];
 void Reset_Handler() __attribute__((naked,noreturn));
 void Default_Handler() __attribute__((naked,noreturn));
 
-int main();
+void vga_setup(); // in new_vga.c
+void audio_init(); // in audio.c
+void board_init(); // in board.c
+int main(); // user supplied or, by default, in bitbox_main
+
+
+#ifndef NO_USB
+#include "usb_bsp.h"
+#include "usbh_core.h"
+#include "usbh_hid_core.h"
+
+__ALIGN_BEGIN USB_OTG_CORE_HANDLE           USB_OTG_Core __ALIGN_END ;
+__ALIGN_BEGIN USBH_HOST                     USB_Host __ALIGN_END ;
+__ALIGN_BEGIN USB_OTG_CORE_HANDLE           USB_OTG_FS_Core __ALIGN_END ;
+__ALIGN_BEGIN USBH_HOST                     USB_FS_Host __ALIGN_END ;
+
+// XXX put with usb interrupts & all (from stm32fxxx_it.c) in a simple usb.c/h file ...
+void TIM7_IRQHandler()
+{
+	if (TIM7->SR & TIM_SR_UIF) // no reason not to
+	{
+		TIM7->SR &= ~TIM_SR_UIF; // clear UIF flag
+
+		// process USB
+		#ifndef NO_USB
+			#ifdef USE_USB_OTG_FS
+				USBH_Process(&USB_OTG_FS_Core, &USB_FS_Host);
+			#endif
+
+			#ifdef USE_USB_OTG_HS
+				// set_led(USB_Host.gState == HOST_DEV_DISCONNECTED); 
+				USBH_Process(&USB_OTG_Core, &USB_Host);
+			#endif
+		#endif 
+
+	}
+}
+
+void setup_usb()
+{
+	/* Init FS/HS Cores */
+	#ifdef USE_USB_OTG_HS
+	USBH_Init(&USB_OTG_Core, USB_OTG_HS_CORE_ID,&USB_Host, &HID_cb);
+	#endif 
+
+	#ifdef USE_USB_OTG_FS
+	USBH_Init(&USB_OTG_FS_Core, USB_OTG_FS_CORE_ID,	&USB_FS_Host, &HID_cb);
+	#endif
+
+	// Enable 125Hz USB timer timer 7
+	RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
+
+	TIM7->PSC=999;  // Prescaler = 1000 
+	TIM7->ARR = SYSCLK/APB_PRESC/1000/125; //125; // ~ 168MHz /2 / 1000 / 125 (65536 max, typically 704)
+	TIM7->CR1 = TIM_CR1_ARPE;	// autoreload preload enable, no other function on
+
+	NVIC_EnableIRQ(TIM7_IRQn);
+	NVIC_SetPriority(TIM7_IRQn,15); // low priority
+
+	TIM7->DIER = TIM_DIER_UIE; // enable interrupt
+	TIM7->CR1 |= TIM_CR1_CEN; // go timer 7
+}
+#else 
+	void TIM7_IRQHandler() __attribute__((weak,alias("Default_Handler"))); 
+#endif
+
+
+
 
 void Reset_Handler()
 {
@@ -27,6 +96,17 @@ void Reset_Handler()
 
 	// Zero fill the bss segment.
 	for(uint32_t *dest=_sbss;dest<_ebss;dest++) *dest=0;
+
+	// misc initializations
+	system_init(); // in system.h
+	board_init();
+	#ifndef NO_USB
+	setup_usb();
+	#endif 
+	audio_init();
+	// be careful to initialize everything before (line callbacks ..)
+	vga_setup();
+
 
 	// Call the application's entry point.
     main();
@@ -104,7 +184,6 @@ void SPI3_IRQHandler() __attribute__((weak,alias("Default_Handler")));
 void UART4_IRQHandler() __attribute__((weak,alias("Default_Handler")));
 void UART5_IRQHandler() __attribute__((weak,alias("Default_Handler")));
 void TIM6_DAC_IRQHandler() __attribute__((weak,alias("Default_Handler")));
-void TIM7_IRQHandler() __attribute__((weak,alias("Default_Handler")));
 void DMA2_Stream0_IRQHandler() __attribute__((weak,alias("Default_Handler")));
 void DMA2_Stream1_IRQHandler() __attribute__((weak,alias("Default_Handler")));
 void DMA2_Stream2_IRQHandler() __attribute__((weak,alias("Default_Handler")));

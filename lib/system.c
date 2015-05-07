@@ -7,7 +7,7 @@ static void InitializeClocks();
 extern InterruptHandler *__isr_vector_sram[];
 extern uint32_t __isr_vector_start[];
 
-void InitializeSystem()
+void system_init()
 {
 	// Reset the RCC clock configuration to the default reset state
 	RCC->CR|=0x00000001; // Set HSION bit
