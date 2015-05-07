@@ -44,6 +44,10 @@ void blitter_init()
 // append to end of list ; list ends up unsorted now
 object* blitter_new() 
 {
+    // auto initialize in case it wasn't done
+    if (!blt.objects[0]) 
+        blitter_init();
+
     if (blt.nb_objects<MAX_OBJECTS) {
         return blt.objects[blt.nb_objects++]; // index of free object IN !
     } else {
