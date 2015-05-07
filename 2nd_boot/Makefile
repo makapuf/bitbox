@@ -1,8 +1,7 @@
-#NO_USB=1
-
 NAME = 2nd_boot
 GAME_C_FILES = $(NAME).c font.c bg.c flashit.c
 GAME_C_OPTS = -DVGAMODE_640
+USE_SDCARD = 1
 include $(BITBOX)/lib/bitbox.mk
 
 # comment to build to flash. This will load boot2 as a normal program in flash 

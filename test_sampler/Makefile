@@ -2,7 +2,6 @@
 VGA_SIMPLE_MODE=0 
 
 USE_SAMPLER=1
-NO_SDCARD=1
 
 NAME = test_sampler
 

@@ -2,12 +2,11 @@
 NAME = test_engine
 
 GAME_C_FILES = main.c 
-GAME_C_OPTS = -DVGAMODE_400
-#GAME_C_OPTS = -DVGAMODE_640_OVERCLOCK
+#GAME_C_OPTS = -DVGAMODE_400
+GAME_C_OPTS = -DVGAMODE_640_OVERCLOCK
 GAME_BINARY_FILES = ball.spr bg.tset bg.tmap ball_small.spr
 
 USE_ENGINE = 1
-NO_SDCARD=1
 NO_USB=1
 
 
@@ -28,3 +27,4 @@ ball_small.spr : ball_small/????.png
 
 clean::
 	rm -f *.spr *.spr.png
+	rm -f bg.h

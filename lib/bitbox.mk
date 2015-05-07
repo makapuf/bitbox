@@ -13,7 +13,7 @@
 #
 #       - Other specific flags : 
 #             NO_USB,       - when you don't want to use USB input related function)
-#             NO_SDCARD,    - when you don't want to use or compile SDcard or fatfs related functions in the game
+#             USE_SDCARD,   - when you want to use or compile SDcard or fatfs related functions in the game 
 #             USE_ENGINE,   - when you want to use the engine
 #             USE_SD_SENSE  - enabling this will disable being used on rev2 !
 #   Simple mode related : 
@@ -101,9 +101,7 @@ ifndef NO_USB
 endif 
 
 # fatfs related files
-ifdef NO_SDCARD
-DEFINES += -DNO_SDCARD
-else
+ifdef USE_SDCARD
 KERNEL_FILES += fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c fatfs/ff.c fatfs/diskio.c
 KERNEL_FILES += stm32f4xx_sdio.c stm32f4xx_dma.c 
 endif 

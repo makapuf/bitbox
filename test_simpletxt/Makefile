@@ -1,6 +1,5 @@
 # simple makefile
 NO_USB=1
-NO_SDCARD=1
 
 # See lib/simple.c for modes
 VGA_SIMPLE_MODE=1
