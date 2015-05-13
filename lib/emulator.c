@@ -238,11 +238,12 @@ int init(void)
 void instructions ()
 {
     printf("Use Joystick, Mouse or keyboard.");
+    printf("Bitbox user Button is emulated by the <Pause/Break> key.\n");
     printf("       -------\n");
     printf("Keyboard for some games emulate Gamepad with the following keys \n");
     printf("    Space (Select),   Enter (Start),   Arrows (D-pad)\n");
     printf("    D (A button),     F (B button),    E (X button), R (Y button),\n");
-    printf("    Left/Right CTRL (L/R shoulders),   ESC (quit), B (bitbox user Button)\n");
+    printf("    Left/Right CTRL (L/R shoulders),   ESC (quit)\n");
     printf("       -------\n");
 }
 
@@ -297,6 +298,9 @@ static bool handle_gamepad()
             case SDL_KEYDOWN:
                 if (sdl_event.key.keysym.sym == SDLK_ESCAPE)
                     return true; // quit now
+                if (sdl_event.key.keysym.sym == SDLK_PAUSE)
+                    user_button=1;
+
                 event_push((struct event){
                     .type= evt_keyboard_press,
                     .kbd={
@@ -308,6 +312,8 @@ static bool handle_gamepad()
                 break;
 
             case SDL_KEYUP:               
+                if (sdl_event.key.keysym.sym == SDLK_PAUSE)
+                    user_button=0;
                 event_push((struct event) {
                     .type= evt_keyboard_release,
                     .kbd={
