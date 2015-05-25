@@ -20,6 +20,6 @@ This repository include the base SDK and some examples. There are other repos on
  * [A ZX Spectrum 48 emulator](https://github.com/makapuf/bitbox-spectrum)
  * [Another game](https://github.com/makapuf/bitbox-polar)
  * [A sound toy / Rhythm box](https://github.com/makapuf/beatblocks)
+ * [beam racer - a car game (WIP)](https://github.com/pulkomandy/beamracer_btbx)
  
-
 makapuf
