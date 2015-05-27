@@ -61,7 +61,7 @@ int quiet;
 SDL_Surface* screen;
 uint16_t mybuffer1[LINE_BUFFER];
 uint16_t mybuffer2[LINE_BUFFER];
-uint16_t *draw_buffer; // volatile ?
+uint16_t *draw_buffer = mybuffer1; // volatile ?
 volatile uint16_t gamepad_buttons[2]; 
 uint32_t vga_line; 
 volatile uint32_t vga_frame;
@@ -109,7 +109,7 @@ static void refresh_screen(SDL_Surface *scr)
 {
     uint16_t *dst = (uint16_t*)scr->pixels;
     
-    draw_buffer = &mybuffer1[0];
+    draw_buffer = mybuffer1;
     graph_frame();
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
@@ -392,7 +392,32 @@ FRESULT f_mount (FATFS* fs, const TCHAR* path, BYTE opt)
 
 FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode)
 {
-    fp->fs = (FATFS*) fopen ((const char*)path,"r"); // now ignores mode.
+    char *mode_host=0;
+
+    // XXX quite buggy ...
+    if (mode & FA_OPEN_ALWAYS) {
+        if (!access(path, F_OK)) // 0 if OK
+            mode_host = "r+";
+        else 
+            mode_host = "w+";
+
+    } else switch (mode) {
+        // Not a very good approximation, should rewrite to handle properly 
+        case FA_READ | FA_OPEN_EXISTING : mode_host="r"; break;
+        case FA_READ | FA_WRITE | FA_OPEN_EXISTING : mode_host="r+"; break;
+        case FA_WRITE | FA_OPEN_EXISTING : mode_host="r+"; break; // faked 
+
+        case FA_WRITE | FA_CREATE_NEW : mode_host="wx"; break;
+        case FA_READ | FA_WRITE | FA_CREATE_NEW : mode_host="wx+"; break;
+
+        case FA_READ | FA_WRITE | FA_CREATE_ALWAYS : mode_host="w+"; break;
+        case FA_WRITE | FA_CREATE_ALWAYS : mode_host="w"; break;
+
+        default : 
+            return FR_DISK_ERR;
+    }
+    
+    fp->fs = (FATFS*) fopen ((const char*)path,mode_host); // now ignores mode.
     return fp->fs ? FR_OK : FR_DISK_ERR; // XXX duh.
 }
 
@@ -405,7 +430,13 @@ FRESULT f_close (FIL* fp)
 
 FRESULT f_read (FIL* fp, void* buff, UINT btr, UINT* br)
 {
-    *br = fread ( buff, 1, btr, (FILE *)fp->fs);
+    *br = fread ( buff, 1,btr, (FILE *)fp->fs);
+    return FR_OK; // XXX handle ferror
+}          
+
+FRESULT f_write (FIL* fp, const void* buff, UINT btr, UINT* br)
+{
+    *br = fwrite ( buff,1, btr, (FILE *)fp->fs);
     return FR_OK; // XXX handle ferror
 }          
 

@@ -43,10 +43,15 @@ void game_init() {
 void game_frame()
 {
 	UINT BytesRead;
+	uint8_t msg2[2]; // 2 bytes to read
+	unsigned int value;
+
+
 	// blink "result" times ...
 	if (state==1)
 	{
 		result = f_open (&img_file,"image.bin",FA_READ); // open file		
+
 		if (result==FR_OK)
 		{
 			state=2; // opened
@@ -55,7 +60,27 @@ void game_frame()
 			if (result) state=3; // read
 			if (img->header == IMGHEADER) state=4; // header OK
 			if (img->data[img->w*img->h] == IMGHEADER) state=5; // last header OK (error?)
+			f_close(&img_file);
 		} 
+
+		if (result==FR_OK) {
+			// open file or create it & update it
+			result = f_open (&img_file,"hello.txt",FA_READ | FA_WRITE | FA_OPEN_ALWAYS); 
+			if (result==FR_OK) {
+				// try to read or 
+				if (f_read(&img_file, &msg2, 2, &BytesRead) == FR_OK && BytesRead == 2) {
+					value=(msg2[0]-'0')*10+(msg2[1]-'0') + 1;
+				} else {
+					value=0;
+				}
+				msg2[0]=(value/10)+'0';
+				msg2[1]=(value%10)+'0';
+				
+				f_lseek(&img_file,0);
+				f_write (&img_file,  &msg2, 2, &BytesRead); // dont check result
+				f_close (&img_file);
+			}
+		}
 	}
 } 
 void graph_frame() {}
