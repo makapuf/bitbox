@@ -1,22 +1,23 @@
 language: c 
 before_script:
-  - sudo apt-get -qq update
-
   ## Install mainline ARM toolchain.  gcc-arm-none-eabi is available
   ## in Ubuntu >= 14.04, but this external PPA is needed for 12.04.
   ## (from kontiki)
-  - sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
   ## also install a newer version of gcc
+  - sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-
   - sudo apt-get -qq update
-
   - sudo apt-get -qq install gcc-arm-none-eabi gcc-4.8
+
+
+  ## now setup 4.8 as real gcc alternative (could use update-alternative, but eh)
+  - sudo rm /usr/bin/gcc /usr/bin/g++
+  - sudo ln -s /usr/bin/gcc4.8 /usr/bin/gcc
+  - sudo ln -s /usr/bin/g++4.8 /usr/bin/g++
+
+  # check it worked
   - arm-none-eabi-gcc --version 
   - gcc --version
-
-  ##  - sudo apt-get -qq install g++-4.8
-
 script:
   - "make"
 
