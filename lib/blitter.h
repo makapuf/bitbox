@@ -43,6 +43,8 @@ object *btc4_2x_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __att
 
 #define TSET_16 0
 #define TSET_32 1
+#define TSET_8 2
+
 #define TMAP_U8 1
 #define TMAP_U16 2
 

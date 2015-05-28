@@ -25,9 +25,14 @@ paths : // besoin de nom sinon crie
 better multilayer : array of ptrs with its own header?
 use struct instead of array module
 
-rewrite tileset ? 
+rewrite tileset ? at least, dont output last unused tiles 
 
 """
+
+out_code='B' # unsigned bytes by default
+typename = {'B':'uint8_t', 'b' : 'int8_t','H':'uint16_t'}
+codes = {'B':'TMAP_U8', 'H':'TMAP_U16' }#0,'b':1,'H':2,'h':3}
+tilesizes = {16:'TSET_16',32:'TSET_32', 8:'TSET_8'}
 
 from PIL import Image # using the PIL library, maybe you'll need to install it. python should come with t.
 import sys, argparse
@@ -46,7 +51,7 @@ def error(msg) :
     print msg
     sys.exit(1)
 
-base_name = os.path.basename(args.file.rsplit('.',1)[0])
+base_name = args.file.rsplit('.',1)[0]
 
 tilesets = root.findall('tileset')
 
@@ -77,11 +82,11 @@ firstgid=int(ts.get('firstgid'))
 
 tilesize = int(ts.get("tilewidth"))
 
-assert tilesize == int(ts.get("tileheight")) and tilesize in [16,32], "only square tiles of 32x32 or 16x16 supported"
+assert tilesize == int(ts.get("tileheight")) and tilesize in tilesizes, "only square tiles of 32x32 or 16x16 supported"
 
 
 img = ts.find("image").get("source")
-print "extern const uint16_t %s_tset[]; // from %s"%(base_name,img)
+#print "extern const uint16_t %s_tset[]; // from %s"%(base_name,img)
 # output as raw tileset 
 # XXX if RGBA -> int, else : uint. Here, assume uint
 def reduce(c) : 
@@ -98,10 +103,6 @@ with open(os.path.join(args.output_dir,tsname),'wb') as of:
                 idx = (tile_y*tilesize+row)*w + tile_x*tilesize
                 pixdata[idx:idx+tilesize].tofile(of) # non extraire des carres de 16x16 avec PIL et les ecrire 
 
-out_code='B' # bytes
-typename = {'B':'uint8_t', 'b' : 'int8_t','H':'uint16_t'}
-codes = {'B':'TMAP_U8', 'H':'TMAP_U16' }#0,'b':1,'H':2,'h':3}
-tilesizes = {16:0, 32:1}
 
 cname = base_name+'.c'
 fname = base_name+'.tmap'
@@ -143,5 +144,5 @@ with open(os.path.join(args.output_dir,fname),'wb') as of, open(os.path.join(arg
             print >>c_file, "    {%d,%d,%d,0},"%c
         print >>c_file, "};\n"
 
-print "#define %s_header TMAP_HEADER(%d,%d,%d,%s)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
-print "extern const %s %s_tmap[][%d*%d];"%(typename[out_code], base_name,lw,lh)
+print "#define %s_header TMAP_HEADER(%d,%d,%s,%s)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
+#print "extern const %s %s_tmap[][%d*%d];"%(typename[out_code], base_name,lw,lh)

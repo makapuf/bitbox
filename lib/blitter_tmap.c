@@ -11,9 +11,8 @@
  */
 #include "blitter.h"
 
+const int tilesizes[] = {16,32,8};
 
-#define TILESIZE16 16
-#define TILESIZE32 32
 #define HEIGHT_64 64
 #define WIDTH_64 64
 #define HEIGHT_32 32
@@ -32,13 +31,14 @@
                 );
             */
 
+// FIXME factorize much of this (as linlines)
+
 void tilemap_u8_line(object *o)
 {
     // in this version, we can assume that we don't have a full 
-    // TODO : take care of smaller x, don't recalc all each time. case o->x <0 
 
     // use current frame, line, buffer
-    unsigned int tilesize = ((o->b)>>4)&3 ? 32:16;
+    unsigned int tilesize = tilesizes[((o->b)>>4)&3];;
     unsigned int tilemap_w = o->b>>20;
     unsigned int tilemap_h = (o->b >>8) & 0xfff;
 
@@ -85,9 +85,11 @@ void tilemap_u8_line(object *o)
         if (idxptr[tile_x]) {
             src = &tiledata[(idxptr[tile_x]*tilesize + offset)*tilesize*2/4];  
 
-            for (int i=7;i>=0;i--) *dst++=*src++;
+            for (int i=0;i<4;i++) *dst++=*src++; // 4 words = 8pixels
+            if (tilesize==16)
+                for (int i=0;i<4;i++) *dst++=*src++; // 8 more 
             if (tilesize==32)
-                for (int i=7;i>=0;i--) *dst++=*src++;
+                for (int i=0;i<8;i++) *dst++=*src++; // 16 more
 
         } else { // skip the tile
             dst += tilesize/2; // words per tile
@@ -102,9 +104,10 @@ void tilemap_u16_line(object *o)
 {
     // in this version, we can assume that we don't have a full 
     // TODO : take care of smaller x, don't recalc all each time. case o->x <0 
+    // TODO handle tilesize=8
 
     // use current frame, line, buffer
-    unsigned int tilesize = ((o->b)>>4)&3 ? 32:16;
+    unsigned int tilesize = tilesizes[((o->b)>>4)&3];;
     unsigned int tilemap_w = o->b>>20;
     unsigned int tilemap_h = (o->b >>8) & 0xfff;
     
@@ -170,10 +173,10 @@ object *tilemap_new(const uint16_t *tileset, int w, int h, uint32_t header, cons
     object *o = blitter_new();    
     if (!o) return 0; // error
 
-
     o->data = (uint32_t*)tilemap; 
 
-    int tilesize=(header>>4)&3 ? 32:16;
+    int tilesize = tilesizes[(header>>4)&3];
+
     o->b = header;
     o->a = (uintptr_t)tileset-tilesize*tilesize*2; // to start at index 1 and not 0, offset now in bytes.
 
@@ -223,11 +226,11 @@ void tmap_blit(object *tm, int x, int y, uint32_t src_header, const void *data)
 
     for (int j=0;j<src_h && j<(dst_h-y);j++)
         for (int i=0;i<src_w && i<(dst_w-x);i++) {
-            if (dst_type==TMAP_U8)  {
-                uint8_t c = ((uint8_t*)data) [src_w * j+i ]; // skips 4 u8
+            if ((dst_type & 0x0f )==TMAP_U8)  { // only consider tmap type
+                uint8_t c = ((uint8_t*)data) [src_w * j+i ]; 
                 if (c) ((uint8_t *)tm->data) [(j+y)*dst_w+i+x] = c;                
             } else {
-                uint16_t c = ((uint16_t*) data)[src_w * j+i ]; // skips 2 u16
+                uint16_t c = ((uint16_t*) data)[src_w * j+i ]; 
                 if (c) ((uint16_t *)tm->data)[(j+y)*dst_w+i+x] = c;                
             }
         }
