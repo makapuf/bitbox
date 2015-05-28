@@ -10,6 +10,8 @@ Also the hardware is included here.
 
 More info on [the development blog](http://bitboxconsole.blogspot.com)
 
+[![Build Status](https://travis-ci.org/makapuf/bitbox.svg?branch=master)](https://travis-ci.org/makapuf/bitbox)
+
 Other repos
 =========
 
