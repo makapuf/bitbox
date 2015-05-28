@@ -1,11 +1,10 @@
 language: c #NOTE: this will set CC=gcc which might cause trouble
 before_script:
-  - WGET="travis_retry wget --continue --tries=20 --waitretry=10 --retry-connrefused --no-dns-cache --timeout 300"
   - sudo apt-get -qq update
 
   ## Install mainline ARM toolchain.  gcc-arm-none-eabi is available
   ## in Ubuntu >= 14.04, but this external PPA is needed for 12.04.
-  ## Install srecord
+  ## (from kontiki)
   - sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
   - sudo apt-get -qq update
   - sudo apt-get -qq install gcc-arm-none-eabi srecord
@@ -18,6 +17,4 @@ after_script:
 
 
 env:
-  ## This magically kick-off parallel jobs for each of the for the sets
-  ## of environment variable defined below
-  - BITBOX=.
+  - BITBOX=../
