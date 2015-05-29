@@ -13,7 +13,7 @@ NO_USB=1
 include $(BITBOX)/lib/bitbox.mk
 main.c:bg.h
 
-bg.tset bg_bg.tmap bg.h: bg.tmx bg.png 
+bg.tset bg.tmap bg.h: bg.tmx bg.png 
 	python ../scripts/tmx.py bg.tmx > bg.h
 
 ball.spr : ball/????.png
