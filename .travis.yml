@@ -19,7 +19,7 @@ before_script:
   - arm-none-eabi-gcc --version 
   - gcc --version
 script:
-  - "make"
+  - "make && make alltest"
 
 after_script:
 

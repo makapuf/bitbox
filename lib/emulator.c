@@ -503,7 +503,11 @@ void set_led(int x) {
 int main ( int argc, char** argv )
 {
 
-    fullscreen = (argc>1 && !strcmp(argv[1],"--fullscreen"));
+    int test = (argc>1 && !strcmp(argv[1],"--test"));    
+    if (test) printf("Testing the app\n");
+    int test_frame=10*60; // if test, run 10 seconds
+
+    fullscreen = (argc>1 && !strcmp(argv[1],"--fullscreen"));    
     if (fullscreen) 
         printf("Running fullscreen.\n");
     else 
@@ -517,7 +521,7 @@ int main ( int argc, char** argv )
 
     quiet = (argc>1 && !strcmp(argv[1],"--quiet"));
 
-    if (!quiet) {
+    if (!quiet && !test) {
         instructions();
         printf(" - Starting\n");        
     }
@@ -535,6 +539,8 @@ int main ( int argc, char** argv )
     bool done = false;
     while (!done)
     {
+        if (test && !test_frame--)
+            break;
 
         // message processing loop
         done = handle_gamepad();

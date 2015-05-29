@@ -1,6 +1,8 @@
-PROJECTS = 1st_boot 2nd_boot crappy hwchip test_engine test_kernel test_sampler test_sdio test_simplegraph test_simpletxt test_simpletxt_color test_usb test_video
+TESTABLE = crappy hwchip test_engine test_kernel test_sampler test_sdio test_simplegraph test_simpletxt test_simpletxt_color test_usb 
+PROJECTS = 1st_boot 2nd_boot test_video $(TESTABLE)
 
 ALLCLEAN = $(patsubst %,%-clean,$(PROJECTS))
+ALLTEST = $(patsubst %,%-test,$(TESTABLE))
 
 .PHONY: $(PROJECTS) 
 .PHONY: $(ALLCLEAN)
@@ -17,9 +19,11 @@ $(PROJECTS):
 	$(MAKE) -C $@ # can fail
 
 allclean: $(ALLCLEAN)
-	
+alltest: $(ALLTEST)
+
 $(ALLCLEAN): 
 	$(MAKE) -C $(patsubst %-clean,%,$@) clean
 
-test_allemu: $(PROJECTS) 
-	for prg in $(PROJECTS);do echo "\n\n **** Testing $$prg\n\n"; cd $$prg && ./*_emu --quiet; cd .. ; done
+$(ALLTEST):
+	echo "\n\n **** Testing $(patsubst %-test,%,$@)\n";
+	$(MAKE) -C $(patsubst %-test,%,$@) test

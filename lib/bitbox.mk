@@ -7,8 +7,7 @@
 #   GAME_C_OPTS : C language options. Those will be used for the ARM game as well as the emulator.
 #		- define with whatever defines are needed with -DXYZ CFLAGS .
 #		  they can be used to define specific kernel resolution. 
-#
-#   	- In particular, define one of VGAMODE_640, VGAMODE_800, VGAMODE_320 or VGA_640_OVERCLOCK
+#   	  In particular, define one of VGAMODE_640, VGAMODE_800, VGAMODE_320 or VGA_640_OVERCLOCK
 #   	  to set up a resolution in the kernel (those will be used in kconf.h)
 #
 #       - Other specific flags : 
@@ -155,14 +154,10 @@ endif
 C_FILES = $(LIB_FILES) $(GAME_C_FILES) $(KERNEL_FILES) $(ENGINE_FILES)
 S_FILES = memcpy-armv7m.S
 
-
-OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.S=$(BUILD_DIR)/%.o) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%_dat.o) 
-
-
+OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.S=$(BUILD_DIR)/%.o) $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.o)
 
 ALL_CFLAGS = $(C_OPTS) $(DEFINES) $(CFLAGS) $(GAME_C_OPTS)
 ALL_LDFLAGS = $(LD_FLAGS) -Wl,-T,$(LINKER_SCRIPT),--gc-sections
-#-specs Terrible.specs
 
 AUTODEPENDENCY_CFLAGS=-MMD -MF$(@:.o=.d) -MT$@
 
@@ -189,12 +184,16 @@ clean::
 $(NAME).bin: $(NAME).elf
 	$(OBJCOPY) -O binary $(NAME).elf $(NAME).bin
 
-$(NAME).elf: $(OBJS) 
+$(NAME).elf: $(OBJS)
 	$(LD) $(ALL_LDFLAGS) -o $@ $^ $(LIBS)
 
 .SUFFIXES: .o .c .S
 
 $(BUILD_DIR)/%.o: $(LIB_SOURCE_DIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: $(LIB_SOURCE_DIR)/%.S
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 
@@ -204,26 +203,25 @@ $(BUILD_DIR)/%.o: $(LIB_STD_SOURCE_DIR)/%.c
 
 # ---------- data embedding 
 
-$(BUILD_DIR)/%_dat.o: $(SOURCE_DIR)/%
+$(BUILD_DIR)/%.c: %
 	@mkdir -p $(dir $@)
-	xxd -i $< | sed "s/unsigned/const unsigned/" > $(BUILD_DIR)/$*.c
-	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c build/$*.c -o $@
-	
+	$(info * embedding $< as $@)
+	xxd -i $< | sed "s/unsigned/const unsigned/" > $@
+
+$(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
+	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+
 # ---------------------------------
 
-$(BUILD_DIR)/%.o: $(LIB_SOURCE_DIR)/%.S
-	@mkdir -p $(dir $@)
-	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CC) -fno-exceptions -fno-rtti -Wno-multichar $(subst -std=c99,-std=c++11,$(ALL_CFLAGS)) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
-	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.S
 	@mkdir -p $(dir $@)
@@ -240,5 +238,8 @@ else
 endif
 
 
-$(NAME)_emu: $(GAME_C_FILES) $(GAME_CPP_FILES) $(BITBOX)/lib/emulator.c $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(addprefix $(BITBOX)/lib/, $(ENGINE_FILES))
+$(NAME)_emu: $(GAME_C_FILES) $(GAME_CPP_FILES) $(BITBOX)/lib/emulator.c  $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(addprefix $(BITBOX)/lib/, $(ENGINE_FILES))
 	gcc -Og -DEMULATOR  $(GAME_C_OPTS) $^ -I$(BITBOX)/lib/ -g -Wall -std=c99 $(HOSTLIBS) `sdl-config --cflags --libs` -lstdc++ -o $(NAME)_emu
+
+test: $(NAME)_emu
+	./$(NAME)_emu --test

@@ -5,12 +5,16 @@
 #include "bg.h"
 
 #define SPRITE ball_small_spr
+#define SPRITE_BIG ball_spr
 
 extern const char SPRITE[];
+extern const char SPRITE_BIG[];
 
 // x and y  should be volatile since the vga thread must see the changes to x and y 
 // which are runnin in the main thread 
-#define NB 20
+#define NB_small 10
+#define NB_big 3
+#define NB (NB_small+NB_big)
 #define MOVE_SQUARE 0
 #define MOVE_BALLS 1
 #define ROTATE_BALLS 1
@@ -37,12 +41,18 @@ void game_init() {
 	if (MOVE_SQUARE)
 		square=rect_new (10,10,100,100,150, RGB(0xff,0,0));
 	
-	for (int i=0;i<NB;i++)
-	{
+	for (int i=0;i<NB_small;i++) {
 		vx[i]=ini_vx[i%8];
 		vy[i]=ini_vy[i%9];
 		ball[i] = sprite_new((uint32_t *)&SPRITE, 0,ini_y[i%7], i);
-		ball[i]->x = i*(VGA_H_PIXELS-ball[i]->w)/(NB+1); // fix X after the fact
+		ball[i]->x = i*(VGA_H_PIXELS-ball[i]->w)/(NB_small+1); // fix X after the fact
+	}
+
+	for (int i=0;i<NB_big;i++) {
+		vx[i]=ini_vx[i%8];
+		vy[i]=ini_vy[i%9]+10;
+		ball[NB_small+i] = sprite_new((uint32_t *)&SPRITE_BIG, 0,ini_y[i%7], i);
+		ball[NB_small+i]->x = i*(VGA_H_PIXELS-ball[NB_small+i]->w)/(NB_big+1); // fix X after the fact
 	}
 }
 
