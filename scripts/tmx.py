@@ -86,7 +86,6 @@ assert tilesize == int(ts.get("tileheight")) and tilesize in tilesizes, "only sq
 
 
 img = ts.find("image").get("source")
-#print "extern const uint16_t %s_tset[]; // from %s"%(base_name,img)
 # output as raw tileset 
 # XXX if RGBA -> int, else : uint. Here, assume uint
 def reduce(c) : 
@@ -145,4 +144,6 @@ with open(os.path.join(args.output_dir,fname),'wb') as of, open(os.path.join(arg
         print >>c_file, "};\n"
 
 print "#define %s_header TMAP_HEADER(%d,%d,%s,%s)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
-#print "extern const %s %s_tmap[][%d*%d];"%(typename[out_code], base_name,lw,lh)
+# XXX bugged, does work only if on base directory
+print "extern const uint16_t %s_tset[]; // from %s"%(base_name,img)
+print "extern const %s %s_tmap[][%d*%d];"%(typename[out_code], base_name,lw,lh)
