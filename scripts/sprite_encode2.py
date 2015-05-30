@@ -12,7 +12,7 @@ from PIL import Image # using the PIL library, maybe you'll need to install it. 
 # p2 mode ; couple modes !
 
 FORCE_MODE = None # 'u16'
-DEBUG = True
+DEBUG = False
 
 modes = {
     'header':0,
@@ -191,12 +191,12 @@ def image_decode(f) :
 
         if record==modes['header'] : 
             w,h=struct.unpack("<2I",raw_data)
-            print "(header) w: %d, h:%d "%(w,h)
+            if DEBUG : print "(header) w: %d, h:%d "%(w,h)
 
         elif record==modes['palette'] : 
             d= struct.unpack('<%dH'%(size/2),raw_data)
             palette=[rgba(x) for x in d]
-            print '(palette)',len(palette),'colors'
+            if DEBUG : print '(palette)',len(palette),'colors'
             if DEBUG : print d
             if DEBUG : print palette
 
@@ -207,7 +207,7 @@ def image_decode(f) :
 
 
         elif record in (modes['p8'],modes['p4'],modes['u16']) : 
-            print '(data)',len(raw_data),'bytes'
+            if DEBUG : print '(data)',len(raw_data),'bytes'
             # read all blits / lines
             y=0; src=0
             tuples=[]

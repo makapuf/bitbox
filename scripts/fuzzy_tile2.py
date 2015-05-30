@@ -13,16 +13,11 @@ import sys
 from PIL import Image # using the PIL library, maybe you'll need to install it. python should come with t.
 out=False # output data 
 
-LAMBDA = 0.5 # quality, lower is better
-USE_RLE = True # can use RLE for maps ?
+LAMBDA = 0.2 # quality, lower is better
+USE_RLE = False # can use RLE for maps ?
 USE_4bits = False 
 
 # grouper par couples
-
-if len(sys.argv)==1 : 
-    sys.argv.append('anim_mechant3')
-    sys.argv.append('entire_worldmap_single_image')
-
 
 totsize = 0 # keep statistics
 BLOCKSIZE = 16

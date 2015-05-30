@@ -42,6 +42,7 @@ import array, os.path, argparse
 parser = argparse.ArgumentParser(description='Process TMX files to tset/tmap/.h files')
 parser.add_argument('file',help='input .tmx filename')
 parser.add_argument('-o','--output-dir', default='.', help='target directory, default: .')
+parser.add_argument('-c','--to_c_file', default='.', help='outputs directly a C file instead of binaries.', action="store_true")
 
 args = parser.parse_args()
 
@@ -91,59 +92,83 @@ img = ts.find("image").get("source")
 def reduce(c) : 
     return (1<<15 | (c[0]>>3)<<10 | (c[1]>>3)<<5 | c[2]>>3) if c[3]>127 else 0 
 
+cname = base_name+'.c'
+fname = base_name+'.tmap'
+c_file = open(os.path.join(args.output_dir,cname),'wb')
+print >>c_file,'#include <stdint.h>'
+print >>c_file,'#include "%s.h"'%base_name
+
 src = Image.open(os.path.join(os.path.dirname(os.path.abspath(args.file)),img)).convert('RGBA')
 pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples. 
 w,h = src.size
 tsname = base_name+'.tset'
 with open(os.path.join(args.output_dir,tsname),'wb') as of: 
+    if args.to_c_file : 
+        print >>c_file,"const uint16_t %s_tset[] = { // from %s"%(base_name,img)
     for tile_y in range(h/tilesize) : 
         for tile_x in range(w/tilesize) : 
             for row in range(tilesize) : 
                 idx = (tile_y*tilesize+row)*w + tile_x*tilesize
-                pixdata[idx:idx+tilesize].tofile(of) # non extraire des carres de 16x16 avec PIL et les ecrire 
+                if args.to_c_file : 
+                    print >>c_file, ",".join(str(x) for x in pixdata[idx:idx+tilesize]),','
+                else : 
+                    pixdata[idx:idx+tilesize].tofile(of) # non extraire des carres de 16x16 avec PIL et les ecrire 
+if args.to_c_file : 
+    print >>c_file,"};"
 
 
-cname = base_name+'.c'
-fname = base_name+'.tmap'
 index=0
+if not args.to_c_file : 
+    of = open(os.path.join(args.output_dir,basename+out_ext),'wb') 
 
-with open(os.path.join(args.output_dir,fname),'wb') as of, open(os.path.join(args.output_dir,cname),'wb') as c_file: 
-    for layer in root.findall("layer") : 
-        lw = int(layer.get("width"))
-        lh = int(layer.get("height"))
-        name=layer.get("name")
-        if name[0]=='_' : continue # skip
-        
-        data = layer.find("data")
-        indices = [int(s) for s in data.text.replace("\n",'').split(',')]
-        if max(indices)>=256 : out_code='H' # will set to u16 if just one level has those indices
-        tidx = array.array(out_code,indices)
-        assert len(tidx) == lw*lh, "not enough or too much data"
-        
-        # output data
-        print "#define %s_%s %d"%(base_name, name, index)
+mw, mh = root.get('width'), root.get('height')
+if args.to_c_file : 
+    print >>c_file, "const %s %s_tmap[][%s*%s]={"%(typename[out_code], base_name,mw,mh)
+    
+for layer in root.findall("layer") : 
+    lw = int(layer.get("width"))
+    lh = int(layer.get("height"))
+    name=layer.get("name")
+    if name[0]=='_' : continue # skip
+    
+    data = layer.find("data")
+    indices = [int(s) for s in data.text.replace("\n",'').split(',')]
+    if max(indices)>=256 : out_code='H' # will set to u16 if just one level has those indices
+    tidx = array.array(out_code,indices)
+    assert len(tidx) == lw*lh, "not enough or too much data"
+    
+    print "#define %s_%s %d"%(base_name, name, index)
+    # output data to binary 
+    if args.to_c_file : 
+        print >>c_file, "{ // %s "%name
+        print >>c_file, ",".join(str(x) for x in tidx)
+        print >>c_file, "},"
+    else : 
         tidx.tofile(of)
-        index += 1
+    index += 1
 
-    print '// max indices : ',max(indices)
+# output all layers in a big array of arrays
+if args.to_c_file : 
+    print >>c_file, "};"
 
-    # output object layers to C file
-    print >> c_file,'#include "%s.h"'%base_name
-    for objectgroup in root.findall('objectgroup') : 
-        name=objectgroup.get('name')
-        if name[0]=='_' : continue # skip
+print '// max indices : ',max(indices)
 
-        pos = [(int(float(o.get('x'))),int(float(o.get('y'))), int(o.get('gid'))) for o in objectgroup.findall('object')]
+# output object layers to C file
+for objectgroup in root.findall('objectgroup') : 
+    name=objectgroup.get('name')
+    if name[0]=='_' : continue # skip
 
-        print "#define %s_%s_nb %d"%(base_name,name,len(pos))
-        print "extern const int16_t %s_%s[%s_%s_nb][4]; // x,y,tid,0"%(base_name,name,base_name,name)
+    pos = [(int(float(o.get('x'))),int(float(o.get('y'))), int(o.get('gid'))) for o in objectgroup.findall('object')]
 
-        print >> c_file,"const int16_t %s_%s[%s_%s_nb][4] = { // x,y,tid,0 "%(base_name,name,base_name,name)
-        for c in pos :
-            print >>c_file, "    {%d,%d,%d,0},"%c
-        print >>c_file, "};\n"
+    print "#define %s_%s_nb %d"%(base_name,name,len(pos))
+    print "extern const int16_t %s_%s[%s_%s_nb][4]; // x,y,tid,0"%(base_name,name,base_name,name)
+
+    print >> c_file,"const int16_t %s_%s[%s_%s_nb][4] = { // x,y,tid,0 "%(base_name,name,base_name,name)
+    for c in pos :
+        print >>c_file, "    {%d,%d,%d,0},"%c
+    print >>c_file, "};\n"
 
 print "#define %s_header TMAP_HEADER(%d,%d,%s,%s)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
-# XXX bugged, does work only if on base directory
+
 print "extern const uint16_t %s_tset[]; // from %s"%(base_name,img)
 print "extern const %s %s_tmap[][%d*%d];"%(typename[out_code], base_name,lw,lh)
