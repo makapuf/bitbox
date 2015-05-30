@@ -11,6 +11,7 @@
 
 # emulation of current game
 *_emu
+*_test
 # build subdirectories
 */build
 # build dependencies

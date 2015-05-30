@@ -5,9 +5,9 @@
 #include <stdint.h>
 #include "kconf.h" // kernel conf can be the basis of values
 
-// user-provided
-void game_init();
-void game_frame();
+// --- Main -----------------------------------------------------------------------------
+void game_init(void); // user provided
+void game_frame(void); // user provided
 
 // --- Audio ----------------------------------------------------------------------------
 
@@ -65,7 +65,7 @@ enum evt_type { // type (a,b,c data)
 	evt_mouse_click,  // button : (port, button_id)
 	evt_mouse_release,// button : (port, button id)
 
-	evt_keyboard_press,  // kbd (u8 key, u8 modifiers)
+	evt_keyboard_press,  // kbd (u8 key, u8 modifiers : R Gui/Alt/Shift/Ctrl, L ...
 	evt_keyboard_release,// kbd (u8 key, u8 modifiers)
 
 	evt_user, // sent by program
