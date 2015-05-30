@@ -42,7 +42,7 @@ import array, os.path, argparse
 parser = argparse.ArgumentParser(description='Process TMX files to tset/tmap/.h files')
 parser.add_argument('file',help='input .tmx filename')
 parser.add_argument('-o','--output-dir', default='.', help='target directory, default: .')
-parser.add_argument('-c','--to_c_file', default='.', help='outputs directly a C file instead of binaries.', action="store_true")
+parser.add_argument('-c','--to_c_file', default=False, help='outputs directly a C file instead of binaries.', action="store_true")
 
 args = parser.parse_args()
 
@@ -92,17 +92,14 @@ img = ts.find("image").get("source")
 def reduce(c) : 
     return (1<<15 | (c[0]>>3)<<10 | (c[1]>>3)<<5 | c[2]>>3) if c[3]>127 else 0 
 
-cname = base_name+'.c'
-fname = base_name+'.tmap'
-c_file = open(os.path.join(args.output_dir,cname),'wb')
+c_file = open(os.path.join(args.output_dir,base_name+'.c'),'wb')
 print >>c_file,'#include <stdint.h>'
 print >>c_file,'#include "%s.h"'%base_name
 
 src = Image.open(os.path.join(os.path.dirname(os.path.abspath(args.file)),img)).convert('RGBA')
 pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples. 
 w,h = src.size
-tsname = base_name+'.tset'
-with open(os.path.join(args.output_dir,tsname),'wb') as of: 
+with open(os.path.join(args.output_dir,base_name+'.tset'),'wb') as of: 
     if args.to_c_file : 
         print >>c_file,"const uint16_t %s_tset[] = { // from %s"%(base_name,img)
     for tile_y in range(h/tilesize) : 
@@ -119,7 +116,7 @@ if args.to_c_file :
 
 index=0
 if not args.to_c_file : 
-    of = open(os.path.join(args.output_dir,basename+out_ext),'wb') 
+    of = open(os.path.join(args.output_dir,base_name+'.tmap'),'wb') 
 
 mw, mh = root.get('width'), root.get('height')
 if args.to_c_file : 

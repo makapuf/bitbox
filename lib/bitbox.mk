@@ -179,7 +179,7 @@ stlink: $(NAME).bin
 
 # double colon to allow extra cleaning
 clean::
-	rm -rf $(BUILD_DIR) $(NAME).elf $(NAME).bin $(NAME)_emu 
+	rm -rf $(BUILD_DIR) $(NAME).elf $(NAME).bin $(NAME)_emu $(NAME)_test
 
 $(NAME).bin: $(NAME).elf
 	$(OBJCOPY) -O binary $(NAME).elf $(NAME).bin
