@@ -55,6 +55,9 @@ SECTIONS
     
     .ccm (NOLOAD) :
     {
+      _sccm = .;
       *(.ccm)
+      _eccm = .;
+
     } > ccmram
 }
