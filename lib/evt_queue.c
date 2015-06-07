@@ -71,7 +71,7 @@ void event_clear()
 
 
 // keymap : list of ranges of elements, non shifted and shifted
-// see http://www.usb.org/developers/devclass_docs/Hut1_11.pdf, page 7
+// see http://www.usb.org/developers/devclass_docs/Hut1_12.pdf, page 7
 const char keyb_en[56]    = "abcdefghijklmnopqrstuvwxyz1234567890\n\027\b\t -=[]\\#;'`,./";
 const char keyb_en_sh[56] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%%^*()\n\027\b\t _+{}|#:\"~<>?" ;
 const char keyb_fr[60]    = "qbcdefghijkl,noparstuvzxyw&é\"'(-è_çà\n\027\b\t )=^$\\#mù*;:!";
