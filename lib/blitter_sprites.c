@@ -24,7 +24,7 @@ Object storage :
     a : palette (not used if u16) ; can be a palette of couples if c8
     b : line16 skips (skips as number of u32 words !)
     c : current blitting pos in data
-    d : len per word (items per word, eg 8bits couples -> 4)
+    d : len per word (items per word, eg 8bits couples -> 4). 0 means not defined (eg RLE)
 
 File storage of data : as record-based data. allows for RAM or flash usage.
     a record is made of
@@ -177,7 +177,7 @@ static void sprite_frame (object *o, int start_line)
     start_line %= 16; // remainder 
     
 
-    // o->d = lpw = len per word (items per word, eg 8bits couples -> 4)
+    // o->d = lpw = len per word (items per word, eg 8bits couples -> 4) Not defined for RLE
 
     // Skip first lines as needed
     while (start_line) {
@@ -186,7 +186,8 @@ static void sprite_frame (object *o, int start_line)
 
         // advances pointer to next blit anyway (as integer, so byte offsets)
         o->c += 4; // header word 
-        o->c += ((LEN(*p)+o->d-1-(o->d/2))/o->d)*4;
+        if (o->d) 
+            o->c += ((LEN(*p)+o->d-1-(o->d/2))/o->d)*4;
     }
 }
 
@@ -338,53 +339,63 @@ static void sprite_c8_line (object *o)
         uint32_t data_len = LEN(*p); // in couples
         x += 2*SKIP(*p); // skip  is in couples
         
-                
-        uint32_t *restrict dst = (uint32_t*) &draw_buffer[x]; 
-        uint32_t *restrict src = p;
+        uint32_t *restrict dst;
+        uint32_t *restrict src;
+        if (x>=0) {
+            dst = (uint32_t*) &draw_buffer[x]; 
+            src = p;
 
-        // blit first two couples
-        if (data_len==0) continue;
+            // blit first two couples - if not skipped ! XXX not if x started at left and has been eaten ...
+            if (data_len==0) continue;
 
-        // handle transparency for first one
-        c=pal[(*src>>16) & 0xff];
-        *dst = c & 0x0000ffff ? c : c | (*dst & 0x0000ffff); 
-        dst++;
-        if (data_len>=2) {
-            // also test last pixel of second couple if it's exactly 3pixels wide 
-            c=pal[(*src>>24) & 0xff];
-            *dst = c & 0xffff0000 ? c : c | (*dst & 0xffff0000); 
+            // handle transparency for first one
+            c=pal[(*src>>16) & 0xff];
+            *dst = c & 0x0000ffff ? c : c | (*dst & 0x0000ffff); 
             dst++;
-            src++;
-        }
+            if (data_len>=2) {
+                // also test last pixel of second couple if it's exactly 3pixels wide 
+                c=pal[(*src>>24) & 0xff];
+                *dst = c & 0xffff0000 ? c : c | (*dst & 0xffff0000); 
+                dst++;
+                src++;
+            }
 
-        // now, palette blit middle couples, 4 couples (=1 input word) by 4
-        for (i=data_len-2;i>4;i-=4, src++)
-        {
-            *dst++ = pal[*src>> 0 & 0xff]; 
-            *dst++ = pal[*src>> 8 & 0xff];
-            *dst++ = pal[*src>>16 & 0xff];
-            *dst++ = pal[*src>>24 & 0xff]; 
-        }
+            // now, palette blit middle couples, 4 couples (=1 input word) by 4
+            for (i=data_len-2;i>4;i-=4, src++)
+            {
+                *dst++ = pal[*src>> 0 & 0xff]; 
+                *dst++ = pal[*src>> 8 & 0xff];
+                *dst++ = pal[*src>>16 & 0xff];
+                *dst++ = pal[*src>>24 & 0xff]; 
+            }
 
-        // finish with 0-3 couples 
-        uint32_t s = *src; // last input couple
-        switch (i) 
-        {
-            // NB fall through 
-            case 4 : 
-                *dst++ = pal[s & 0xff]; 
-                s >>=8;
-            case 3 : 
-                *dst++ = pal[s & 0xff]; 
-                s >>=8;
-            case 2 : 
-                *dst++ = pal[s & 0xff]; 
-                s >>=8;
-            case 1 : // last one can be transparent - ie be 0 exactly
-                c = pal[s & 0xff]; 
-                *dst= c & 0xffff0000 ? c : c | (*dst & 0xffff0000);
-        }
+            // finish with 0-3 couples 
+            uint32_t s = *src; // last input couple
+            switch (i) 
+            {
+                // NB fall through 
+                case 4 : 
+                    *dst++ = pal[s & 0xff]; 
+                    s >>=8;
+                case 3 : 
+                    *dst++ = pal[s & 0xff]; 
+                    s >>=8;
+                case 2 : 
+                    *dst++ = pal[s & 0xff]; 
+                    s >>=8;
+                case 1 : // last one can be transparent - ie be 0 exactly
+                    c = pal[s & 0xff]; 
+                    *dst= c & 0xffff0000 ? c : c | (*dst & 0xffff0000);
+            }
+        } else { // <0 : dont display this run
+            // always remove first two
+            // FIXME: skip what is needed and blit what is needed to get back to right element
+            // finish normally
+            dst = (uint32_t*) &draw_buffer[0];
 
+
+            /// XXX how many to blit to get sure that src is aligned to a word ?
+        }
         // advance x 
         x += data_len*2;
 
