@@ -10,6 +10,9 @@ extern uint32_t _sidata[];
 extern uint32_t _edata[];
 extern uint32_t _sbss[];
 extern uint32_t _ebss[];
+extern uint32_t _sccm[];
+extern uint32_t _eccm[];
+
 
 void Reset_Handler() __attribute__((naked,noreturn));
 void Default_Handler() __attribute__((naked,noreturn));
@@ -66,8 +69,13 @@ void setup_usb()
 	// Enable 125Hz USB timer timer 7
 	RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
 
-	TIM7->PSC=999;  // Prescaler = 1000 
-	TIM7->ARR = SYSCLK/APB_PRESC/1000/125; //125; // ~ 168MHz /2 / 1000 / 125 (65536 max, typically 704)
+	TIM7->PSC=999;  // Prescaler = 1000
+	TIM7->ARR = SYSCLK/APB_PRESC/1000/125; // ~ 168MHz /2 / 1000 / 125Hz (65536 max, typically 704)
+	/* XXX verify bInterval ?
+		For low- and full-speed interrupt endpoints, the descriptor's bInterval value indicates 
+		the requested maximum number of milliseconds between transaction attempts. 
+		http://janaxelson.com/usbfaq.htm
+	*/
 	TIM7->CR1 = TIM_CR1_ARPE;	// autoreload preload enable, no other function on
 
 	NVIC_EnableIRQ(TIM7_IRQn);
@@ -96,6 +104,9 @@ void Reset_Handler()
 
 	// Zero fill the bss segment.
 	for(uint32_t *dest=_sbss;dest<_ebss;dest++) *dest=0;
+
+	// Zero fill the CCM segment also
+	for(uint32_t *dest=_sccm;dest<_eccm;dest++) *dest=0;
 
 	// misc initializations
 	system_init(); // in system.h

@@ -72,8 +72,8 @@ volatile int vga_odd; // only in skipline modes
 uint16_t LineBuffer1[1024] __attribute__((aligned (1024))); // __attribute__ ((section (".sram")))
 uint16_t LineBuffer2[1024] __attribute__((aligned (1024)));
 
-uint16_t *display_buffer; // will be sent to display 
-uint16_t *draw_buffer; // will be drawn (bg already drawn)
+uint16_t *display_buffer = LineBuffer1; // will be sent to display 
+uint16_t *draw_buffer = LineBuffer2; // will be drawn (bg already drawn)
 
 static void HSYNCHandler();
 static void DMACompleteHandler();
@@ -97,9 +97,11 @@ void vga_setup()
 
 	// initialize software state.
 	vga_line=0;	vga_frame=0;
+	/*
 	display_buffer=LineBuffer1;
 	draw_buffer=LineBuffer2;
-
+	*/
+	
 	// --- GPIO ---------------------------------------------------------------------------------------
 	// init vga gpio ports A0 vsync, A1 hsync B0-11 dac
 	// XXX here port PC11 is used for vsync !!!  
