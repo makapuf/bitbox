@@ -16,6 +16,7 @@
  */
 
 #include <stdint.h>
+#include <stdlib.h>
  
 #include "chiptune_engine.h"
 // #include "exported.h"
@@ -97,8 +98,7 @@ struct unpacker songup;
 static const uint8_t* song_data;
 
 static inline uint8_t readsongbyte(uint16_t offset) {
-	extern const uint8_t songdata[];
-	return songdata[offset];
+	return song_data ? song_data[offset] : NULL;
 }
 
 static void initup(struct unpacker *up, uint16_t offset) {
