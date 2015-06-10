@@ -98,7 +98,7 @@ struct unpacker songup;
 static const uint8_t* song_data;
 
 static inline uint8_t readsongbyte(uint16_t offset) {
-	return song_data ? song_data[offset] : NULL;
+	return song_data ? song_data[offset] : 0;
 }
 
 static void initup(struct unpacker *up, uint16_t offset) {
