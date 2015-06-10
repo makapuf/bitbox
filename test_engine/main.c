@@ -22,10 +22,10 @@ extern const char SPRITE_BIG[];
 
 object *ball[NB], *bg, *square;
 int vx[NB],vy[NB];
-const int ini_vy []= {-4, 3, 1,-6, 4,-7, 3,-5};
-const int ini_vx []= {-2, 7, 1, 2, 4,-4, 3, 1 ,3};
-const int ini_vz []= {-3,-5,-2,-2,-2, 3, 4, 5};
-const int ini_y  []= {-50,50,100,200,0,60,40,30};
+const int ini_vy [8]= {-4, 3, 1,-6, 4,-7, 3,-5};
+const int ini_vx [9]= {-2, 7, 1, 2, 4,-4, 3, 1 ,3};
+const int ini_vz [8]= {-3,-5,-2,-2,-2, 3, 4, 5};
+const int ini_y  [8]= {-50,0,100,-100,0,60,40,30};
 
 
 void game_init() {
@@ -36,23 +36,21 @@ void game_init() {
 	else
 		bg= rect_new (0,0,VGA_H_PIXELS, VGA_H_PIXELS*3,200, RGB(100,100,100));
 
-	bg->z=200;
-	
 	if (MOVE_SQUARE)
 		square=rect_new (10,10,100,100,150, RGB(0xff,0,0));
 	
 	for (int i=0;i<NB_small;i++) {
-		vx[i]=ini_vx[i%8];
-		vy[i]=ini_vy[i%9];
-		ball[i] = sprite_new((uint32_t *)&SPRITE, 0,ini_y[i%7], i);
+		vx[i]=ini_vx[i%9];
+		vy[i]=ini_vy[i%7];
+		ball[i] = sprite_new((uint32_t *)&SPRITE, 0,ini_y[i%8], i);
 		ball[i]->x = i*(VGA_H_PIXELS-ball[i]->w)/(NB_small+1); // fix X after the fact
 	}
 
-	for (int i=0;i<NB_big;i++) {
-		vx[i]=ini_vx[i%8];
-		vy[i]=ini_vy[i%9]+10;
-		ball[NB_small+i] = sprite_new((uint32_t *)&SPRITE_BIG, 0,ini_y[i%7], i);
-		ball[NB_small+i]->x = i*(VGA_H_PIXELS-ball[NB_small+i]->w)/(NB_big+1); // fix X after the fact
+	for (int i=NB_small;i<NB;i++) {
+		vx[i]=ini_vx[i%9];
+		vy[i]=ini_vy[i%7]+10;
+		ball[i] = sprite_new((uint32_t *)&SPRITE_BIG, 0,ini_y[i%8], 0);
+		ball[i]->x = (i-NB_small)*(VGA_H_PIXELS-ball[i]->w)/(NB_big+1); // fix X after the fact
 	}
 }
 
@@ -73,7 +71,7 @@ void game_frame()
 		    if (ball[i]->x + vx[i] >= (VGA_H_PIXELS-ball[i]->w) || ball[i]->x <0 )
 		      	vx[i] = -vx[i];
 		    
-		    if ((ball[i]->y + vy[i]) >= VGA_H_PIXELS-(int32_t)ball[i]->h )
+		    if ((ball[i]->y + vy[i]) > VGA_V_PIXELS-(int32_t)ball[i]->h )
 		    	vy[i] = -vy[i]+1;
 
 
