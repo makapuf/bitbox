@@ -58,7 +58,11 @@ def p8_encode(data, palette) :
         for j in range(4) : # last word
             w |= (palette.index(data[i+j]) if (len(data)>i+j) else 0)<<(j*8)
         linedata.append(w)
-    return struct.pack('<%dI'%len(linedata),*linedata)
+    try : 
+        return struct.pack('<%dI'%len(linedata),*linedata)
+    except struct.error,e : 
+        print linedata
+        raise
 
 def p8_decode(data,n, palette) : 
     linedata=[]
@@ -94,6 +98,11 @@ def image_encode(src,f,frame_height,mode) :
         # Get the alpha band
         alpha = src.split()[-1]
         r,g,b= src.convert('RGB').convert('P', palette=Image.ADAPTIVE, colors=16).convert('RGB').split()
+        src=Image.merge("RGBA",(r,g,b,alpha))
+    elif mode=='p8' : 
+        # Get the alpha band
+        alpha = src.split()[-1]
+        r,g,b= src.convert('RGB').convert('P', palette=Image.ADAPTIVE, colors=256).convert('RGB').split()
         src=Image.merge("RGBA",(r,g,b,alpha))
     
     data = [reduce(c) for c in src.getdata()] # keep image in RAM as RGBA tuples. 
@@ -257,17 +266,19 @@ if __name__=='__main__' :
     parser = argparse.ArgumentParser()
     parser.add_argument("file_out",help="Output file name. Usually .spr")
     parser.add_argument('file_in', nargs='+', help="Input files in order as frames.")
-    parser.add_argument("-m","--mode",help="Encoding mode",choices=('u16','p4'))
+    parser.add_argument("-m","--mode",help="Encoding mode",choices=('u16','p4','p8'))
     args = parser.parse_args()
 
     print '\n***',args.file_in,'to',args.file_out,  args
 
     # prepare input as vertically stacked images
-    srcs = [Image.open(filein).convert('RGBA') for filein in args.file_in]
+    srcs = [Image.open(filein).convert('RGBA') for filein in sorted(args.file_in)]
 
     Width,Height = srcs[0].size
     if not all(im.size == (Width,Height) for im in srcs) : 
         print "All images must be the same size !"
+        for nm,im in zip(args.file_in,srcs) : 
+            print nm,im.size
         sys.exit(0)
 
     src = Image.new("RGBA", (Width,Height*len(srcs)))

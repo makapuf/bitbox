@@ -142,11 +142,14 @@ if __name__=='__main__' :
     print '\n***',args.file_in,'to',args.file_out,  args
 
     # prepare input as vertically stacked images
-    srcs = [Image.open(filein).convert('RGBA') for filein in args.file_in]
+    srcs = [Image.open(filein).convert('RGBA') for filein in sorted(args.file_in)]
 
     Width,Height = srcs[0].size
     if not all(im.size == (Width,Height) for im in srcs) : 
         print "All images must be the same size !"
+        for nm,im in zip(args.file_in,srcs) : 
+            print nm,im.size
+
         sys.exit(0)
 
     src = Image.new("RGBA", (Width,Height*len(srcs)))
