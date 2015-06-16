@@ -229,6 +229,7 @@ int init(void)
     audio_init();
     joy_init();
 
+    next_time = SDL_GetTicks();
 
     printf("screen is now %dx%d\n",screen_width,screen_height);
     return 0;
