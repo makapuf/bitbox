@@ -50,6 +50,7 @@ int screen_height;
 #define TICK_INTERVAL 1000/60
 #define LINE_BUFFER 1024
 
+#define USER_BUTTON_KEY SDLK_F12
 int slow; // parameter : run slower ?
 
 static uint32_t next_time;
@@ -239,7 +240,7 @@ int init(void)
 void instructions ()
 {
     printf("Use Joystick, Mouse or keyboard.");
-    printf("Bitbox user Button is emulated by the <Pause/Break> key.\n");
+    printf("Bitbox user Button is emulated by the F12 key.\n");
     printf("       -------\n");
     printf("Keyboard for some games emulate Gamepad with the following keys \n");
     printf("    Space (Select),   Enter (Start),   Arrows (D-pad)\n");
@@ -299,9 +300,13 @@ static bool handle_gamepad()
             case SDL_KEYDOWN:
                 if (sdl_event.key.keysym.sym == SDLK_ESCAPE)
                     return true; // quit now
-                if (sdl_event.key.keysym.sym == SDLK_PAUSE)
+                
+                /* note that this event WILL be propagated so on emulator 
+                you'll see both button and keyboard. It's ot really a problem since 
+                programs rarely use the button and the keyboard */
+                
+                if (sdl_event.key.keysym.sym == USER_BUTTON_KEY) 
                     user_button=1;
-
                 event_push((struct event){
                     .type= evt_keyboard_press,
                     .kbd={
@@ -313,8 +318,10 @@ static bool handle_gamepad()
                 break;
 
             case SDL_KEYUP:               
-                if (sdl_event.key.keysym.sym == SDLK_PAUSE)
+
+                if (sdl_event.key.keysym.sym == USER_BUTTON_KEY)
                     user_button=0;
+                
                 event_push((struct event) {
                     .type= evt_keyboard_release,
                     .kbd={
@@ -322,6 +329,7 @@ static bool handle_gamepad()
                         .mod=sdl_event.key.keysym.mod
                     }
                 });
+                
                 break;
 
             // joypads
