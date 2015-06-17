@@ -29,12 +29,12 @@
 	 5: j = instrument jump
 	 6: l = slide
 	 7: m = duty variation
-	 8: t = timing
+	 8: t = timing (or song speed)
 	 9: v = volume
 	 10: w = select waveform
 	 11: ~ = vibrato
 	 12: + = set relative note
-	 13: = = set absolute note
+	 13: = = set absolute note (or instrument in pattern context)
 	 14: ! = set instrument 
 
 

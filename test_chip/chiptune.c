@@ -108,7 +108,8 @@ struct oscillator osc[MAX_CHANNELS];
 
 struct ChipSong *current_song;
 
-static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param) {
+static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param, uint8_t context) {
+	// context is 0 for instrument, 1/2 for pattern
 	switch(cmd) {
 		case 1: // 0 = note off
 			channel[ch].inum = 0;
@@ -131,8 +132,11 @@ static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param) {
 		case 7: // m = duty variation
 			channel[ch].dutyd = param << 6;
 			break;
-		case 8: // t = timing
-			channel[ch].iwait = param;
+		case 8: // t = timing (for instrument, song speed for track context)
+			if (!context)
+				channel[ch].iwait = param;
+			else 
+				songspeed = param;
 			break;
 		case 9: // v = volume
 			osc[ch].volume = param;
@@ -150,11 +154,11 @@ static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param) {
 		case 12: // + = set relative note 
 			channel[ch].inote = param + channel[ch].tnote - 12 * 4;
 			break;
-		case 13: // = = set absolute note
-			channel[ch].inote = param;
-			break;
-		case 14 : // ! set instrument
-			channel[ch].lastinstr = param;
+		case 13: // = = set absolute note in instrument context or instrument in pattern context
+			if (!context)
+				channel[ch].inote = param;
+			else 
+				channel[ch].lastinstr = param;
 			break;
 	}
 }
@@ -224,8 +228,8 @@ void chip_update()
 				uint8_t par2 = (fields>>0) & 0xff;
 				message("Note:%02x %x %02x / %x %02x |",note, cmd1,par1,cmd2,par2);
 
-				if(cmd1) runcmd(ch, cmd1, par1);
-				if(cmd2) runcmd(ch, cmd2, par2);
+				if(cmd1) runcmd(ch, cmd1, par1,1);
+				if(cmd2) runcmd(ch, cmd2, par2,2);
 
 				if(note) {
 					channel[ch].tnote = note + channel[ch].transp;
@@ -257,7 +261,7 @@ void chip_update()
 
 			channel[ch].iptr++;
 
-			runcmd(ch, ins>>8, ins & 0xff);
+			runcmd(ch, ins>>8, ins & 0xff,0);
 		}
 
 		if(channel[ch].iwait) 
