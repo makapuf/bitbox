@@ -91,7 +91,25 @@ enum evt_type { // type (a,b,c data)
 } ;
 
 enum kbd_modifier { 
-	LCtrl,LShift,LAlt,LWin,RCtrl,RShift,RAlt,RWin 
+#ifdef EMULATOR
+	LCtrl = 0x40,
+	LShift = 0x01,
+	LAlt = 0x100,
+	LWin = 0x400,
+	RCtrl = 0x80,
+	RShift = 0x02,
+	RAlt = 0x200,
+	RWin = 0x800
+#else
+	LCtrl = 1,
+	LShift = 2,
+	LAlt = 4,
+	LWin = 8,
+	RCtrl = 16,
+	RShift = 32,
+	RAlt = 64,
+	RWin = 128
+#endif
 };
 
 enum gamepad_buttons_enum {
