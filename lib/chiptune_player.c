@@ -19,6 +19,7 @@
 #include <stdlib.h>
  
 #include "chiptune_engine.h"
+#include "chiptune_player.h"
 // #include "exported.h"
 #define MAXTRACK	0x15 
 #define TRACKLEN 32
@@ -30,7 +31,7 @@ uint8_t songpos;
 
 uint8_t songlen; // now a variable 
 
-static const uint16_t freqtable[] = {
+const uint16_t freqtable[] = {
 	0x010b, 0x011b, 0x012c, 0x013e, 0x0151, 0x0165, 0x017a, 0x0191, 0x01a9,
 	0x01c2, 0x01dd, 0x01f9, 0x0217, 0x0237, 0x0259, 0x027d, 0x02a3, 0x02cb,
 	0x02f5, 0x0322, 0x0352, 0x0385, 0x03ba, 0x03f3, 0x042f, 0x046f, 0x04b2,
@@ -43,15 +44,13 @@ static const uint16_t freqtable[] = {
 	0x70a3, 0x7756, 0x7e6f
 };
 
-static const int8_t sinetable[] = {
+const int8_t sinetable[] = {
 	0, 12, 25, 37, 49, 60, 71, 81, 90, 98, 106, 112, 117, 122, 125, 126,
 	127, 126, 125, 122, 117, 112, 106, 98, 90, 81, 71, 60, 49, 37, 25, 12,
 	0, -12, -25, -37, -49, -60, -71, -81, -90, -98, -106, -112, -117, -122,
 	-125, -126, -127, -126, -125, -122, -117, -112, -106, -98, -90, -81,
 	-71, -60, -49, -37, -25, -12
 };
-
-static const uint8_t validcmds[] = "0dfijlmtvw~+=";
 
 struct trackline {
 	uint8_t	note;
@@ -64,32 +63,7 @@ struct track {
 	struct trackline	line[TRACKLEN];
 };
 
-struct unpacker {
-	uint16_t	nextbyte;
-	uint8_t	buffer;
-	uint8_t	bits;
-};
-
-struct channel {
-	struct unpacker		trackup;
-	uint8_t			tnum;
-	int8_t			transp;
-	uint8_t			tnote;
-	uint8_t			lastinstr;
-	uint8_t			inum;
-	uint16_t			iptr;
-	uint8_t			iwait;
-	uint8_t			inote;
-	int8_t			bendd;
-	int16_t			bend;
-	int8_t			volumed;
-	int16_t			dutyd;
-	uint8_t			vdepth;
-	uint8_t			vrate;
-	uint8_t			vpos;
-	int16_t			inertia;
-	uint16_t			slur;
-} channel[4];
+struct channel channel[4];
 
 uint16_t resources[16 + MAXTRACK];
 
@@ -139,7 +113,7 @@ static inline void readinstr(uint8_t num, uint8_t pos, uint8_t *dest) {
 	dest[1] = readsongbyte(resources[num] + 2 * pos + 1);
 }
 
-static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param) {
+void runcmd(uint8_t ch, uint8_t cmd, uint8_t param) {
 	switch(cmd) {
 		case 0: // 0 = note off
 			channel[ch].inum = 0;
