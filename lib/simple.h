@@ -50,7 +50,12 @@
 #define SCREEN_W 120
 #define SCREEN_H 75
 #define COLOR_TEXT
-#endif
+
+#elif VGA_SIMPLE_MODE==12
+#define SCREEN_W 80
+#define SCREEN_H 60
+#define COLOR_TEXT
+#endif    
 
 // Utilities ------------------------------------------------
 

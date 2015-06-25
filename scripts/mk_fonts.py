@@ -5,8 +5,8 @@ import sys
 
 def font(filename, size_x, size_y) : 
 	print "/* *** File : %s *** */ "%filename
-	print "const uint8_t font_data[256][%d] = {"%size_y
-	src = Image.open(filename)
+	print "const uint8_t %s_data[256][%d] = {"%(filename,size_y)
+	src = Image.open(filename+'.png')
 
 	for y in range(src.size[1]//size_y) : 
 	    for x in range(src.size[0]//size_x) : 
@@ -16,5 +16,6 @@ def font(filename, size_x, size_y) :
 	print "};"
 
 print "#include <stdint.h>"
-font('font16.png',8,16)
-font('font8.png',6,8)
+font('font16',8,16)
+font('font8',6,8)
+font('font88',8,8)
