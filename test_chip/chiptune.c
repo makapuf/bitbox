@@ -87,6 +87,7 @@ struct oscillator {
 	uint16_t	duty; // duty cycle (pulse wave only)
 	uint8_t	waveform; // waveform (from the enum above)
 	uint8_t	volume;	// 0-255
+	uint8_t bitcrush; // 0-f level of quantization (power of 2)
 };
 
 // At each sample the phase is incremented by frequency/4. It is then used to
@@ -160,6 +161,8 @@ static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param, uint8_t context) {
 			else 
 				channel[ch].lastinstr = param;
 			break;
+		case 14: 
+			osc[ch].bitcrush=param;
 	}
 }
 
@@ -179,11 +182,24 @@ void chip_init(const struct ChipSong *song) {
 	for (int i=0;i<4;i++) {
 		osc[i].volume = 0;
 		channel[i].inum = 0;
+		osc[i].bitcrush = 5;
 	}
 }
 
+void chip_note(uint8_t ch, uint8_t note, uint8_t instrument) 
+{
+	channel[ch].tnote = note ;
+	channel[ch].inum = instrument;
+	channel[ch].iptr = 0;
+	channel[ch].iwait = 0;
+	channel[ch].bend = 0;
+	channel[ch].bendd = 0;
+	channel[ch].volumed = 0;
+	channel[ch].dutyd = 0;
+	channel[ch].vdepth = 0;
+}
 
-void chip_update()
+static void chip_update()
 // this shall be called each 1/60 sec. 
 // one buffer is 512 samples @32kHz, which is ~ 62.5 Hz,
 // calling each song frame should be OK
@@ -231,17 +247,9 @@ void chip_update()
 				if(cmd1) runcmd(ch, cmd1, par1,1);
 				if(cmd2) runcmd(ch, cmd2, par2,2);
 
-				if(note) {
-					channel[ch].tnote = note + channel[ch].transp;
-					channel[ch].inum = channel[ch].lastinstr;
-					channel[ch].iptr = 0;
-					channel[ch].iwait = 0;
-					channel[ch].bend = 0;
-					channel[ch].bendd = 0;
-					channel[ch].volumed = 0;
-					channel[ch].dutyd = 0;
-					channel[ch].vdepth = 0;
-				}
+				if(note) 
+					chip_note(ch,note + channel[ch].transp, channel[ch].lastinstr);
+
 			}
 			message("\n");
 
@@ -299,6 +307,7 @@ void chip_update()
 		osc[ch].duty = duty;
 
 		channel[ch].vpos += channel[ch].vrate;
+
 	}
 
 }
@@ -359,6 +368,11 @@ static inline uint16_t gen_sample()
 		// Compute the oscillator phase (position in the waveform) for next time
 		osc[i].phase += osc[i].freq / 4;
 
+		// bit crusher effect
+		if (osc[i].bitcrush) {
+			value |= ((1<<osc[i].bitcrush) - 1);
+		}
+
 		// Mix it in the appropriate output channel
 		acc[i & 1] += value * osc[i].volume; // rhs = [-8160,7905]
 	}
@@ -368,7 +382,6 @@ static inline uint16_t gen_sample()
 }
 
 void game_snd_buffer(uint16_t* buffer, int len) {
-
 	chip_update();
 	// Just generate enough samples to fill the buffer.
 	for (int i = 0; i < len; i++) {

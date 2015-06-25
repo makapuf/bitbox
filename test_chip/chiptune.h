@@ -52,6 +52,8 @@ struct ChipSong {
 	uint32_t **tracks; // array of pointer to 32 u32 elements. 
 };
 
-void chip_init(const struct ChipSong *song); // init with a song. use 0 to stop playing
-void chip_update(); //  update player
-void chip_note(const uint8_t instrument_id); // play a note of this instrument now - useful for FX ! will find a free track.
+// init with a song. use 0 to stop playing
+void chip_init(const struct ChipSong *song); 
+
+// play a note of this instrument now - useful for FX ! 
+void chip_note(uint8_t ch, uint8_t note, uint8_t instrument);

@@ -1,10 +1,10 @@
 #include "bitbox.h"
 #include "chiptune.h"
 
-extern const struct ChipSong bdash_chipsong;
+extern const struct ChipSong SONG;
 
 void game_init() {
-	chip_init(&bdash_chipsong);
+	chip_init(&SONG);
 }
 
 // ouch, that was hard !

@@ -1,11 +1,14 @@
 NAME=test_chip
-GAME_C_FILES=main.c bdash.c chiptune.c
+SONG=rapid1
+
+GAME_C_FILES=main.c $(SONG).c chiptune.c
+GAME_C_OPTS = -DSONG=$(SONG)_chipsong
 NO_USB=1
 
 #USE_CHIPTUNE=1 not now, will use internal replacement one
 
 include $(BITBOX)/lib/bitbox.mk
 
-bdash.c: bdash.song
+%.c: %.song
 	$(BITBOX)/scripts/song2C.py $^ > $@
 
