@@ -333,7 +333,7 @@ static bool handle_gamepad()
 
             key = key_trans[sdl_event.key.keysym.scancode];
             mod = sdl_event.key.keysym.mod;
-            printf("%x\n",sdl_event.key.keysym.scancode );
+            // printf("%x\n",sdl_event.key.keysym.scancode );
             event_push((struct event){
                 .type= evt_keyboard_press,
                 .kbd={ .key=key,.mod=mod,.sym=kbd_map(mod,key) }
