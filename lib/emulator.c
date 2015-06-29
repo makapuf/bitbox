@@ -320,8 +320,10 @@ static bool handle_gamepad()
 
         // check for keypresses
         case SDL_KEYDOWN:
+            #ifndef DISABLE_ESC_EXIT
             if (sdl_event.key.keysym.sym == SDLK_ESCAPE)
                 return true; // quit now
+            #endif 
             
             /* note that this event WILL be propagated so on emulator 
             you'll see both button and keyboard. It's ot really a problem since 

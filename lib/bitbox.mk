@@ -15,18 +15,12 @@
 #             USE_SDCARD,   - when you want to use or compile SDcard or fatfs related functions in the game 
 #             USE_ENGINE,   - when you want to use the engine
 #             USE_SD_SENSE  - enabling this will disable being used on rev2 !
+#			  DISABLE_ESC_EXIT - for the emulator only, disable quit when pressing ESC
+#             KEYB_FR       - enable AZERTY keybard mapping
 #   Simple mode related : 
-#        VGA_SIMPLE_MODE=0 .. 5 (see simple.h for modes)
+#        VGA_SIMPLE_MODE=0 .. 12 (see simple.h for modes)
 #   Simple Sampler : 
 #        USE_SAMPLER=1
-
-#NAME = yourgame
-#GAME_C_FILES = test_data.c object.c $(NAME).c
-#GAME_H_FILES = test_data.h kernel.h object.h test_object.h
-
-#MCU  = cortex-m4
-#FPU = -mfloat-abi=hard -mfpu=fpv4-sp-d16 
-#OPT = -O3 -falign-functions=16 -fno-inline -fomit-frame-pointer -funroll-loops
 
 CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
@@ -72,8 +66,8 @@ LIB_STD_SOURCE_DIR =$(BITBOX)/lib/StdPeriph
 # replace with linker_raw if you want to overwrite bootloader
 LINKER_SCRIPT = $(BITBOX)/lib/Linker_loader.ld
 FLASH_START = 0x08004000
-#FLASH_START = 0x08000000
 #LINKER_SCRIPT = lib/Linker_raw.ld
+#FLASH_START = 0x08000000
 
 KERNEL_FILES = startup.c system.c board.c \
 	new_vga.c bitbox_main.c audio.c \
