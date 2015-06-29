@@ -42,12 +42,14 @@ void display_first_event(void)
 				print_at(1,15,"KB pressed      ");
 				vram[15][14]=HEX_Digits[(e.kbd.key>>4) & 0xF];
 				vram[15][15]=HEX_Digits[e.kbd.key&0xf];
+				vram[15][17]=e.kbd.sym;
 				break;
 
 			case evt_keyboard_release : 
 				print_at(1,15,"KB released     ");
 				vram[15][14]=HEX_Digits[(e.kbd.key>>4) & 0xF];
 				vram[15][15]=HEX_Digits[e.kbd.key&0xf];
+				vram[15][17]=e.kbd.sym;
 				break;
 
 			case evt_device_change:

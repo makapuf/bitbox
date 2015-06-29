@@ -37,12 +37,14 @@ static void KEYBRD_Init (uint8_t coreID, uint16_t vid, uint16_t pid)
         // XXX change static devices type
 }
 
+
 /* boot keyboard report  : 
         u8 modifier (LCtrl =1, LShift=2, LAlt=4, LWin - Rctrl, ... )
         u8 reserved
         8u codes[6] of pressed keys
 */
 
+char kbd_map(uint8_t mod, uint8_t key); // evt_queue.c
 
 static void KEYBRD_Decode(uint8_t coreID, uint8_t *pbuf)
 {
@@ -73,6 +75,7 @@ static void KEYBRD_Decode(uint8_t coreID, uint8_t *pbuf)
                         e.type=evt_keyboard_press;
                         e.kbd.mod=pbuf[0];
                         e.kbd.key=pbuf[i];
+                        e.kbd.sym=kbd_map(pbuf[0],pbuf[i]);
                         event_push(e);
                 }
         }
@@ -90,6 +93,7 @@ static void KEYBRD_Decode(uint8_t coreID, uint8_t *pbuf)
                         e.type=evt_keyboard_release;
                         e.kbd.mod=pbuf[0];
                         e.kbd.key=keys_last[i];
+                        e.kbd.sym=kbd_map(pbuf[0],keys_last[i]);
                         event_push(e);
                 }                
         }

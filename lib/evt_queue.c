@@ -69,29 +69,6 @@ void event_clear()
 	evt_in=evt_out=&evt_queue[0];
 }
 
-
-// keymap : list of ranges of elements, non shifted and shifted
-// see http://www.usb.org/developers/devclass_docs/Hut1_12.pdf, page 7
-const char keyb_en[56]    = "abcdefghijklmnopqrstuvwxyz1234567890\n\027\b\t -=[]\\#;'`,./";
-const char keyb_en_sh[56] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%%^*()\n\027\b\t _+{}|#:\"~<>?" ;
-const char keyb_fr[60]    = "qbcdefghijkl,noparstuvzxyw&é\"'(-è_çà\n\027\b\t )=^$\\#mù*;:!";
-const char keyb_fr_sh[60] = "QBCDEFGHIJKL?NOPARSTUVZXYW1234567890\n\027\b\t °+¨£\\#M%%µ./§";
-
-const char *keymap=keyb_en, *keymap_sh=keyb_en_sh; // XXX config ?
-
-char kbd_map(struct event e) 
-/*
- maps a keyboard event to printable latin-1 letter given the current keymap & shift. 
- only printable output is given, zero else.
- */
-{
-	if (e.kbd.key>=3 && e.kbd.key<=58) 
-		return (e.kbd.mod & (LShift|RShift)) ? keymap_sh[e.kbd.key-3] : keymap[e.kbd.key-3];
-	else 
-		return 0; // non printable char
-}
-
-
 /* This emulates the gamepad with a keyboard.
  * fetches all keyboard events, 
  * discarding all others (not optimal)
@@ -131,6 +108,78 @@ void kbd_emulate_gamepad (void)
 		}
 	} while (e.type);
 }
+
+
+
+
+// keymap : list of ranges of elements, non shifted and shifted
+// see http://www.usb.org/developers/devclass_docs/Hut1_12.pdf, page 7
+#define ERR KEY_ERR
+static const char keyb_en[3][83] = { // normal, shift, ctrl
+    {
+        ERR,ERR,ERR,ERR,'a','b','c','d','e','f','g','h','i','j','k','l','m','n',
+        'o','p','q','r','s','t','u','v','w','x','y','z','1','2','3','4','5','6',
+        '7','8','9','0','\n',0x1B,'\b','\t',' ','-','=','[',']','\\','#',';','\'','`',
+        ',','.','/',
+        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP
+    },{
+        ERR,ERR,ERR,ERR,'A','B','C','D','E','F','G','H','I','J','K','L','M','N',
+        'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@','#','$','%','&',
+        '^','*','(',')','\n',0x1B,'\b','\t',' ','_','+','{','}','|','#',':','\\','"',
+        '~','<','>','?',
+        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP,
+    },{
+        ERR,ERR,ERR,ERR, 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10, 11, 12, 13, 14,
+         15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,'1','2','3','4','5','6',
+        '7','8','9','0','\n',0x1B,'\b','\t',' ','-','=','[',']','\\',ERR,';','\'','`',
+        ',','.','/',
+        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP,
+    }
+};
+
+static const char keyb_fr[3][83] = { // normal, shift, ctrl - TODO : add right_alt characters (for ~ [], {}, # and @)
+    {
+        ERR,ERR,ERR,ERR,'q','b','c','d','e','f','g','h','i','j','k','l',',','n',
+        'o','p','a','r','s','t','u','v','z','x','y','w','&',0xe9,'\"','\'','(','-',
+        0xe8,'_',0xe7,0xe0,'\n',0x1B,'\b','\t',' ',')','=','^','$','\\','#','m',0xF9,'*',
+        ';',':','!',
+        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP
+    },{
+        ERR,ERR,ERR,ERR,'Q','B','C','D','E','F','G','H','I','J','K','L','?','N',
+        'O','P','A','R','S','T','U','V','Z','X','Y','W','1','2','3','4','5','6',
+        '7','8','9','0','\n',0x1B,'\b','\t',' ',0xB0,'+',0xa8,0xa3,'\\','#','M','%',0xB5,
+        '.','/',0xA7,
+        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP,
+    },{
+        ERR,ERR,ERR,ERR, 17, 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10, 11, 12,',', 14,
+         15, 16, 1 , 18, 19, 20, 21, 22, 26, 24, 25, 23,'1','2','3','4','5','6',
+        '7','8','9','0','\n',0x1B,'\b','\t',' ','-','=','[',']','\\',ERR,';','\'','`',
+         13,'.','/',
+        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP,
+    }
+}; 
+
+// FIXME Put config in flash ?
+#ifdef KEYB_FR
+static const char (*keymap)[83]=keyb_fr;  
+#else
+static const char (*keymap)[83]=keyb_en; 
+#endif 
+
+// not public, not static either as it can be used by other funcs
+char kbd_map(uint8_t mod, uint8_t key) 
+{
+    if (key>82) 
+        return ERR;
+    if (mod & (LShift|RShift))
+        return keymap[1][key];
+    if (mod & (LCtrl|RCtrl))
+        return keymap[2][key];
+    return keymap[0][key];
+}
+
+
+
 
 #ifdef TEST
 #include <stdio.h>

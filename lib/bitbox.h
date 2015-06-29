@@ -90,6 +90,7 @@ enum evt_type { // type (a,b,c data)
 */
 } ;
 
+
 enum kbd_modifier { 
 #ifdef EMULATOR
 	LCtrl = 0x40,
@@ -133,19 +134,26 @@ enum gamepad_buttons_enum {
 };
 
 #define GAMEPAD_PRESSED(id , key) (gamepad_buttons[id] & (gamepad_##key))
+enum keycodes{
+	KEY_ERR = 0xff,
+	KEY_RIGHT = 128,
+	KEY_LEFT = 129,
+	KEY_DOWN = 130,
+	KEY_UP = 131
+};
 
 struct event { //should be coded in 32bits 
 	uint8_t type;
 	union {
 		struct {
-			uint8_t port;
-			uint8_t type;
-			uint8_t subtype;
+			uint8_t port; // 0 or 1 
+			uint8_t type; // type of device
+			uint8_t subtype; // subtype (if any)
 		} device;
 
 		struct {
-			uint8_t port;
-			uint8_t id;
+			uint8_t port; // USB port 0 or 1
+			uint8_t id; // id of button pressed
 		} button;
 		
 		// used for mice
@@ -155,10 +163,12 @@ struct event { //should be coded in 32bits
 		} mov;
 
 		struct {
-			uint8_t key, mod;
+			uint8_t key; // key is the boot protocol physical key pressed,
+			uint8_t mod; // modifier bitmask : LCtrl, LAlt, ...
+			uint8_t sym; // symbol is the ascii code or logical key pressed (including KEY_RIGHT as defined ) 
 		} kbd;
 
-		uint8_t data[3];
+		uint8_t data[3]; // raw value
 	};		
 } __attribute__ ((__packed__));
 
@@ -181,8 +191,6 @@ void event_push(struct event e);
 
 // returns "empty event"=0 if get from empty
 struct event event_get();
-
-char kbd_map(struct event kbd_e);
 
 /* This emulates the gamepad with a keyboard.
  * fetches all keyboard events, 
