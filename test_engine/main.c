@@ -15,7 +15,7 @@ extern const char SPRITE_BIG[];
 #define NB_small 10
 #define NB_big 3
 #define NB (NB_small+NB_big)
-#define MOVE_SQUARE 0
+#define MOVE_SQUARE 1
 #define MOVE_BALLS 1
 #define ROTATE_BALLS 1
 #define TILED_BG 1
@@ -37,7 +37,7 @@ void game_init() {
 		bg= rect_new (0,0,VGA_H_PIXELS, VGA_H_PIXELS*3,200, RGB(100,100,100));
 
 	if (MOVE_SQUARE)
-		square=rect_new (10,10,100,100,150, RGB(0xff,0,0));
+		square=rect_new (10,10,100,100,/*z*/50, RGB(0xff,0,0));
 	
 	for (int i=0;i<NB_small;i++) {
 		vx[i]=ini_vx[i%9];
