@@ -24,4 +24,5 @@ This repository include the base SDK and some examples. There are other repos on
  * [A sound toy / Rhythm box](https://github.com/makapuf/beatblocks)
  * [beam racer - a car game (WIP)](https://github.com/pulkomandy/beamracer_btbx)
  
+... and many more ! See [the software index](https://github.com/makapuf/bitbox/wiki/Software-Index) on the wiki
 makapuf
