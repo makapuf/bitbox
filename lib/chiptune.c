@@ -166,7 +166,7 @@ static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param, uint8_t context) {
 	}
 }
 
-void chip_init(const struct ChipSong *song) {
+void chip_play(const struct ChipSong *song) {
 	current_song = (struct ChipSong*) song;
 	if (!song) { // if given NULL, just stop it now
 		playsong=0;

@@ -1,7 +1,7 @@
 NAME=test_chip
-SONG=rapid1
+SONG=bomber
 
-GAME_C_FILES=main.c $(SONG).c chiptune.c
+GAME_C_FILES=main.c $(SONG).c $(BITBOX)/lib/chiptune.c 
 GAME_C_OPTS = -DSONG=$(SONG)_chipsong
 NO_USB=1
 
