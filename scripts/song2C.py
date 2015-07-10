@@ -92,7 +92,8 @@ for name in args.file_in :
 			# XXX always ignore second parameter ? 
 			if c2!='00' : print "// WARNING: will ignore commands here"
 			c1n = cmdref(c1)
-			print "0x%s%xd%s%s,"%(note,c1n,p1,instr), # Check if instr changed !
+			print "0x%s%x%x%s%s,"%(note,c1n,0xd if instr!='00' else 0,p1,instr), # Check if instr changed !
+			#print "0x%s%xd%s%s,"%(note,c1n,p1,instr), # Check if instr changed !
 			lastindex += 1
 		print "}, // Track %d - '%s' / len: %d "%(n+1, trid, lastindex)
 	print '    }'

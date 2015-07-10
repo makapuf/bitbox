@@ -4,7 +4,7 @@
 extern const struct ChipSong SONG;
 
 void game_init() {
-	chip_init(&SONG);
+	chip_play(&SONG);
 }
 
 // ouch, that was hard !

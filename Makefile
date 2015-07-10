@@ -1,4 +1,4 @@
-TESTABLE = crappy hwchip test_engine test_kernel test_sampler test_sdio test_simplegraph test_simpletxt test_simpletxt_color test_usb 
+TESTABLE = crappy test_chip test_engine test_kernel test_sampler test_sdio test_simplegraph test_simpletxt test_simpletxt_color test_usb 
 PROJECTS = 1st_boot 2nd_boot test_video $(TESTABLE)
 
 ALLCLEAN = $(patsubst %,%-clean,$(PROJECTS))

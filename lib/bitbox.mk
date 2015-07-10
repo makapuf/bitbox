@@ -141,6 +141,7 @@ endif
 
 # - chiptune engine
 ifdef USE_CHIPTUNE 
+$(warning the chiptune engine is about to change. Please change to the chiptune.h file)
 ENGINE_FILES += chiptune_engine.c chiptune_player.c
 endif
 
