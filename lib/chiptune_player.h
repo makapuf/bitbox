@@ -50,6 +50,7 @@ void ply_init(const uint8_t songlen, const unsigned char* song);
  * song is running.
  */
 void ply_update(); // Call this once per frame.
+void ply_update_noloop(); // Call this once per frame, but no looping will occur
 
 /** Directly run a command on a channel.
  *
