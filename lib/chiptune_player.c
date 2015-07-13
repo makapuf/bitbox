@@ -202,6 +202,15 @@ void ply_init(const uint8_t songlength, const unsigned char* data) {
 
 void ply_update()
 {
+	ply_update_noloop();
+	// Done? No problem, let's reinit with the same song so it loops!
+	// Note: it would be better if the song could have a loop position, or
+	// track jump commands.
+	if (!playsong) ply_init(songlen, song_data);
+}
+
+void ply_update_noloop()
+{
 	uint8_t ch;
 
 	if(trackwait) {
@@ -325,9 +334,4 @@ void ply_update()
 
 		channel[ch].vpos += channel[ch].vrate;
 	}
-
-	// Done? No problem, let's reinit with the same song so it loops!
-	// Note: it would be better if the song could have a loop position, or
-	// track jump commands.
-	if (!playsong) ply_init(songlen, song_data);
 }
