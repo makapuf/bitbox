@@ -288,17 +288,35 @@ uint8_t key_trans[256] = { // scan_code -> USB BootP code
     [0x41]=0x2C, // space
     [0x17]=0x2B, // TAB
     [0x10]=42, // backspace
+    [0x16]=42, // backspace on mine... (lowagner)
+    [0x77]=76, // delete
+    [0x76]=73, // insert
 
     [0x0a]=30,31,32,33,34,35,36,37,38,39,45,46, // 1234567890-=
-    [0x18]=20,26, 8,21,23,28,  24,  12,  18,  19, 0x13, // qwertyuiop
+    [0x18]=20,26, 8,21,23,28,  24,  12,  18,  19,  // qwertyuiop
+    [0x22]=47,48, // [] 
     [0x26]= 4,22, 7, 9,10,11,13,14,15,16, // asdfghjklm
+    [0x30]=52,53, // ' and `
+    [0x33]=49,  //  backslash 
     [0x34]=29,27, 6,25, 5,17,16,54,55,56, // zxcvbnm,./
 
+    [0x6e]=74, // home
+    [0x73]=77, // end
+    [0x70]=75, // pgup
+    [0x75]=78, // pgdn
+    [0x5a]=98,99, // 0. on number pad
+    [0x57]=89,90,91, // 1 through 3
+    [0x53]=92,93,94, // 4 through 6
+    [0x4f]=95,96,97, // 7 through 9 on number pad
+
+    [0x32]=225, // left shift
+    [0x3e]=229, // right shift
+    [0x40]=226, // L alt
+    [0x6c]=230, // R alt
     [0x25]=0xe0, // L CTRL
     [0x69]=0xe4, // R CTRL
     [0x24]=0x28, // Enter
 
-    // [0x31] backtick
 };
 #endif
 
