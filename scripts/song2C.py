@@ -3,8 +3,9 @@
 
 s='''
 struct ChipSong {
-	int songlen; // number of steps
-	int numchannels; // 4 or 8 tracks supported by now
+	uint16_t songlen; // number of steps in the track sequencer
+	uint8_t numchannels; // 4 or 8 channels supported by now
+	uint8_t tracklength; // number of notes you can fit in each track.  default is 32
 	uint8_t *tracklist; // id of tracks. songlen * numchannels
 	int8_t *transpose; // number of semitones. songlen * numchannels
 	
@@ -25,6 +26,7 @@ song=[]
 tracks=[]
 track_ids = ['00'] # initial value : map index '00' is 0
 instrs=[]
+tracklength = 32
 
 print "#include <stdint.h>"
 print s
@@ -51,19 +53,25 @@ for name in args.file_in :
 				instrs.append([])
 			assert int(t[2],16) == len(instrs[-1]), "%d %d "%(len(instrs[-1]), int (t[2],16))
 			instrs[-1].append(t[1:])
+		elif t[0]=='tracklength' : 
+			tracklength = int(t[1])
 
-	from pprint import pprint
+	#from pprint import pprint
 
 
 	def i8(x) : 
 		n=int(x,16)
 		return n if n<=127 else n-256
 
-
+	assert len(song) < 2**16, "song is too long, somehow..."
+	numchannels = len(song[0])/2
+	assert numchannels == 4 or numchannels == 8, "number of channels should be 4 or 8 (got %d)"%numchannels
+	assert tracklength > 0 and tracklength <= 256, "tracklength should be > 0 and <= 256 (got %d)"%tracklength
 	print "struct ChipSong %s_chipsong = {"%name.rsplit('.',1)[0]
 	print "    // Song "
 	print "    .songlen=%d,"%len(song)
-	print "    .numchannels=%d,"%(len(song[0])/2)
+	print "    .numchannels=%d,"%numchannels
+	print "    .tracklength=%d,"%tracklength
 	print "    .tracklist=(uint8_t[]) {"
 	print "\n".join("        "+"".join('%d,'%track_ids.index(x) for x in tuple(l[0::2])) for l in song) 
 	print "    },"
@@ -96,5 +104,6 @@ for name in args.file_in :
 			#print "0x%s%xd%s%s,"%(note,c1n,p1,instr), # Check if instr changed !
 			lastindex += 1
 		print "}, // Track %d - '%s' / len: %d "%(n+1, trid, lastindex)
+		assert lastindex <= tracklength, "too many notes in your track somehow...?"
 	print '    }'
 	print '};'
