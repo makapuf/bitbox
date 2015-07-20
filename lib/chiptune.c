@@ -204,7 +204,7 @@ static void chip_update()
 // one buffer is 512 samples @32kHz, which is ~ 62.5 Hz,
 // calling each song frame should be OK
 {
-	unsigned int nchan = current_song->trackwidth; // number of channels
+	unsigned int nchan = current_song->numchannels; // number of channels
 
 	if(trackwait) {
 		trackwait--;

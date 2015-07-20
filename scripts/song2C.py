@@ -4,9 +4,9 @@
 s='''
 struct ChipSong {
 	int songlen; // number of steps
-	int trackwidth; // 4 or 8 tracks supported by now
-	uint8_t *tracklist; // id of tracks. songlen * trackwidth
-	int8_t *transpose; // number of semitones. songlen * trackwidth
+	int numchannels; // 4 or 8 tracks supported by now
+	uint8_t *tracklist; // id of tracks. songlen * numchannels
+	int8_t *transpose; // number of semitones. songlen * numchannels
 	
 	uint16_t **instruments; // pointer to an array of pointers to command<<8 | parameter
 
@@ -63,7 +63,7 @@ for name in args.file_in :
 	print "struct ChipSong %s_chipsong = {"%name.rsplit('.',1)[0]
 	print "    // Song "
 	print "    .songlen=%d,"%len(song)
-	print "    .trackwidth=%d,"%(len(song[0])/2)
+	print "    .numchannels=%d,"%(len(song[0])/2)
 	print "    .tracklist=(uint8_t[]) {"
 	print "\n".join("        "+"".join('%d,'%track_ids.index(x) for x in tuple(l[0::2])) for l in song) 
 	print "    },"
