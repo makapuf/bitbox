@@ -54,7 +54,7 @@ for name in args.file_in :
 			assert int(t[2],16) == len(instrs[-1]), "%d %d "%(len(instrs[-1]), int (t[2],16))
 			instrs[-1].append(t[1:])
 		elif t[0]=='tracklength' : 
-			tracklength = int(t[1])
+			tracklength = int(t[1],16)
 
 	#from pprint import pprint
 
