@@ -12,3 +12,5 @@ include $(BITBOX)/lib/bitbox.mk
 %.c: %.song
 	$(BITBOX)/scripts/song2C.py $^ > $@
 
+clean::
+	rm $(SONG).c
