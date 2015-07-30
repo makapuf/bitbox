@@ -22,11 +22,11 @@
 #include <stdlib.h>
 #include "chiptune.h"
  
-int trackwait; // >0 means wait N frames, 0 means play now. <0 means stop playing now.
+int16_t songwait; // >0 means wait N frames, 0 means play now. <0 means stop playing now.
 uint8_t trackpos;
 uint8_t songspeed;
 uint8_t playsong;
-uint8_t songpos;
+uint16_t songpos;
 
 static const uint16_t freqtable[] = {
 	0x010b, 0x011b, 0x012c, 0x013e, 0x0151, 0x0165, 0x017a, 0x0191, 0x01a9,
@@ -173,7 +173,7 @@ void chip_play(const struct ChipSong *song) {
 		return;
 	}
 
-	trackwait = 0;
+	songwait = 0;
 	trackpos = 0;
 	playsong = 1;
 	songpos = 0;
@@ -204,12 +204,12 @@ static void chip_update()
 // one buffer is 512 samples @32kHz, which is ~ 62.5 Hz,
 // calling each song frame should be OK
 {
-	unsigned int nchan = current_song->trackwidth; // number of channels
+	int nchan = current_song->numchannels; // number of channels
 
-	if(trackwait) {
-		trackwait--;
+	if(songwait) {
+		songwait--;
 	} else {
-		trackwait = songspeed; 
+		songwait = songspeed; 
 
 		if(!trackpos) {
 			if(playsong) {
@@ -254,7 +254,8 @@ static void chip_update()
 			message("\n");
 
 			trackpos++;
-			trackpos &= 31;
+			if (trackpos == current_song->tracklength)
+				trackpos = 0;
 		}
 	}
 

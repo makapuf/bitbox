@@ -42,10 +42,11 @@ that means that only one command 'f' is available unless we differentiate for in
 */
 
 struct ChipSong {
-	int songlen; // number of steps in the track sequencer
-	int trackwidth; // 4 or 8 tracks supported by now 
-	uint8_t *tracklist; // id of tracks. songlen * trackwidth
-	int8_t *transpose; // number of semitones. songlen * trackwidth
+	uint16_t songlen; // number of steps in the track sequencer
+	uint8_t numchannels; // 4 or 8 channels supported by now (number of tracks which can play simultaneously)
+	uint8_t tracklength; // 32 notes per track by default
+	uint8_t *tracklist; // id of tracks. songlen * numchannels
+	int8_t *transpose; // number of semitones. songlen * numchannels
 	
 	uint16_t **instruments; // pointer to an array of pointers to command<<8 | parameter
 
