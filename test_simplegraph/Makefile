@@ -5,7 +5,7 @@
 NO_USB=1
 
 # See lib/simple.h for modes 
-VGA_SIMPLE_MODE=4
+VGA_SIMPLE_MODE=3
 
 NAME = test_simplegraph
 GAME_C_FILES = $(NAME).c 
