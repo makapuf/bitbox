@@ -121,8 +121,8 @@ void graph_line() {
 		uint32_t w = *src++;
 		// we need to write two pixels at a time into *dst,
 		// and increment dst 8 times to get all the pixels from w.
-		for (int j=0;j<32;j+=4) // 16 couples of pixels - verify unrolled
-			switch (w>>j&15) {
+		for (int j=0;j<32;j+=4) // 8 pixels - verify unrolled
+			switch (w>>j&15) { // read two palette indices at a time
 				case 0x0 : *dst++ = c0<<16 | c0; break;
 				case 0x1 : *dst++ = c0<<16 | c1; break;
 				case 0x2 : *dst++ = c0<<16 | c2; break;
