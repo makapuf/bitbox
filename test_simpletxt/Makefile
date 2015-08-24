@@ -2,7 +2,7 @@
 NO_USB=1
 
 # See lib/simple.c for modes
-VGA_SIMPLE_MODE=1
+VGA_SIMPLE_MODE=1   # 0 or 1 allowed in this example.  do `make clean` if you change it.
 
 NAME = stext
 
