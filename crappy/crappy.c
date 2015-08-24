@@ -68,8 +68,11 @@ void game_init() {}
 
 void game_frame()
 {
+	// allow keyboard to play, too:
+	kbd_emulate_gamepad();
+
 	// detect button press (ie change of state)
-	but_state = button_state() || GAMEPAD_PRESSED(0,A);
+	but_state = button_state() || gamepad_buttons[0]; // detect any button (or even d-pad)
 	if (!but_last && but_state) {
 		if (game_title) 
 			new_game();

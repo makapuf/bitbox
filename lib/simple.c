@@ -25,7 +25,7 @@ void graph_line() {
 	lut_data[2] = palette[0] <<16 | palette[1];
 	lut_data[3] = palette[1] <<16 | palette[1];
 
-	uint32_t *dst = (uint32_t *) draw_buffer;
+	uint32_t *dst = (uint32_t*) draw_buffer;
 	uint8_t c;
 
 	for (int i=0;i<80;i++) {// column char
@@ -55,7 +55,7 @@ void graph_line() {
 	lut_data[2] = palette[0] <<16 | palette[1];
 	lut_data[3] = palette[1] <<16 | palette[1];
 
-	uint32_t *dst = (uint32_t *) draw_buffer;
+	uint32_t *dst = (uint32_t*) draw_buffer;
 	uint8_t c;
 
 	for (int i=0;i<132;i++) {// column char
@@ -75,7 +75,7 @@ uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
 uint16_t palette[2]  __attribute__ ((section (".ccm"))) = {0, RGB(0xAA, 0xAA, 0xAA)};
 
 void graph_line() {
-	unit32_t *dst=(uint32_t)draw_buffer;
+	uint32_t *dst=(uint32_t*)draw_buffer;
 	uint32_t *src=&vram[vga_line*800/32];
 	for (int i=0;i<800/32;i++) {
 		// read 1 word = 32 pixels
@@ -99,28 +99,30 @@ void graph_line() {
 
 // --------------------------------------------------------------
 
-#elif VGA_SIMPLE_MODE==3 // 640x400 2BPP + bandes noires (one drawn at 620!)
+#elif VGA_SIMPLE_MODE==3 // 640x400 2BPP + bandes noires
 
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32]; 
 uint16_t palette[1<<BPP]  __attribute__ ((section (".ccm"))) = {RGB(0,0,0), RGB(0x55, 0xff, 0xff), RGB(0xff, 0x55, 0x55), RGB(0xff, 0xff, 0xff)};
 
 void graph_line() {
-	// letterbox
-	if (vga_line==620) fast_fill(0,640,RGB(0,0,0));
-	if (vga_line<20 || vga_line >= 620) return;
+	// resolution is 640x480, but make letterbox style with 640x400:
+	// only draw from y=40 to y=440 (with SCREEN_H=400)
+	if (vga_line/2==0 || vga_line/2 == 220) memset(draw_buffer, 0, SCREEN_W*2);
+	if (vga_line<40 || vga_line >= 440) return;
 	
-	unit32_t *dst=(uint32_t)draw_buffer;
-	uint32_t *src=&vram[(vga_line-20)*640/16];
+	uint32_t *dst=(uint32_t*)draw_buffer;
+	uint16_t c0 = palette[0];
+	uint16_t c1 = palette[1];
+	uint16_t c2 = palette[2];
+	uint16_t c3 = palette[3];
+	uint32_t *src=&vram[(vga_line-40)*640/16];
 	for (int i=0;i<640/16;i++) {
 		// read 1 word = 16 pixels
 		uint32_t w = *src++;
-		uint32_t c0 = palette[0];
-		uint32_t c1 = palette[1];
-		uint32_t c2 = palette[2];
-		uint32_t c3 = palette[3];
-
-		for (int j=0;j<32;j+=2) // 16 couples of pixels - verify unrolled
-			switch (w>>j&3) {
+		// we need to write two pixels at a time into *dst,
+		// and increment dst 8 times to get all the pixels from w.
+		for (int j=0;j<32;j+=4) // 8 pixels - verify unrolled
+			switch (w>>j&15) { // read two palette indices at a time
 				case 0x0 : *dst++ = c0<<16 | c0; break;
 				case 0x1 : *dst++ = c0<<16 | c1; break;
 				case 0x2 : *dst++ = c0<<16 | c2; break;
@@ -138,7 +140,7 @@ void graph_line() {
 				case 0xe : *dst++ = c3<<16 | c2; break;
 				case 0xf : *dst++ = c3<<16 | c3; break;
 			}
-		}
+	}
 }
 
 // --------------------------------------------------------------
@@ -237,7 +239,7 @@ uint32_t palette[256]; // BG<<16 | FG couples (default values : 16c BG, 16c FG)
 void graph_line() {
 	uint32_t lut_data[4]; // cache couples for faster draws
 
-	uint32_t *dst = (uint32_t *) draw_buffer;
+	uint32_t *dst = (uint32_t*) draw_buffer;
 	uint8_t prev_attr = 0xff; // what if it's just that ?
 
 	for (int i=0;i<SCREEN_W;i++) { // column char
@@ -277,7 +279,7 @@ void graph_line( void )
 {
 	uint32_t lut_data[4]; // cache couples for faster draws
 
-	uint32_t *dst = (uint32_t *) draw_buffer;
+	uint32_t *dst = (uint32_t*) draw_buffer;
 	uint8_t prev_attr = 0xff; // what if it's just that ?
 
 	for (int i=0;i<SCREEN_W/2;i++) { // column char
@@ -335,7 +337,7 @@ uint32_t palette[256]; // BG<<16 | FG couples (default values : 16c BG, 16c FG)
 void graph_line() {
 	uint32_t lut_data[4]; // cache couples for faster draws
 
-	uint32_t *dst = (uint32_t *) draw_buffer;
+	uint32_t *dst = (uint32_t*) draw_buffer;
 	uint8_t prev_attr = 0xff; // what if it's just that ?
 
 	for (int i=0;i<SCREEN_W;i++) { // column char
@@ -381,6 +383,8 @@ void draw_pixel(int x,int y,int c)
 	int pixel=x+y*SCREEN_W; // number of the pixel
 	vram[pixel/(32/BPP)] &= ~ (((1<<BPP)-1)<<(BPP*(pixel%(32/BPP)))); // mask
 	vram[pixel/(32/BPP)] |= c<<(BPP*(pixel%(32/BPP))); // value
+	// if e.g. BPP == 2 (640x400 mode)
+	// you fit 32/BPP = 16 pixels in one 32bit integer
 }
 
 void draw_line(int x0, int y0, int x1, int y1, int c) {
