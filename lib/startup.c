@@ -33,7 +33,7 @@ __ALIGN_BEGIN USBH_HOST                     USB_Host __ALIGN_END ;
 __ALIGN_BEGIN USB_OTG_CORE_HANDLE           USB_OTG_FS_Core __ALIGN_END ;
 __ALIGN_BEGIN USBH_HOST                     USB_FS_Host __ALIGN_END ;
 
-// XXX put with usb interrupts & all (from stm32fxxx_it.c) in a simple usb.c/h file ...
+// XXX put with usb interrupts & all (from stm32fxxx_it.c) in a simple usb.c/h file ... / merge with USB BSP
 void TIM7_IRQHandler()
 {
 	if (TIM7->SR & TIM_SR_UIF) // no reason not to
