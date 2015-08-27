@@ -72,7 +72,7 @@ void game_frame()
 	kbd_emulate_gamepad();
 
 	// detect button press (ie change of state)
-	but_state = button_state() || gamepad_buttons[0]; // detect any button (or even d-pad)
+	but_state = button_state() || gamepad_buttons[0] || gamepad_buttons[1]; // detect any button (or even d-pad)
 	if (!but_last && but_state) {
 		if (game_title) 
 			new_game();
