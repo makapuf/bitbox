@@ -37,7 +37,7 @@ void set_led(int value)
 
 int button_state()
 {
-	return GPIOE->IDR & GPIO_IDR_IDR_15;
+	return !(GPIOE->IDR & GPIO_IDR_IDR_15);
 }
 
 int sdio_sense_state()
