@@ -4,6 +4,8 @@
  * Based on the "Hardware Chiptune" project
  */
 
+#warning This engine is deprecated , Please use chiptune.h now !
+
 struct unpacker {
 	uint16_t	nextbyte;
 	uint8_t	buffer;
