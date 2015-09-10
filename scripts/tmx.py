@@ -122,6 +122,7 @@ mw, mh = root.get('width'), root.get('height')
 if args.to_c_file : 
     print >>c_file, "const %s %s_tmap[][%s*%s]={"%(typename[out_code], base_name,mw,mh)
     
+print '// layers'    
 for layer in root.findall("layer") : 
     lw = int(layer.get("width"))
     lh = int(layer.get("height"))
