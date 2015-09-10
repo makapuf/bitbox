@@ -235,3 +235,12 @@ void tmap_blit(object *tm, int x, int y, uint32_t src_header, const void *data)
             }
         }
 }
+
+
+void tmap_blitlayer(object *tm, int x, int y, uint32_t src_header, const void* data, int layer)
+{
+    int src_w = (src_header>>20);
+    int src_h = ((src_header>>8) & 0xfff);
+
+    tmap_blit(tm,x,y,src_header,data+src_w*src_h*layer);
+}

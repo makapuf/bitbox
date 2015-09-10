@@ -77,7 +77,10 @@ object *tilemap_new (const uint16_t *tileset, int w, int h, uint32_t header, con
 	tilemap index 0 are always transparent (ie no tile, so first tile in tileset has index 1)
 */
 
-void tmap_blit(object *dst, int x, int y, uint32_t src_header, const void *src_data);
 /* 
 	blits a tilemap into the object tilemap at x,y position (x,y in tiles)
  */
+void tmap_blit(object *dst, int x, int y, uint32_t src_header, const void *src_data);
+
+/* Blit a given layer of a tilemap to an object */
+void tmap_blitlayer(object *tm, int x, int y, uint32_t src_header, const void* data, int layer);
