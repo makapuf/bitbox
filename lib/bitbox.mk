@@ -69,7 +69,7 @@ FLASH_START = 0x08004000
 #LINKER_SCRIPT = lib/Linker_raw.ld
 #FLASH_START = 0x08000000
 
-KERNEL_FILES = startup.c system.c board.c \
+KERNEL_FILES += startup.c system.c board.c \
 	new_vga.c bitbox_main.c audio.c \
 	stm32f4xx_gpio.c \
 	stm32f4xx_rcc.c \

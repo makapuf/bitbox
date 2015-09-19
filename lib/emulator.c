@@ -524,13 +524,30 @@ FRESULT f_opendir ( DIR* dp, const TCHAR* path )
 
 FRESULT f_readdir ( DIR* dp, FILINFO* fno ) 
 {
+    errno=0;
     struct dirent *de = readdir((NIX_DIR *)dp->fs); // updates ?
+
     if (de) {
         for (int i=0;i<13;i++)
             fno->fname[i]=de->d_name[i];
         return FR_OK;
     } else {
-        printf("Error reading directory %s : %s\n",dp->dir, strerror(errno));
+        if (errno) {
+            printf("Error reading directory %s : %s\n",dp->dir, strerror(errno)); // not neces an erro, can be end of dir.
+            return FR_DISK_ERR;        
+        } else {
+            fno->fname[0]='\0';
+            return FR_OK;
+        }
+    }
+}
+
+FRESULT f_closedir (DIR* dp)
+{
+    if (!closedir((NIX_DIR *)dp->fs)) {
+        return FR_OK ;
+    } else {
+        printf("Error closing directory %s : %s\n",dp->dir, strerror(errno));
         return FR_DISK_ERR;
     }
 }
