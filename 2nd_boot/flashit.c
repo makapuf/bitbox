@@ -212,7 +212,7 @@ void flash_frame()
 				if (eof) {
 					flash_state = state_idle;
 					file_to_write = 0;
-					strcpy(flash_message,"Done !");	
+					strcpy(flash_message,"** Done! Please press reset **");	
 
 					FLASH->CR |= FLASH_CR_LOCK; // relock flash
 				} else {

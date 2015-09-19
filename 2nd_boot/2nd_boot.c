@@ -10,41 +10,50 @@
  */
 
 #include <string.h>
-#include "stm32f4xx.h" 
-#include "system.h" // InitializeSystem
+#include <stdlib.h> // qsort 
+// #include "system.h" // system_init
 #include "bitbox.h"
+#include "fatfs/ff.h"
+
 #include "flashit.h"
 
+
 enum {INIT =4, MOUNT=5, OPEN=6, READ=7}; // where we died - bootloader 2
-#define MAX_FILES 20
+#define MAX_FILES 50
 #define LIST_Y 6
 #define MSG_X 40
 #define MSG_Y 25
-
-void die(int where, int cause);
-
-void led_on() 
-{
-    GPIOA->BSRRL = 1<<2; 
-}
-
-void led_off() 
-{
-    GPIOA->BSRRH = 1<<2; 
-}
-
-void led_init() {
-	// init LED GPIO
-    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA (+)
-    GPIOA->MODER |= (1 << 4) ; // set pin 8 to be general purpose output
-}
-
-void blink(int times, int speed);
-
+#define DISPLAY_LINES 19
 FATFS fs32;
 // load from sd to RAM
 // flash LED, boot
 
+#ifdef EMULATOR
+	#define ROOT_DIR "."
+	// flash stubs
+	int frame_started; // simulate a flash delay
+	void flash_init() {frame_started=0;}
+	int flash_done() {
+		return !frame_started || vga_frame-frame_started > 3*60;
+	}
+
+	char flash_message[32];
+	int flash_start_write(FIL *file) { 
+		frame_started = vga_frame;
+		strcpy(flash_message,"Faking flashing.");
+		return 0;
+	}
+
+	void flash_frame() {
+		if (frame_started && vga_frame-frame_started>3*60)
+			strcpy(flash_message,"** Done! Please press reset **");
+	}
+#else 
+
+#define ROOT_DIR "" 
+
+/*
+#include "stm32f4xx.h" 
 // Code stolen from "matis"
 // http://forum.chibios.org/phpbb/viewtopic.php?f=2&t=338
 void jump(uint32_t address)
@@ -78,10 +87,12 @@ void jump(uint32_t address)
     __set_MSP((u32)(ApplicationAddress[0]));
     Jump_To_Application();
 }
+*/
+#endif 
 
 
 extern const uint8_t font_data [256][16];
-char vram_char  [30][80];
+char vram_char[30][80];
 
 int nb_files;
 char filenames[MAX_FILES][13]; // 8+3 +. + 1 chr0
@@ -97,6 +108,11 @@ FIL file;
 void print_at(int column, int line, const char *msg)
 {
 	strcpy(&vram_char[line][column],msg); 
+}
+
+inline int min (int x, int y) 
+{ 
+	return x<=y?x:y;
 }
 
 // draws an empty window at this position, asserts x1<x2 && y1<y2
@@ -119,6 +135,13 @@ void window (int x1, int y1, int x2, int y2 )
 	vram_char[y2][x2] ='\xBC'; 
 }
 
+
+// compare simplt two names
+static int cmp(const void *p1, const void *p2){
+    return strcmp( (char * const ) p1, (char * const ) p2);
+}
+
+
 void list_roms()
 {
 
@@ -134,7 +157,7 @@ void list_roms()
 #endif
 
 
-    res = f_opendir(&dir, "");                       /* Open the root directory */
+    res = f_opendir(&dir, ROOT_DIR);                       /* Open the root directory */
     if (res == FR_OK) {
         for (nb_files=0;nb_files<MAX_FILES;) {
             res = f_readdir(&dir, &fno);                   /* Read a directory item */
@@ -152,7 +175,7 @@ void list_roms()
             	#endif
 
             	// check extension : only keep .bin
-            	if (strstr(fn,".BIN")) {
+            	if (strstr(fn,".BIN") || strstr(fn,".bin")) { // search ignoring case
                 	strcpy(filenames[nb_files],fn);
                 	nb_files +=1;            		
             	}
@@ -168,6 +191,9 @@ void list_roms()
         vram_char[MSG_Y+1][MSG_X] = '0'+res;
     }
 
+    // sort it
+    qsort(filenames, nb_files, 13, cmp);
+
 }
  
 // read icon PBM data to memory
@@ -175,7 +201,7 @@ int read_icon(const char *filename)
 {
 	char c;
 	FRESULT res;
-	unsigned int b_read;
+	UINT b_read;
 	
 	res = f_open (&file, filename, FA_READ);
 	if (res != FR_OK)
@@ -235,91 +261,21 @@ void game_init() {
 	}
 
 	list_roms();
+	if (!nb_files)
+		print_at(MSG_X, MSG_Y, "There are no .bin files on the SD card.");
 }
 
-
-void display_first_event(void)
-{
-	// display first event, put it back
-	struct event e; 
-	e=event_get();		
-	switch(e.type)
-	{
-		case evt_keyboard_press : 
-			print_at(50,10,"KB pressed      ");
-			vram_char[10][61]="0123456789ABCDEF"[e.kbd.key>>4];
-			vram_char[10][62]="0123456789ABCDEF"[e.kbd.key&0xf];
-		break;
-
-		case evt_keyboard_release : 
-			print_at(50,10,"KB released     ");
-			vram_char[10][63]="0123456789ABCDEF"[e.kbd.key>>4];
-			vram_char[10][64]="0123456789ABCDEF"[e.kbd.key&0xf];
-		break;
-	}
-	if (e.type) event_push(e); // put it back
-}
 
 int selected,old_selected=-1;
+int offset=0; // display offset (scrolling)
 int x =5,y=10 , dir_x=1, dir_y=1;
 char old_val=' ';
 char icon_name[13];
 
 void game_frame() 
 {
-	display_first_event();
-	
 	// interpret keyboard as gamepad & discard all other events
 	kbd_emulate_gamepad();
-
-
-	// handle input 
-	if (GAMEPAD_PRESSED(0,down) && vga_frame%4==0)
-		selected +=1;
-	if (selected>=nb_files) selected=0;
-
-	if (GAMEPAD_PRESSED(0,up) && vga_frame%4==0)
-		selected -=1;
-	if (selected<0) selected=nb_files-1;
-	
-	// XXX try to read game icon if selected is different
-	
-	if (old_selected != selected)
-	{
-		strcpy(icon_name, filenames[selected]);
-		char *c = strchr(icon_name,'.');
-		strcpy(c,".pbm");
-		int r=read_icon(icon_name);
-		if (r!=FR_OK)
-			r=read_icon("bitbox.pbm"); // missed, try standard one
-	}
-	
-	// Start flashing ?
-	if (flash_done() && (GAMEPAD_PRESSED(0,start) || GAMEPAD_PRESSED(0,A)))
-	{
-		print_at(MSG_X,MSG_Y,"Goldorak GO ! Flashing ");
-		print_at(MSG_X+24,MSG_Y,filenames[selected]);
-
-		if (f_open(&file,filenames[selected],FA_READ)==FR_OK)
-		{
-			flash_start_write(&file);
-		} else {
-			print_at(MSG_X,MSG_Y,"Error reading ");
-			print_at(MSG_X+14,MSG_Y,filenames[selected]);
-		}		
-	}
-
-	memset(&vram_char[MSG_Y+1][MSG_X],' ',30);
-	strcpy(&vram_char[MSG_Y+1][MSG_X],flash_message);
-
-	// update_display
-	for (int i=0;i<nb_files;i++)
-	{
-		print_at(10,i+LIST_Y,filenames[i]);		
-		// cursor ?
-		vram_char[LIST_Y+i][8]=(i==selected)?0x10:' ';
-		vram_char[LIST_Y+i][25]=(i==selected)?0x11:' ';
-	}
 
 	if (vga_frame%2 == 0 ) {
 		// bounce guy
@@ -336,8 +292,74 @@ void game_frame()
 		vram_char[y][x] = '\x02';
 	}
 
+	if (!nb_files) return; // no need to go further
+
+
+	// handle input 
+	if (GAMEPAD_PRESSED(0,down) && vga_frame%4==0 && selected+offset < nb_files-1) 
+	{
+		if (selected<DISPLAY_LINES-1) 
+			selected +=1;
+		else 
+			offset += 1;
+	}
+
+
+	if (GAMEPAD_PRESSED(0,up) && vga_frame%4==0 && selected+offset > 0 ) 
+	{
+		if (selected>0) 
+			selected -=1;
+		else 
+			offset -= 1;
+	}
+	
+	if (old_selected != selected) // only if there ARE files to display
+	{
+		strcpy(icon_name, filenames[selected]);
+		char *c = strchr(icon_name,'.');
+		strcpy(c,".pbm");
+		int r=read_icon(icon_name);
+		if (r!=FR_OK)
+			r=read_icon("bitbox.pbm"); // missed, try standard one
+	}
+	
+	// Start flashing ?
+	if ((GAMEPAD_PRESSED(0,start) || GAMEPAD_PRESSED(0,A)))
+	{
+		char *filename = filenames[offset+selected];
+		if ( flash_done() ) {
+			print_at(MSG_X,MSG_Y,"Goldorak GO ! Flashing ");
+			print_at(MSG_X+24,MSG_Y,filename);
+			if (f_open(&file,filename,FA_READ)==FR_OK)
+			{
+				flash_start_write(&file);
+			} else {
+				print_at(MSG_X,MSG_Y,"Error reading ");
+				print_at(MSG_X+14,MSG_Y,filename);
+			}		
+		} 
+	}
+
+
+	// update_display
+	for (int i=0;i<min(offset+nb_files, DISPLAY_LINES);i++)
+	{
+		int l;
+		char *s=filenames[offset+i];
+		for (l=0;s[l]!='.';l++)
+			vram_char[i+LIST_Y][10+l]=s[l];
+		for (;l<13;l++)	
+			vram_char[i+LIST_Y][10+l]=' ';
+		// cursor 
+		vram_char[LIST_Y+i][8]=(i==selected)?0x10:' ';
+		vram_char[LIST_Y+i][25]=(i==selected)?0x11:' ';
+	}
+
+
 	old_selected=selected;
 
+	memset(&vram_char[MSG_Y+1][MSG_X],' ',30);
+	strcpy(&vram_char[MSG_Y+1][MSG_X],flash_message);
 	flash_frame(); // at the end to let it finish 
 }
 

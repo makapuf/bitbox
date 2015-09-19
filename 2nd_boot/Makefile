@@ -1,7 +1,8 @@
 NAME = 2nd_boot
-GAME_C_FILES = $(NAME).c font.c bg.c flashit.c
+GAME_C_FILES = $(NAME).c font.c bg.c  
 GAME_C_OPTS = -DVGAMODE_640
 USE_SDCARD = 1
+KERNEL_FILES = flashit.c # will only be used when not in emulator
 include $(BITBOX)/lib/bitbox.mk
 
 # comment to build to flash. This will load boot2 as a normal program in flash 
@@ -18,7 +19,7 @@ stlink: $(NAME).bin
 endif 
 
 # the emulator cannot be used for a bootloader. disable making it.
-.DEFAULT_GOAL := $(NAME).bin
+#.DEFAULT_GOAL := $(NAME).bin
 
 #.INTERMEDIATE: font.c
 font.c: 8x16_437.png
@@ -26,3 +27,8 @@ font.c: 8x16_437.png
 
 bg.c: bg.png
 	python mk_bg.py $< > $@
+
+
+# special emulator : does not include flashit
+$(NAME)_semu: $(NAME).c font.c bg.c  $(BITBOX)/lib/emulator.c 
+	gcc -Og -DEMULATOR  $(GAME_C_OPTS) $^ -I$(BITBOX)/lib/ -g -Wall -std=c99 $(HOSTLIBS) `sdl-config --cflags --libs` -o $(NAME)_emu
