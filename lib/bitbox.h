@@ -10,8 +10,9 @@ void game_init(void); // user provided
 void game_frame(void); // user provided
 
 // --- Audio ----------------------------------------------------------------------------
-
+#ifndef BITBOX_SAMPLERATE
 #define BITBOX_SAMPLERATE 32000 
+#endif 
 #define BITBOX_SNDBUF_LEN 512 // 16ms latency (double buffering is used)
 #define BITBOX_SAMPLE_BITDEPTH 8 // 8bit output 
 
