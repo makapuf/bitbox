@@ -13,7 +13,7 @@ to use it,
 
 #include <stdint.h>
 
-#define MAX_VOICES 64
+#define MAX_VOICES 16
 
 
 /* plays a sound once stored from data in memory. 
