@@ -73,6 +73,9 @@ def read_midi_simple(midifile):
     tot_evts = 0
     for i in range(ntracks) :
         events, set_tempo, track_name=parse_track(midifile)
+        # escapes track name, only keep alnums and replace rest with _
+        track_name=''.join(c if c.isalnum() else '_' for c in track_name)
+
         if set_tempo : tempo = set_tempo
         if not events : continue # skip empty track - First Type 1 midi often
         print 'struct NoteEvent track_%s[] = {'%track_name.lower()
@@ -157,6 +160,7 @@ def parse_track(midifile):
             elif meta_type == 3: # track name
                 # XXX check first track ?
                 track_name = meta_data
+                print '// Track name :',track_name
             else : 
                 print '// (meta) %s :'%META_TYPES.get(meta_type,'??? (%d)'%meta_type),repr(meta_data)
 
