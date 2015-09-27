@@ -156,7 +156,7 @@ ALL_LDFLAGS = $(LD_FLAGS) -Wl,-T,$(LINKER_SCRIPT),--gc-sections
 
 AUTODEPENDENCY_CFLAGS=-MMD -MF$(@:.o=.d) -MT$@
 
-all: $(NAME).bin $(NAME)_emu $(EXTRA_FILES)
+all: $(NAME).bin $(NAME) $(EXTRA_FILES)
 
 upload: $(NAME).bin
 	openocd -f interface/stlink-v2.cfg -f target/stm32f4x_stlink.cfg \
@@ -174,7 +174,7 @@ stlink: $(NAME).bin
 
 # double colon to allow extra cleaning
 clean::
-	rm -rf $(BUILD_DIR) $(NAME).elf $(NAME).bin $(NAME)_emu $(NAME)_test
+	rm -rf $(BUILD_DIR) $(NAME).elf $(NAME).bin $(NAME) $(NAME)_test
 
 $(NAME).bin: $(NAME).elf
 	$(OBJCOPY) -O binary $(NAME).elf $(NAME).bin
@@ -240,8 +240,8 @@ else
 endif
 
 
-$(NAME)_emu: $(GAME_C_FILES) $(GAME_CPP_FILES) $(BITBOX)/lib/emulator.c  $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(addprefix $(BITBOX)/lib/, $(ENGINE_FILES))
-	gcc -Og -DEMULATOR  $(GAME_C_OPTS) $^ -I$(BITBOX)/lib/ -g -Wall -std=c99 $(HOSTLIBS) `sdl-config --cflags --libs` -lstdc++ -o $(NAME)_emu
+$(NAME): $(GAME_C_FILES) $(GAME_CPP_FILES) $(BITBOX)/lib/emulator.c  $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(addprefix $(BITBOX)/lib/, $(ENGINE_FILES))
+	gcc -Og -DEMULATOR  $(GAME_C_OPTS) $^ -I$(BITBOX)/lib/ -g -Wall -std=c99 $(HOSTLIBS) `sdl-config --cflags --libs` -lstdc++ -o $(NAME)
 
 $(NAME)_test: $(GAME_C_FILES) $(GAME_CPP_FILES) $(BITBOX)/lib/tester.c  $(GAME_BINARY_FILES:%=$(BUILD_DIR)/%.c) $(addprefix $(BITBOX)/lib/, $(ENGINE_FILES))
 	gcc -Og -DEMULATOR  $(GAME_C_OPTS) $^ -I$(BITBOX)/lib/ -g -Wall -std=c99 $(HOSTLIBS) -lstdc++ -o $(NAME)_test
