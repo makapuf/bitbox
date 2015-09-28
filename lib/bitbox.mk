@@ -177,10 +177,12 @@ clean::
 	rm -rf $(BUILD_DIR) $(NAME).elf $(NAME).bin $(NAME) $(NAME)_test
 
 $(NAME).bin: $(NAME).elf
-	$(OBJCOPY) -O binary $(NAME).elf $(NAME).bin
+	$(OBJCOPY) -O binary $^ $@
+	chmod -x $@
 
 $(NAME).elf: $(OBJS)
 	$(LD) $(ALL_LDFLAGS) -o $@ $^ $(LIBS)
+	chmod -x $@
 
 .SUFFIXES: .o .c .S
 
