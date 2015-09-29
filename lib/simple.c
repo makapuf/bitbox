@@ -5,11 +5,13 @@
 #include <stdlib.h> // abs
 #include <string.h> // memset
 
+#define PALETTE_SECTION //__attribute__ ((section (".ccm")))
+
 // default palettes
 
-void graph_frame() {}
 // --------------------------------------------------------------
 #if VGA_SIMPLE_MODE==0 // text mode 80x25 
+void graph_frame() {}
 
 extern const uint8_t font16_data[256][16];
 uint8_t font16_data_cached[256][16]  __attribute__ ((section (".ccm")));
@@ -41,6 +43,7 @@ void graph_line() {
 // --------------------------------------------------------------
 #elif VGA_SIMPLE_MODE==1 // mini text mode 132x75, chars 8x6, base 800
 
+void graph_frame() {}
 extern const uint8_t font8_data[256][8];
 uint8_t font8_data_cached[256][8]  __attribute__ ((section (".ccm")));
 
@@ -71,8 +74,21 @@ void graph_line() {
 // --------------------------------------------------------------
 #elif VGA_SIMPLE_MODE==2 // 800x600 1bpp - base 800
 
+
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
-uint16_t palette[2]  __attribute__ ((section (".ccm"))) = {0, RGB(0xAA, 0xAA, 0xAA)};
+uint16_t palette[2]  PALETTE_SECTION;
+const uint16_t palette_flash[] = {0, RGB(0xAA, 0xAA, 0xAA)};
+
+uint32_t cp[1<<(BPP*2)]; // couples palette
+
+void graph_frame() 
+{
+	// load palette into couple palette
+	cp[0] = palette[0]<<16|palette[0];
+	cp[1] = palette[0]<<16|palette[1];
+	cp[2] = palette[1]<<16|palette[0];
+	cp[3] = palette[1]<<16|palette[1];
+}
 
 void graph_line() {
 	uint32_t *dst=(uint32_t*)draw_buffer;
@@ -80,20 +96,8 @@ void graph_line() {
 	for (int i=0;i<800/32;i++) {
 		// read 1 word = 32 pixels
 		uint32_t w = *src++;
-		// test zero / one (faster)
-
-		uint32_t c0 = palette[0]<<16|palette[0];
-		uint32_t c1 = palette[0]<<16|palette[1];
-		uint32_t c2 = palette[1]<<16|palette[0];
-		uint32_t c3 = palette[1]<<16|palette[1];
-
 		for (int j=0;j<32;j+=2) // 16 couples of pixels - verify unrolled
-			switch (w>>j&3) {
-				case 0 : *dst++ = c0; break;
-				case 1 : *dst++ = c1; break;
-				case 2 : *dst++ = c2; break;
-				case 3 : *dst++ = c3; break;
-			}
+			*dst++ = cp[w>>j&3];
 	}
 }
 
@@ -102,7 +106,23 @@ void graph_line() {
 #elif VGA_SIMPLE_MODE==3 // 640x400 2BPP + bandes noires
 
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32]; 
-uint16_t palette[1<<BPP]  __attribute__ ((section (".ccm"))) = {RGB(0,0,0), RGB(0x55, 0xff, 0xff), RGB(0xff, 0x55, 0x55), RGB(0xff, 0xff, 0xff)};
+uint16_t palette[1<<BPP]  PALETTE_SECTION;
+const uint16_t palette_flash[] = {
+	RGB(0,0,0), 
+	RGB(0x55, 0xff, 0xff), 
+	RGB(0xff, 0x55, 0x55), 
+	RGB(0xff, 0xff, 0xff)
+};
+
+uint32_t cp[1<<(BPP*2)]; // 4*4=16
+
+void graph_frame() 
+{
+	// reload couple palette
+	for (int i=0;i<4;i++)
+		for (int j=0;j<4;j++)
+			cp[j<<2 | i] = palette[j]<<16 | palette[i];
+}
 
 void graph_line() {
 	// resolution is 640x480, but make letterbox style with 640x400:
@@ -111,35 +131,14 @@ void graph_line() {
 	if (vga_line<40 || vga_line >= 440) return;
 	
 	uint32_t *dst=(uint32_t*)draw_buffer;
-	uint16_t c0 = palette[0];
-	uint16_t c1 = palette[1];
-	uint16_t c2 = palette[2];
-	uint16_t c3 = palette[3];
 	uint32_t *src=&vram[(vga_line-40)*640/16];
-	for (int i=0;i<640/16;i++) {
+	for (int i=0;i<640/16;i++) { 
 		// read 1 word = 16 pixels
 		uint32_t w = *src++;
 		// we need to write two pixels at a time into *dst,
 		// and increment dst 8 times to get all the pixels from w.
 		for (int j=0;j<32;j+=4) // 8 pixels - verify unrolled
-			switch (w>>j&15) { // read two palette indices at a time
-				case 0x0 : *dst++ = c0<<16 | c0; break;
-				case 0x1 : *dst++ = c0<<16 | c1; break;
-				case 0x2 : *dst++ = c0<<16 | c2; break;
-				case 0x3 : *dst++ = c0<<16 | c3; break;
-				case 0x4 : *dst++ = c1<<16 | c0; break;
-				case 0x5 : *dst++ = c1<<16 | c1; break;
-				case 0x6 : *dst++ = c1<<16 | c2; break;
-				case 0x7 : *dst++ = c1<<16 | c3; break;
-				case 0x8 : *dst++ = c2<<16 | c0; break;
-				case 0x9 : *dst++ = c2<<16 | c1; break;
-				case 0xa : *dst++ = c2<<16 | c2; break;
-				case 0xb : *dst++ = c2<<16 | c3; break;
-				case 0xc : *dst++ = c3<<16 | c0; break;
-				case 0xd : *dst++ = c3<<16 | c1; break;
-				case 0xe : *dst++ = c3<<16 | c2; break;
-				case 0xf : *dst++ = c3<<16 | c3; break;
-			}
+			*dst++ = cp[w>>j&15];
 	}
 }
 
@@ -148,13 +147,15 @@ void graph_line() {
 #elif VGA_SIMPLE_MODE==4 // 4BPP 400x300, base 400x300
 
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
-uint16_t palette[1<<BPP]  __attribute__ ((section (".ccm"))) = {
+uint16_t palette[1<<BPP]  PALETTE_SECTION;
+uint16_t palette_flash[]  = {
 	RGB(   0,   0,   0), RGB(   0,   0,0xAA), RGB(   0,0xAA,   0), RGB(   0,0xAA,0xAA),
 	RGB(0xAA,   0,   0), RGB(0xAA,   0,0xAA), RGB(0xAA,0x55,   0), RGB(0xAA,0xAA,0xAA),
 	RGB(0x55,0x55,0x55), RGB(0x55,0x55,0xFF), RGB(0x55,0xFF,0x55), RGB(0x55,0xFF,0xFF),
 	RGB(0xFF,0x55,0x55), RGB(0xFF,0x55,0xFF), RGB(0xFF,0x55,0x55), RGB(0xFF,0xFF,0xFF),
 };
 
+void graph_frame() {}
 void graph_line() {
 	if (vga_odd) return;
 	uint32_t *dst=(uint32_t*)draw_buffer;
@@ -175,7 +176,8 @@ void graph_line() {
 #elif VGA_SIMPLE_MODE==5 // 8BPP 320x200 - base 320x240  
 
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] ;
-uint16_t palette[1<<BPP]  __attribute__ ((section (".ccm")))= { // 256 colors standard VGA palette
+uint16_t palette[1<<BPP]  PALETTE_SECTION;
+const uint16_t palette_flash[] = { // 256 colors standard VGA palette
 	0x0000, 0x0015, 0x02a0, 0x02b5, 0x5400, 0x5415, 0x5540, 0x56b5, 
 	0x294a, 0x295f, 0x2bea, 0x2bff, 0x7d4a, 0x7d5f, 0x7fea, 0x7fff, 
 	0x0000, 0x0842, 0x1084, 0x14a5, 0x1ce7, 0x2108, 0x294a, 0x318c, 
@@ -210,6 +212,7 @@ uint16_t palette[1<<BPP]  __attribute__ ((section (".ccm")))= { // 256 colors st
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
 };
 
+void graph_frame() {}
 void graph_line() {
 	if (vga_odd) return;
 	// letterbox
@@ -376,6 +379,7 @@ void graph_line() {
 void clear() 
 {
    memset(vram, 0, sizeof(vram));
+   memcpy(palette,palette_flash,sizeof(palette_flash));
 }
 
 void draw_pixel(int x,int y,int c)
