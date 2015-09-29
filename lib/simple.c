@@ -7,11 +7,9 @@
 
 #define PALETTE_SECTION //__attribute__ ((section (".ccm")))
 
-// default palettes
 
 // --------------------------------------------------------------
 #if VGA_SIMPLE_MODE==0 // text mode 80x25 
-void graph_frame() {}
 
 extern const uint8_t font16_data[256][16];
 uint8_t font16_data_cached[256][16]  __attribute__ ((section (".ccm")));
@@ -43,7 +41,6 @@ void graph_line() {
 // --------------------------------------------------------------
 #elif VGA_SIMPLE_MODE==1 // mini text mode 132x75, chars 8x6, base 800
 
-void graph_frame() {}
 extern const uint8_t font8_data[256][8];
 uint8_t font8_data_cached[256][8]  __attribute__ ((section (".ccm")));
 
@@ -155,7 +152,6 @@ uint16_t palette_flash[]  = {
 	RGB(0xFF,0x55,0x55), RGB(0xFF,0x55,0xFF), RGB(0xFF,0x55,0x55), RGB(0xFF,0xFF,0xFF),
 };
 
-void graph_frame() {}
 void graph_line() {
 	if (vga_odd) return;
 	uint32_t *dst=(uint32_t*)draw_buffer;
@@ -212,7 +208,6 @@ const uint16_t palette_flash[] = { // 256 colors standard VGA palette
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
 };
 
-void graph_frame() {}
 void graph_line() {
 	if (vga_odd) return;
 	// letterbox
