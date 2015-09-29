@@ -50,6 +50,7 @@ C_OPTS = -std=c99 \
 	-ffast-math \
 	-fsingle-precision-constant \
 	-ffunction-sections -fdata-sections \
+	-funroll-loops \
 	-fomit-frame-pointer 
 	#-funroll-all-loops \
 	#-Werror \
