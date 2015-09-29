@@ -366,4 +366,3 @@ static void DMACompleteHandler()
 
 }
 
-__attribute__((weak)) void graph_frame() {}  // default empty implementaiton 

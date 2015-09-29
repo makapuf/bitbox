@@ -7,6 +7,7 @@
 
 #define PALETTE_SECTION //__attribute__ ((section (".ccm")))
 
+__attribute__((weak)) void graph_frame() {}  // default empty implementaiton 
 
 // --------------------------------------------------------------
 #if VGA_SIMPLE_MODE==0 // text mode 80x25 
