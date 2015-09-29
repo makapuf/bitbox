@@ -49,7 +49,7 @@ mode as defined in kconf.h values
 #ifdef PROFILE
 // from http://forums.arm.com/index.php?/topic/13949-cycle-count-in-cortex-m3/
 // also average ?
-uint32_t line_time,max_line_time, max_line; // maximum time of line 
+uint32_t line_time; // maximum time of line 
 // gdb : disp *(uint32_t *)0xE0001004
 #endif 
 
@@ -306,21 +306,27 @@ static void HSYNCHandler()
 		
 
 		prepare_pixel_DMA(); // will be triggered 
-		
+
 		#ifdef PROFILE
 		line_time = DWT->CYCCNT; // reset the perf counter
-		#endif 
+		#endif
 
-		graph_line(); // Game callback !		
+		graph_line(); // Game callback !
 
         #ifdef PROFILE
-		line_time = DWT->CYCCNT - line_time; // read the counter
-		if (line_time>max_line_time) {
-			max_line_time=line_time;
-			max_line =vga_line;
+		line_time = DWT->CYCCNT - line_time; // read the counter 
+		line_time /= VGA_PIXELCLOCK; // scale it to screen width 
+
+		// plot from 0 to VGA_V_PIXELS a red element
+		if (line_time<VGA_H_PIXELS) {
+			
+			draw_buffer[line_time-1]=0;
+			draw_buffer[line_time]=0x11111<<10;
+			draw_buffer[line_time+1]=0;
 		}
+
 		#endif
-		
+
 	}  else {
 		if (vga_line== VGA_V_PIXELS) {
 			vga_frame++; // new frame sync now. 

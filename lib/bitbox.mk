@@ -17,6 +17,8 @@
 #             USE_SD_SENSE  - enabling this will disable being used on rev2 !
 #			  DISABLE_ESC_EXIT - for the emulator only, disable quit when pressing ESC
 #             KEYB_FR       - enable AZERTY keybard mapping
+#			  PROFILE		- enable profiling (red line / pixels onscreen)
+
 #   Simple mode related : 
 #        VGA_SIMPLE_MODE=0 .. 12 (see simple.h for modes)
 #   Simple Sampler : 
@@ -26,7 +28,7 @@ CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 
-DEFINES += -DARM_MATH_CM4  -DAUDIO -DPROFILE 
+DEFINES += -DARM_MATH_CM4  -DAUDIO 
 
 # USB defines
 ifdef NO_USB
