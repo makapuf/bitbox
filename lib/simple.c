@@ -7,7 +7,6 @@
 
 #define PALETTE_SECTION //__attribute__ ((section (".ccm")))
 
-__attribute__((weak)) void graph_frame() {}  // default empty implementaiton 
 
 // --------------------------------------------------------------
 #if VGA_SIMPLE_MODE==0 // text mode 80x25 
@@ -18,6 +17,7 @@ uint8_t font16_data_cached[256][16]  __attribute__ ((section (".ccm")));
 char vram[SCREEN_H][SCREEN_W];
 uint16_t palette[2]={0,0x56b5}; 
 
+void graph_frame() {} 
 void graph_line() {
 	uint32_t lut_data[4]; // cache couples for faster draws
 	
@@ -48,6 +48,7 @@ uint8_t font8_data_cached[256][8]  __attribute__ ((section (".ccm")));
 uint16_t palette[2]={0,0x56b5}; 
 char vram[SCREEN_H][SCREEN_W];
 
+void graph_frame() {} 
 void graph_line() {
 	static uint32_t lut_data[4]; // cache couples for faster draws
 	
@@ -153,6 +154,7 @@ uint16_t palette_flash[]  = {
 	RGB(0xFF,0x55,0x55), RGB(0xFF,0x55,0xFF), RGB(0xFF,0x55,0x55), RGB(0xFF,0xFF,0xFF),
 };
 
+void graph_frame() {} 
 void graph_line() {
 	if (vga_odd) return;
 	uint32_t *dst=(uint32_t*)draw_buffer;
@@ -209,6 +211,7 @@ const uint16_t palette_flash[] = { // 256 colors standard VGA palette
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
 };
 
+void graph_frame() {} 
 void graph_line() {
 	if (vga_odd) return;
 	// letterbox
@@ -235,6 +238,7 @@ char vram[SCREEN_H][SCREEN_W];
 char vram_attr[SCREEN_H][SCREEN_W];
 uint32_t palette[256]; // BG<<16 | FG couples (default values : 16c BG, 16c FG)
 
+void graph_frame() {} 
 void graph_line() {
 	uint32_t lut_data[4]; // cache couples for faster draws
 
@@ -274,6 +278,7 @@ char vram[SCREEN_H][SCREEN_W];
 char vram_attr[SCREEN_H][SCREEN_W];
 uint32_t palette[256]; // BG<<16 | FG couples (default values : 16c BG, 16c FG)
 
+void graph_frame() {} 
 void graph_line( void ) 
 {
 	uint32_t lut_data[4]; // cache couples for faster draws
@@ -333,6 +338,7 @@ char vram[SCREEN_H][SCREEN_W];
 char vram_attr[SCREEN_H][SCREEN_W];
 uint32_t palette[256]; // BG<<16 | FG couples (default values : 16c BG, 16c FG)
 
+void graph_frame() {} 
 void graph_line() {
 	uint32_t lut_data[4]; // cache couples for faster draws
 
