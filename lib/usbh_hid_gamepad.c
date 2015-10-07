@@ -38,13 +38,14 @@ static const USB_Gamepad_descriptor device_table[] = {
         .button_bit={44,45,46,47,48,49,50,51}
     },
 
-    // SNES Gamepad USB, Ebay
+/*    // SNES Gamepad USB, Ebay
     {
         .vid=0x0079,.pid=0x0011,.pid2=0x0011,.pid3=0x0011,
         .dpad_type=0,.analog_type=2,.max_button_index=7,
         .dpad_bit=0,
         .button_bit={44,45,46,47,48,49,50,51}
     },     
+*/
 
     // PS3 dualshock 3 (info from http://eleccelerator.com/wiki/index.php?title=DualShock_3)
     {
