@@ -9,7 +9,7 @@
  * Copyright 2014, Adrien Destugues <pulkomandy@pulkomandy.tk>
  * Copyright 2007, Linus Akesson
  * Based on the "Hardware Chiptune" project */
-
+#pragma once
 #include <stdint.h>
 
 /*
@@ -58,3 +58,5 @@ void chip_play(const struct ChipSong *song);
 
 // play a note of this instrument now - useful for FX ! 
 void chip_note(uint8_t ch, uint8_t note, uint8_t instrument);
+
+int chip_over();
