@@ -181,11 +181,7 @@ void chip_play(const struct ChipSong *song) {
 	songpos = 0;
 	songspeed=4; // default speed
 
-<<<<<<< HEAD
 	for (int i=0;i<nchan;i++) {
-=======
-	for (int i=0;i<MAX_CHANNELS;i++) {
->>>>>>> 1db02ab... allowing chip notes to be played even when a song isn't playing
 		osc[i].volume = 0;
 		channel[i].inum = 0;
 		osc[i].bitcrush = 5;
@@ -205,7 +201,7 @@ void chip_note(uint8_t ch, uint8_t note, uint8_t instrument)
 	channel[ch].vdepth = 0;
 }
 
-static void song_update()
+static void chip_song_update()
 // this shall be called each 1/60 sec. 
 // one buffer is 512 samples @32kHz, which is ~ 62.5 Hz,
 // calling each song frame should be OK
@@ -264,14 +260,9 @@ static void song_update()
 	}
 }
 
-<<<<<<< HEAD
 static void chip_osc_update()
 {
-=======
-static void osc_update()
-{
 	int nchan = current_song->numchannels; // number of channels
->>>>>>> 1db02ab... allowing chip notes to be played even when a song isn't playing
 	for(int ch = 0; ch < nchan; ch++) {
 		int16_t vol;
 		uint16_t duty;
@@ -347,11 +338,7 @@ static inline uint16_t gen_sample()
 	acc[0] = 0;
 	acc[1] = 0;
 	// Now compute the value of each oscillator and mix them
-<<<<<<< HEAD
 	for(int i=0; i<nchan; i++) {
-=======
-	for(int i=0; i<MAX_CHANNELS; i++) {
->>>>>>> 1db02ab... allowing chip notes to be played even when a song isn't playing
 		int8_t value; // [-32,31]
 
 		switch(osc[i].waveform) {
@@ -400,9 +387,9 @@ static inline uint16_t gen_sample()
 void game_snd_buffer(uint16_t* buffer, int len) {
 	if (current_song) {
 		if (playsong)
-			song_update();
+			chip_song_update();
 			// even if there's no song, update oscillators in case a "chip_note" gets called.
-		osc_update(); 
+		chip_osc_update(); 
 	}
 	// Just generate enough samples to fill the buffer.
 	for (int i = 0; i < len; i++) {
@@ -410,7 +397,7 @@ void game_snd_buffer(uint16_t* buffer, int len) {
 	}
 }
 
-int chip_over()
+int chip_song_finished()
 {
     return (playsong == 0);
 }
