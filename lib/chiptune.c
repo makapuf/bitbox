@@ -170,7 +170,6 @@ static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param, uint8_t context) {
 void chip_play(const struct ChipSong *song) {
 	current_song = (struct ChipSong*) song;
 	if (!song) { // if given NULL, just stop it now
-		songwait = 0;
 		playsong=0;
 		return;
 	}
@@ -182,7 +181,11 @@ void chip_play(const struct ChipSong *song) {
 	songpos = 0;
 	songspeed=4; // default speed
 
+<<<<<<< HEAD
 	for (int i=0;i<nchan;i++) {
+=======
+	for (int i=0;i<MAX_CHANNELS;i++) {
+>>>>>>> 1db02ab... allowing chip notes to be played even when a song isn't playing
 		osc[i].volume = 0;
 		channel[i].inum = 0;
 		osc[i].bitcrush = 5;
@@ -202,7 +205,7 @@ void chip_note(uint8_t ch, uint8_t note, uint8_t instrument)
 	channel[ch].vdepth = 0;
 }
 
-static void chip_song_update()
+static void song_update()
 // this shall be called each 1/60 sec. 
 // one buffer is 512 samples @32kHz, which is ~ 62.5 Hz,
 // calling each song frame should be OK
@@ -261,8 +264,14 @@ static void chip_song_update()
 	}
 }
 
+<<<<<<< HEAD
 static void chip_osc_update()
 {
+=======
+static void osc_update()
+{
+	int nchan = current_song->numchannels; // number of channels
+>>>>>>> 1db02ab... allowing chip notes to be played even when a song isn't playing
 	for(int ch = 0; ch < nchan; ch++) {
 		int16_t vol;
 		uint16_t duty;
@@ -338,7 +347,11 @@ static inline uint16_t gen_sample()
 	acc[0] = 0;
 	acc[1] = 0;
 	// Now compute the value of each oscillator and mix them
+<<<<<<< HEAD
 	for(int i=0; i<nchan; i++) {
+=======
+	for(int i=0; i<MAX_CHANNELS; i++) {
+>>>>>>> 1db02ab... allowing chip notes to be played even when a song isn't playing
 		int8_t value; // [-32,31]
 
 		switch(osc[i].waveform) {
@@ -380,18 +393,16 @@ static inline uint16_t gen_sample()
 	}
 	// Now put the two channels together in the output word
 	// acc [-32640,31620] > ret 2*[1,251]
-	if (nchan == 4)
-		return (128 + (acc[0] >> 7)) | ((128 + (acc[1] >> 7)) << 8);	// [1,251]
-	else
-		return (128 + (acc[0] >> 8)) | ((128 + (acc[1] >> 8)) << 8);	// [1,251]
+	return (128 + (acc[0] >> 8)) | ((128 + (acc[1] >> 8)) << 8);	// [1,251]
+    // was (acc[i] >> 7) for 4 channels, but was clipping for 8 channels.
 }
 
 void game_snd_buffer(uint16_t* buffer, int len) {
 	if (current_song) {
 		if (playsong)
-			chip_song_update();
+			song_update();
 			// even if there's no song, update oscillators in case a "chip_note" gets called.
-		chip_osc_update(); 
+		osc_update(); 
 	}
 	// Just generate enough samples to fill the buffer.
 	for (int i = 0; i < len; i++) {
@@ -401,5 +412,5 @@ void game_snd_buffer(uint16_t* buffer, int len) {
 
 int chip_over()
 {
-    return (playsong == 0) && (songwait == 0);
+    return (playsong == 0);
 }
