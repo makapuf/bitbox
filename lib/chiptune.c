@@ -170,6 +170,7 @@ static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param, uint8_t context) {
 void chip_play(const struct ChipSong *song) {
 	current_song = (struct ChipSong*) song;
 	if (!song) { // if given NULL, just stop it now
+		songwait = 0;
 		playsong=0;
 		return;
 	}
@@ -398,7 +399,7 @@ void game_snd_buffer(uint16_t* buffer, int len) {
 	}
 }
 
-int chip_song_playing()
+int chip_over()
 {
-    return (playsong != 0);
+    return (playsong == 0) && (songwait == 0);
 }
