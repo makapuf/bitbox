@@ -262,7 +262,6 @@ static void chip_song_update()
 
 static void chip_osc_update()
 {
-	int nchan = current_song->numchannels; // number of channels
 	for(int ch = 0; ch < nchan; ch++) {
 		int16_t vol;
 		uint16_t duty;
@@ -380,8 +379,10 @@ static inline uint16_t gen_sample()
 	}
 	// Now put the two channels together in the output word
 	// acc [-32640,31620] > ret 2*[1,251]
-	return (128 + (acc[0] >> 8)) | ((128 + (acc[1] >> 8)) << 8);	// [1,251]
-    // was (acc[i] >> 7) for 4 channels, but was clipping for 8 channels.
+	if (nchan == 4)
+		return (128 + (acc[0] >> 7)) | ((128 + (acc[1] >> 7)) << 8);	// [1,251]
+	else
+		return (128 + (acc[0] >> 8)) | ((128 + (acc[1] >> 8)) << 8);	// [1,251]
 }
 
 void game_snd_buffer(uint16_t* buffer, int len) {
@@ -397,7 +398,7 @@ void game_snd_buffer(uint16_t* buffer, int len) {
 	}
 }
 
-int chip_song_finished()
+int chip_song_playing()
 {
-    return (playsong == 0);
+    return (playsong != 0);
 }
