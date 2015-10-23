@@ -59,4 +59,4 @@ void chip_play(const struct ChipSong *song);
 // play a note of this instrument now - useful for FX ! 
 void chip_note(uint8_t ch, uint8_t note, uint8_t instrument);
 
-int chip_song_finished();
+int chip_song_playing();
