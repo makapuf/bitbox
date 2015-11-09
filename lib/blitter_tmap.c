@@ -86,7 +86,7 @@ void tilemap_u8_line(object *o)
             src = &tiledata[(idxptr[tile_x]*tilesize + offset)*tilesize*2/4];  
 
             for (int i=0;i<4;i++) *dst++=*src++; // 4 words = 8pixels
-            if (tilesize==16)
+            if (tilesize>=16) // 16 or 32
                 for (int i=0;i<4;i++) *dst++=*src++; // 8 more 
             if (tilesize==32)
                 for (int i=0;i<8;i++) *dst++=*src++; // 16 more
