@@ -154,9 +154,11 @@ void tilemap_u16_line(object *o)
         if (idxptr[tile_x]) {
             src = &tiledata[(idxptr[tile_x]*tilesize + offset)*tilesize*2/4];  
 
-            for (int i=7;i>=0;i--) *dst++=*src++;
+            for (int i=0;i<4;i++) *dst++=*src++; // 4 words = 8pixels
+            if (tilesize>=16) // 16 or 32
+                for (int i=0;i<4;i++) *dst++=*src++; // 8 more 
             if (tilesize==32)
-                for (int i=7;i>=0;i--) *dst++=*src++;
+                for (int i=0;i<8;i++) *dst++=*src++; // 16 more
 
         } else { // skip the tile
             dst += tilesize/2; // words per tile
