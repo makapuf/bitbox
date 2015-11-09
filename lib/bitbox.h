@@ -33,7 +33,8 @@ extern void graph_line(void); // user provided graphical
 extern void graph_frame(void); // user provided graphical blitting algorithms
 
 // 0x0rrrrrgggggbbbbb pixels
-extern uint16_t *draw_buffer; // drawing next line 
+typedef uint16_t pixel_t;
+extern pixel_t *draw_buffer; // drawing next line 
 // also check kconf.h for video modes.
 
 
