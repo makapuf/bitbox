@@ -183,7 +183,7 @@ args = parser.parse_args()
 print '\n***',args.file_in,'to',args.file_out,  args
 
 # prepare input as vertically stacked images
-srcs = [Image.open(filein).convert('RGBA') for filein in sorted(args.file_in)]
+srcs = [Image.open(filein).convert('RGBA') for filein in args.file_in]
 
 Width,Height = srcs[0].size
 if not all(im.size == (Width,Height) for im in srcs) : 
@@ -193,7 +193,6 @@ if not all(im.size == (Width,Height) for im in srcs) :
 src = Image.new("RGBA", (Width,Height*len(srcs)))
 for i,im in enumerate(srcs) : 
     src.paste(im,(0,i*Height))
-
 # output 
 f = open(args.file_out,'wb+')
 couples_encode(src,f,Height,'c8',args.file_out+'.png')
