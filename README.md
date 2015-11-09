@@ -12,6 +12,8 @@ More info on [the development blog](http://bitboxconsole.blogspot.com)
 
 [![Build Status](https://travis-ci.org/makapuf/bitbox.svg?branch=master)](https://travis-ci.org/makapuf/bitbox)
 
+Information can be found on [the project wiki](https://github.com/makapuf/bitbox/wiki)
+
 Other repos
 =========
 
