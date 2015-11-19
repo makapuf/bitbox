@@ -175,6 +175,10 @@ stlink: $(NAME).bin
 	#arm-eabi-gdb $(NAME).elf --eval-command="target ext :4242"
 	st-flash write $(NAME).bin $(FLASH_START)
 
+# using dfu util	
+dfu: $(NAME).bin
+	dfu-util -D $< --dfuse-address 0x8000000 -a 0
+
 # double colon to allow extra cleaning
 clean::
 	rm -rf $(BUILD_DIR) $(NAME).elf $(NAME).bin $(NAME) $(NAME)_test
