@@ -1,6 +1,6 @@
 #testkernel makefile
 NO_SDCARD=1
-NO_AUDIO
+NO_AUDIO=1
 
 
 NAME = crappy
