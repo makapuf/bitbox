@@ -208,13 +208,6 @@ FRESULT f_readdir ( DIR* dp, FILINFO* fno )
     }
 }
 
-
-// ------------- datacopy
-void *memcpy2(void *dst, void*src, size_t size) 
-{
-    return memcpy(dst,src,size);
-}
-
 // user button
 int button_state() {
     return user_button;

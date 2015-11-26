@@ -1,5 +1,6 @@
 #include "blitter.h" 
 
+#include <string.h> // memcpy
 // -------------------------------------------
 
 /*
@@ -44,8 +45,6 @@ File storage of data : as record-based data. allows for RAM or flash usage.
  * all blits are always skip:7, rfu:1, eol:1, len:7
  */
 #include <stddef.h>
-
-void *memcpy2 (void *dst, const void *src, size_t count); // included as memcpy in a later newlib version
 
 // this is internal for loading data
 enum sprite_recordID {
@@ -204,7 +203,7 @@ static void sprite_u16_line (object *o)
         // now, directly copy blit it 
         uint32_t data_len = *p>>1 & 0x7f; // LEN but for 16bit 
 
-        memcpy2(&draw_buffer[x], p+1, 2*data_len); // source = u16 after p
+        memcpy(&draw_buffer[x], p+1, 2*data_len); // source = u16 after p
 
         // advance x 
         x += data_len;
