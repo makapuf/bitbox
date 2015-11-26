@@ -99,7 +99,7 @@ uint32_t time_left(void)
 0RRRRRGGGGGBBBBB to 16bit color (565)
 RRRRRGGGGG0BBBBB
 */
-inline uint16_t pixelconv(uint16_t pixel)
+static inline uint16_t pixelconv(uint16_t pixel)
 {
     return (pixel & (uint16_t)(~0x1f))<<1 | (pixel & 0x1f);
 } 
