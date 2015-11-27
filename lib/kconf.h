@@ -4,19 +4,7 @@
  * to override this file in your project, just include a modified kconf.h in your main compile dir. 
  */
 #include <stdint.h>
- 
-// micro interface to the kernel. pixels will be expanded by bitbox
-// you can do ifeq (TARGET,MICRO) DEFINES += MICRO_INTERFACE by example. Or just assume Micro.
-#ifdef MICRO_INTERFACE
-typedef uint8_t pixel_t; // 0brrrggbbl where l is used for g and b third bit.
-#define RGB(r,g,b)  (((r)>>5)<<5 | ((g)>>5)<<3 | ((b)>>5))
-typedef uint8_t sample_t; // mono u8
 
-#else
-typedef uint16_t pixel_t; // 0x0rrrrrgggggbbbbb pixels
-#define RGB(r,g,b)  ((((r)>>3)&0x1f)<<10 | (((g)>>3)&0x1f)<<5 | (((b)>>3)&0x1f))
-typedef uint16_t sample_t; // stereo u8
-#endif 
 
 // Modes implied by simple Modes
 
@@ -82,3 +70,4 @@ typedef uint16_t sample_t; // stereo u8
 #define VGA_FPS 60
 
 #endif 
+

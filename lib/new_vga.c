@@ -269,6 +269,19 @@ static void prepare_pixel_DMA()
 	DMA2_Stream5->CR|=DMA_SxCR_EN; // Go .. when timer 3 will start.
 }
 
+#ifdef MICRO
+// simulates MICRO interface through palette expansion
+extern const uint16_t MicroPalette[256]; // microX palette
+static inline void expand_line( void )
+{
+	uint8_t *drawbuf8=(uint8_t *) draw_buffer;
+	// expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb 
+	// XXX unroll loop, read 4 by 4 pixels src, write 2 pixels out by two ... 
+	for (int i=VGA_H_PIXELS;i>=0;i--)
+		draw_buffer[i] = MicroPalette[drawbuf8[i]]; 
+}
+#endif 
+
 static void HSYNCHandler()
 {
 	TIM5->SR=0; // clear pending interrupts 
@@ -302,6 +315,9 @@ static void HSYNCHandler()
 		#endif
 
 		graph_line(); // Game callback !
+		#ifdef MICRO_INTERFACE // Micro interface to bitbox hardware
+		expand_line();
+		#endif
 
         #ifdef PROFILE
 		line_time = DWT->CYCCNT - line_time; // read the counter 
@@ -323,16 +339,11 @@ static void HSYNCHandler()
 			graph_frame(); 
 		}
 
-		if (vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) 
-		{
-			GPIOA->BSRRH|=(1<<0); // lower VSync line
-		}
-		else if(vga_line==VGA_V_PIXELS+1+VGA_V_FRONTPORCH+VGA_V_SYNC)
-		{
-			GPIOA->BSRRL|=(1<<0); // raise VSync line
-		}
-		else if(vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+VGA_V_SYNC+VGA_V_BACKPORCH)
-		{
+		if (vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) {
+			vga_lower_vsync();
+		} else if(vga_line==VGA_V_PIXELS+1+VGA_V_FRONTPORCH+VGA_V_SYNC)	{
+			vga_raise_vsync();
+		} else if(vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+VGA_V_SYNC+VGA_V_BACKPORCH) {
 			vga_line=0;
             graph_line();  // first line next frame!
 		}

@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "kconf.h" // kernel conf can be the basis of values
 
+
+
 // --- Main -----------------------------------------------------------------------------
 void game_init(void); // user provided
 void game_frame(void); // user provided
@@ -23,7 +25,18 @@ void audio_init();
 void game_snd_buffer(uint16_t *buffer, int len); 
 
 // --- VGA interface ----------------------------------------------------------------------
+// micro interface to the kernel. can be used by bitbox also
+// you can do ifeq (TARGET,MICRO) DEFINES += MICRO_INTERFACE by example. Or just assume Micro.
+#ifdef MICRO_INTERFACE
+typedef uint8_t pixel_t; // 0brrrggbbl where l is used for g and b third bit.
+#define RGB(r,g,b)  (((r)>>5)<<5 | ((g)>>5)<<3 | ((b)>>5))
+typedef uint8_t sample_t; // mono u8
+
+#else
+typedef uint16_t pixel_t; // 0x0rrrrrgggggbbbbb pixels
 #define RGB(r,g,b)  ((((r)>>3)&0x1f)<<10 | (((g)>>3)&0x1f)<<5 | (((b)>>3)&0x1f))
+typedef uint16_t sample_t; // stereo u8
+#endif 
 
 extern uint32_t vga_line; // should be const
 extern volatile uint32_t vga_frame; 
@@ -33,7 +46,6 @@ extern void graph_line(void); // user provided graphical
 extern void graph_frame(void); // user provided graphical blitting algorithms
 
 // 0x0rrrrrgggggbbbbb pixels
-typedef uint16_t pixel_t;
 extern pixel_t *draw_buffer; // drawing next line 
 // also check kconf.h for video modes.
 
