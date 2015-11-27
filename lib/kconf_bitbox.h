@@ -40,7 +40,6 @@ typedef uint16_t pixel_t; // 0x0rrrrrgggggbbbbb pixels
 #elif defined(VGAMODE_640_OVERCLOCK)
 
 // 640 480 VESA on 192 MHz SYSCLK
-#define VGA_H_PIXELS 640 
 #define VGA_H_FRONTPORCH 16 
 #define VGA_H_SYNC 96
 #define VGA_H_BACKPORCH 48
@@ -50,7 +49,6 @@ typedef uint16_t pixel_t; // 0x0rrrrrgggggbbbbb pixels
 #define VGA_V_SYNC 2
 #define VGA_V_BACKPORCH 33
 
-#define VGA_FPS 60
 #define VGA_PIXELCLOCK 7 // DMA clocks per pixel
 
 #define PLL_M 4
@@ -62,17 +60,14 @@ typedef uint16_t pixel_t; // 0x0rrrrrgggggbbbbb pixels
 
 // 800 600 non VESA on lightly O/C core (180MHz) - ~ 30kHz, 56fps
 
-#define VGA_H_PIXELS 800 
 #define VGA_H_FRONTPORCH 64 
 #define VGA_H_SYNC 128
 #define VGA_H_BACKPORCH 50
 
-#define VGA_V_PIXELS 600
 #define VGA_V_FRONTPORCH 1
 #define VGA_V_SYNC 4
 #define VGA_V_BACKPORCH 14
 
-#define VGA_FPS 56
 #define VGA_PIXELCLOCK 5 // DMA clocks per pixel
 
 #define PLL_M 4
@@ -84,17 +79,14 @@ typedef uint16_t pixel_t; // 0x0rrrrrgggggbbbbb pixels
 
 // 800 600 non VESA O/C core (192Hz) - ~ 34kHz, 56fps
 
-#define VGA_H_PIXELS 800 
 #define VGA_H_FRONTPORCH 32 
 #define VGA_H_SYNC 80
 #define VGA_H_BACKPORCH 50
 
-#define VGA_V_PIXELS 600
 #define VGA_V_FRONTPORCH 1
 #define VGA_V_SYNC 4
 #define VGA_V_BACKPORCH 14
 
-#define VGA_FPS 56
 #define VGA_PIXELCLOCK 6 // DMA clocks per pixel
 
 #define PLL_M 4
@@ -106,13 +98,10 @@ typedef uint16_t pixel_t; // 0x0rrrrrgggggbbbbb pixels
 #elif defined(VGAMODE_400)
 // 400x300 based on 800x600 + skipline / non VESA on lightly O/C core (180MHz) - ~ 30kHz, 56fps
 
-#define VGA_H_PIXELS 400 
 #define VGA_H_FRONTPORCH 32 
 #define VGA_H_SYNC 64
 #define VGA_H_BACKPORCH 25
 
-#define VGA_SKIPLINE
-#define VGA_V_PIXELS 300
 #define VGA_V_FRONTPORCH 1
 #define VGA_V_SYNC 2
 #define VGA_V_BACKPORCH 7
@@ -129,18 +118,14 @@ typedef uint16_t pixel_t; // 0x0rrrrrgggggbbbbb pixels
 
 // 320 240 non completely VESA on non O/C core (168MHz) - 30kHz, 60fps
 
-#define VGA_H_PIXELS 320 
 #define VGA_H_FRONTPORCH 8 
 #define VGA_H_SYNC 48
 #define VGA_H_BACKPORCH 24
 
-#define VGA_SKIPLINE
-#define VGA_V_PIXELS 240
 #define VGA_V_FRONTPORCH 2
 #define VGA_V_SYNC 2
 #define VGA_V_BACKPORCH 6
 
-#define VGA_FPS 60
 #define VGA_PIXELCLOCK 14 // DMA clocks per pixel
 
 #define PLL_M 8
@@ -150,17 +135,14 @@ typedef uint16_t pixel_t; // 0x0rrrrrgggggbbbbb pixels
 
 #else // default one, use 
 // 640 480 non completely VESA on non O/C core (168MHz) - 30kHz, 60fps
-#define VGA_H_PIXELS 640 
 #define VGA_H_FRONTPORCH 16 
 #define VGA_H_SYNC 64
 #define VGA_H_BACKPORCH 80
 
-#define VGA_V_PIXELS 480
 #define VGA_V_FRONTPORCH 3
 #define VGA_V_SYNC 4
 #define VGA_V_BACKPORCH 13
 
-#define VGA_FPS 60
 #define VGA_PIXELCLOCK 7 // DMA clocks per pixel
 
 #define PLL_M 8
