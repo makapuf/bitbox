@@ -37,9 +37,6 @@ mode as defined in kconf.h values
 #include "kconf_bitbox.h"	
 #include "stm32f4xx.h" // ports, timers, profile
 
-#include "GPIO.h"
-#include "RCC.h"
-
 // --- local
 #define TIMER_CYCL (SYSCLK/VGA_VFREQ/APB1_DIV)
 #define SYNC_END (VGA_H_SYNC*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
@@ -109,35 +106,28 @@ void vga_setup()
 	// GPIO A pins 0 (vsync- not bitbox prototype) & 1 (hsync) and GPIO E for pixel DAC
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; // enable gpio E
 
-	// - Configure DAC pins in GPIOB 0-11
-	SetGPIOOutputMode(GPIOE,0x7fff); 
-	SetGPIOPushPullOutput(GPIOE,0x7fff);
-	SetGPIOSpeed50MHz(GPIOE,0x7fff); 
-	SetGPIOPullDownResistor(GPIOE,0x7fff);
+	// GPIO A pins 0 (vsync- not bitbox prototype) & 1 (hsync) and GPIO E for pixel DAC
+
+	// - Configure DAC pins in GPIOE 0-14
+	// PA0-7 out, pushpull(default), 50MHz, pulldown
+	
+	// clear bits 0-14 (bit15 being User Button)
+    GPIOE->MODER    |= 0b00010101010101010101010101010101; // 00:IN 01:OUT 10:ALT 11:ANALOG x15 bits
+    GPIOE->OSPEEDR  |= 0b00101010101010101010101010101010; // 10 : SPEED=50MHz 
+    GPIOE->PUPDR    |= 0b00101010101010101010101010101010; // 10 = Pull Down x 15
 
 	output_black();
 
-	// - Configure sync pins as GPIOA 0 (vsync) , 1 (hsync)
+	// - Configure sync pins as GPIOA 0 (vsync - out) , 1 (hsync : alt - PWM) high speed each
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA
-	SetGPIOAlternateFunctionMode(GPIOA,0b10); // PA1 as alternate
-	SelectAlternateFunctionForGPIOPin(GPIOA,1,2); // TIM 5 CH 2, see Table9 of datasheet, p60 : alt func 2 is PA1
+	GPIOA->MODER |= GPIO_MODER_MODER0_0 * 0b01 | GPIO_MODER_MODER1_0 * 0b10; // PA0 out, PA1 alternate 
+    GPIOA->OSPEEDR  |= 0b1010; // 10 : SPEED=50MHz 
 
-	SetGPIOOutputMode(GPIOA, (1<<0)); // PA01 as ouput
-
-	SetGPIOPushPullOutput(GPIOA, (1<<1) | (1<<0));
-	SetGPIOSpeed50MHz(GPIOA, (1<<1) | (1<<0));
-	SetGPIOPullUpResistor(GPIOA, (1<<1) | (1<<0));
-
-	// Also set GPIOC as current bitbox has it 
-        /*
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // enable gpioC
-	SetGPIOOutputMode(GPIOC, 1<<11); // PC11 as ouput
-	SetGPIOPushPullOutput(GPIOC,1<<11);
-	SetGPIOSpeed50MHz(GPIOC,1<<11);
-	SetGPIOPullUpResistor(GPIOC,1<<11);
-        */
+	GPIOA->AFR[0] |= 2<<4; // TIM 5 CH 2, see Table9 of datasheet, p60 : alt func 2 is PA1
+    GPIOA->PUPDR  |=  GPIO_PUPDR_PUPDR0_0 * 0b01 | GPIO_PUPDR_PUPDR1_0 * 0b01 ; // PB1, PB15 pullup 01
 
 	// drive them high
+	//GPIOA->BSRR |= GPIO_BSRR_BS_0 | GPIO_BSRR_BS_1; // raise VSync line
 	GPIOA->BSRRL=(1<<1) | (1<<0);
 
 	// --- TIMERS ---------------------------------------------------------------------------------------
