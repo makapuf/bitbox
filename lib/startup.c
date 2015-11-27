@@ -117,9 +117,11 @@ void Reset_Handler()
 	#ifndef NO_AUDIO
 	audio_init();
 	#endif 
-	
+
+	#ifndef NO_VGA
 	// be careful to initialize everything before (line callbacks ..)
 	vga_setup();
+	#endif 
 
 
 	// Call the application's entry point.
