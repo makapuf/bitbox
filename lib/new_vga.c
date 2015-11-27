@@ -269,7 +269,7 @@ static void prepare_pixel_DMA()
 	DMA2_Stream5->CR|=DMA_SxCR_EN; // Go .. when timer 3 will start.
 }
 
-#ifdef MICRO
+#ifdef MICRO_INTERFACE
 // simulates MICRO interface through palette expansion
 extern const uint16_t MicroPalette[256]; // microX palette
 static inline void expand_line( void )
