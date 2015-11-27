@@ -114,7 +114,10 @@ void Reset_Handler()
 	#ifndef NO_USB
 	setup_usb();
 	#endif 
+	#ifndef NO_AUDIO
 	audio_init();
+	#endif 
+	
 	// be careful to initialize everything before (line callbacks ..)
 	vga_setup();
 
