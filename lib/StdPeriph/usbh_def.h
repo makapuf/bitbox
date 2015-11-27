@@ -58,8 +58,8 @@
 #define SetBit(VAR,POS)                               (VAR |= (1 << POS))
 #define ClrBit(VAR,POS)                               (VAR &= ((1 << POS)^255))
 
-#define  LE16(addr)             (((u16)(*((u8 *)(addr))))\
-                                + (((u16)(*(((u8 *)(addr)) + 1))) << 8))
+#define  LE16(addr)             (((uint16_t)(*((uint8_t *)(addr))))\
+                                + (((uint16_t)(*(((uint8_t *)(addr)) + 1))) << 8))
 
 #define  USB_LEN_DESC_HDR                               0x02
 #define  USB_LEN_DEV_DESC                               0x12

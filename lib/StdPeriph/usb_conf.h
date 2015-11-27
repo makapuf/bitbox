@@ -30,75 +30,15 @@
 #define __USB_CONF__H__
 
 /* Includes ------------------------------------------------------------------*/
+// will define which USB core is used
+#if (BOARD==BITBOX)
+#include "kconf_bitbox.h"
+#elif (BOARD==MICRO)
+#include "kconf_micro.h"
+#endif 
 
  #include "stm32f4xx.h"
  #include "stm32f4xx_conf.h"
-// #include "stm32f4_discovery.h"
- //#include "stm324xg_eval_lcd.h"
-// #include "stm324xg_eval_ioe.h"
-// #include "stm324xg_eval_sdio_sd.h"
-
-
-/** @addtogroup USB_OTG_DRIVER
-  * @{
-  */
-  
-/** @defgroup USB_CONF
-  * @brief USB low level driver configuration file
-  * @{
-  */ 
-
-/** @defgroup USB_CONF_Exported_Defines
-  * @{
-  */ 
-
-/* USB Core and PHY interface configuration.
-   Tip: To avoid modifying these defines each time you need to change the USB
-        configuration, you can declare the needed define in your toolchain
-        compiler preprocessor.
-   */
-/****************** USB OTG FS PHY CONFIGURATION *******************************
-*  The USB OTG FS Core supports one on-chip Full Speed PHY.
-*  
-*  The USE_EMBEDDED_PHY symbol is defined in the project compiler preprocessor 
-*  when FS core is used.
-*******************************************************************************/
-#ifndef USE_USB_OTG_FS
- //#define USE_USB_OTG_FS
-#endif /* USE_USB_OTG_FS */
-
-#ifdef USE_USB_OTG_HS 
-// #define USB_OTG_HS_CORE
-#endif
-
-/****************** USB OTG HS PHY CONFIGURATION *******************************
-*  The USB OTG HS Core supports two PHY interfaces:
-*   (i)  An ULPI interface for the external High Speed PHY: the USB HS Core will 
-*        operate in High speed mode
-*   (ii) An on-chip Full Speed PHY: the USB HS Core will operate in Full speed mode
-*
-*  You can select the PHY to be used using one of these two defines:
-*   (i)  USE_ULPI_PHY: if the USB OTG HS Core is to be used in High speed mode 
-*   (ii) USE_EMBEDDED_PHY: if the USB OTG HS Core is to be used in Full speed mode
-*
-*  Notes: 
-*   - The USE_ULPI_PHY symbol is defined in the project compiler preprocessor as 
-*     default PHY when HS core is used.
-*   - On STM322xG-EVAL and STM324xG-EVAL boards, only configuration(i) is available.
-*     Configuration (ii) need a different hardware, for more details refer to your
-*     STM32 device datasheet.
-*******************************************************************************/
-#ifndef USE_USB_OTG_HS
- //#define USE_USB_OTG_HS
-#endif /* USE_USB_OTG_HS */
-
-#ifndef USE_ULPI_PHY
- //#define USE_ULPI_PHY
-#endif /* USE_ULPI_PHY */
-
-#ifndef USE_EMBEDDED_PHY
- //#define USE_EMBEDDED_PHY
-#endif /* USE_EMBEDDED_PHY */
 
 #ifdef USE_USB_OTG_HS 
  #define USB_OTG_HS_CORE

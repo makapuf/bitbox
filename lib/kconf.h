@@ -3,9 +3,11 @@
  * 
  * to override this file in your project, just include a modified kconf.h in your main compile dir. 
  */
-
-// micro interface to the kernel
-#ifdef MICRO
+#include <stdint.h>
+ 
+// micro interface to the kernel. pixels will be expanded by bitbox
+// you can do ifeq (TARGET,MICRO) DEFINES += MICRO_INTERFACE by example. Or just assume Micro.
+#ifdef MICRO_INTERFACE
 typedef uint8_t pixel_t; // 0brrrggbbl where l is used for g and b third bit.
 #define RGB(r,g,b)  (((r)>>5)<<5 | ((g)>>5)<<3 | ((b)>>5))
 typedef uint8_t sample_t; // mono u8

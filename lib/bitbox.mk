@@ -160,15 +160,12 @@ endif
 ifdef NO_USB
 DEFINES += NO_USB
 else 
-$(BITBOX_TGT): DEFINES += USE_USB_OTG_HS USE_EMBEDDED_PHY USE_USB_OTG_FS USE_STDPERIPH_DRIVER
-
-KERNEL_BITBOX += usb_bsp.c usb_core.c usb_hcd.c usb_hcd_int.c \
+$(BITBOX_TGT) $(MICRO_TGT): DEFINES += USE_STDPERIPH_DRIVER
+USB_FILES := usb_bsp.c usb_core.c usb_hcd.c usb_hcd_int.c \
 	usbh_core.c usbh_hcs.c usbh_stdreq.c usbh_ioreq.c \
 	usbh_hid_core.c usbh_hid_keybd.c usbh_hid_mouse.c usbh_hid_gamepad.c \
-	usbh_hid_parse.c \
-	stm32fxxx_it.c stm32f4xx_gpio.c stm32f4xx_dma.c misc.c stm32f4xx_rcc.c
-
-
+	usbh_hid_parse.c misc.c
+KERNEL_BITBOX += $(USB_FILES)
 endif
 
 ifdef NO_AUDIO
