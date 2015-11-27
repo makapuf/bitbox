@@ -1,6 +1,6 @@
 #include "system.h"
 
-#include "kconf.h"
+#include "kconf_bitbox.h"
 
 static void InitializeClocks();
 

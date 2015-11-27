@@ -33,15 +33,15 @@ mode as defined in kconf.h values
 #include <stdint.h>
 
 #include "system.h" // interrupts 
-#include "stm32f4xx.h" // ports, timers, profile
 #include "kconf.h"
+#include "kconf_bitbox.h"	
+#include "stm32f4xx.h" // ports, timers, profile
 
 #include "GPIO.h"
 #include "RCC.h"
 
-
 // --- local
-#define TIMER_CYCL (SYSCLK/VGA_VFREQ/APB_PRESC)
+#define TIMER_CYCL (SYSCLK/VGA_VFREQ/APB1_DIV)
 #define SYNC_END (VGA_H_SYNC*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
 #define BACKPORCH_END ((VGA_H_SYNC+VGA_H_BACKPORCH)*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
 

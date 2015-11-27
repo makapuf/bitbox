@@ -2,6 +2,7 @@
 #include "stm32f4xx.h"
 #include "system.h"
 #include "kconf.h"
+#include "kconf_bitbox.h"
 
 static uint8_t stack[8192]  __attribute__ ((section (".ccm")));
 
@@ -70,7 +71,7 @@ void setup_usb()
 	RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
 
 	TIM7->PSC=999;  // Prescaler = 1000
-	TIM7->ARR = SYSCLK/APB_PRESC/1000/125; // ~ 168MHz /2 / 1000 / 125Hz (65536 max, typically 704)
+	TIM7->ARR = SYSCLK/APB1_DIV/1000/125; // ~ 168MHz /2 / 1000 / 125Hz (65536 max, typically 704)
 	/* XXX verify bInterval ?
 		For low- and full-speed interrupt endpoints, the descriptor's bInterval value indicates 
 		the requested maximum number of milliseconds between transaction attempts. 
