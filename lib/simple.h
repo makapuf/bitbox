@@ -4,8 +4,12 @@
 /* 
     modes 
 
-    0 - txt 16c 80x30  fg/bg  (16x8 chars)	4k vram + 4k ROM bitmap 
-    1 - txt 16c 132x75 (8x6 chars) 	19k vram+2k ROM bitmap 	
+    0 - b&w text 80x30  fg/bg  (16x8 chars)	4k vram + 4k ROM bitmap 
+    1 - b&w text 132x75 (8x6 chars) 	19k vram+2k ROM bitmap 	
+    10 - color text 80x30 
+    11 - color text 120x75 
+    12 - color text 80x60
+
 
     2 - 1BPP 800x600   
     3 - 2BPP 640x400   
