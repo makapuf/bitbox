@@ -1,5 +1,7 @@
 // board.c : misc board elements definitions ; buttons, LED, debug blinks  ...
 // interface in bitbox.h
+
+#include "kconf_bitbox.h"
 #include "stm32f4xx.h"
 
 void board_init()
@@ -29,11 +31,12 @@ void toggle_led()
 
 void set_led(int value)
 {
-	if (value)
-		GPIOA->BSRRL |= 1<<2;
-	else
-		GPIOA->BSRRH |= 1<<2;
+    if (value)
+        GPIOA->BSRR |= GPIO_BSRR_BR_2; // PA2
+    else
+        GPIOA->BSRR |= GPIO_BSRR_BS_2;
 }
+
 
 int button_state()
 {

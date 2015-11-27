@@ -75,11 +75,21 @@ uint16_t *draw_buffer = LineBuffer2; // will be drawn (bg already drawn)
 static void HSYNCHandler();
 static void DMACompleteHandler();
 
-
-static inline void output_black()
+static inline void vga_output_black()
 {
-    GPIOE->BSRRH=0x7fff; // Set signal to black. 
+    GPIOE->BSRR |= GPIO_BSRR_BR_0*0x7fff; // Set signal to black. 
 } 
+
+static inline void vga_raise_vsync() 
+{
+	GPIOA->BSRR |= GPIO_BSRR_BS_0; // raise VSync line
+}
+
+static inline void vga_lower_vsync() 
+{
+	GPIOA->BSRR |= GPIO_BSRR_BR_0; // raise VSync line
+}
+
 
 
 void vga_setup()
@@ -116,7 +126,7 @@ void vga_setup()
     GPIOE->OSPEEDR  |= 0b00101010101010101010101010101010; // 10 : SPEED=50MHz 
     GPIOE->PUPDR    |= 0b00101010101010101010101010101010; // 10 = Pull Down x 15
 
-	output_black();
+	vga_output_black();
 
 	// - Configure sync pins as GPIOA 0 (vsync - out) , 1 (hsync : alt - PWM) high speed each
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA
@@ -128,7 +138,7 @@ void vga_setup()
 
 	// drive them high
 	//GPIOA->BSRR |= GPIO_BSRR_BS_0 | GPIO_BSRR_BS_1; // raise VSync line
-	GPIOA->BSRRL=(1<<1) | (1<<0);
+	GPIOA->BSRR=(1<<1) | (1<<0);
 
 	// --- TIMERS ---------------------------------------------------------------------------------------
 	
@@ -267,6 +277,7 @@ static void prepare_pixel_DMA()
 	TIM1->CR1|=TIM_CR1_CEN; // go .. when slave active
 
 	DMA2_Stream5->CR|=DMA_SxCR_EN; // Go .. when timer 3 will start.
+
 }
 
 #ifdef MICRO_INTERFACE
@@ -352,7 +363,7 @@ static void HSYNCHandler()
 
 static void DMACompleteHandler()
 {
-	output_black(); // This should not be necessary, as timing is wrong in sw. 
+	vga_output_black(); // This should not be necessary, as timing is wrong in sw. 
 
 	// Clear Transfer complete interrupt flag of stream 5
 	do {

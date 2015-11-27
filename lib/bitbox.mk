@@ -43,7 +43,7 @@ BUILD_DIR := build
 
 VPATH=.:$(BITBOX)/lib:$(BITBOX)/lib/StdPeriph
 
-INCLUDES=-I$(BITBOX)/lib/ -I$(BITBOX)/lib/CMSIS/Include -I$(BITBOX)/lib/StdPeriph
+INCLUDES=-I$(BITBOX)/lib/ -I$(BITBOX)/lib/cmsis -I$(BITBOX)/lib/StdPeriph
 
 # language specific (not specific to target)
 C_OPTS =  -std=c99 -g -Wall -ffast-math -fsingle-precision-constant -ffunction-sections -fdata-sections -funroll-loops -fomit-frame-pointer 
