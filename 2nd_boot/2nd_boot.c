@@ -110,7 +110,7 @@ void print_at(int column, int line, const char *msg)
 	strcpy(&vram_char[line][column],msg); 
 }
 
-inline int min (int x, int y) 
+static inline int min (int x, int y) 
 { 
 	return x<=y?x:y;
 }

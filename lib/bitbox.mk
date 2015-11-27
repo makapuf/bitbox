@@ -111,13 +111,19 @@ $(BITBOX_TGT): C_OPTS += -O3 $(MCU)
 $(BITBOX_TGT): LD_FLAGS += $(MCU)
 $(BITBOX_TGT): DEFINES += __FPU_USED=1  
 
-ifndef NO_BOOTLOADER 
-$(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib//Linker_loader.ld
-$(BITBOX_TGT): FLASH_START = 0x08004000
-else 
-$(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib//Linker_raw.ld
-$(BITBOX_TGT): FLASH_START = 0x08000000
+ifdef LINKER_RAM
+$(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_ram.ld
+stlink: FLASH_START = 0x20000000
+else ifdef NO_BOOTLOADER 
+$(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_raw.ld
+stlink: FLASH_START = 0x08000000
+else
+$(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_loader.ld
+stlink: FLASH_START = 0x08004000
 endif 
+
+$(MICRO_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib//Linker_micro.ld
+$(MICRO_TGT): FLASH_START = 0x08000000
 
 HOST = $(shell uname)
 ifeq ($(HOST), Haiku)
@@ -131,9 +137,9 @@ $(SDL_TGT): C_OPTS += -Og
 $(SDL_TGT): C_OPTS != sdl-config --cflags
 $(SDL_TGT): HOSTLIBS += $(shell sdl-config --libs)
 
-KERNEL_SDL=emulator.c
-KERNEL_TEST=tester.c
-KERNEL_BITBOX=board.c startup.c system.c bitbox_main.c
+KERNEL_SDL+=emulator.c
+KERNEL_TEST+=tester.c
+KERNEL_BITBOX+=board.c startup.c system.c bitbox_main.c
 
 # -- Optional AND target specific
 
