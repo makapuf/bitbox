@@ -3,19 +3,14 @@
  */
 #include <stdint.h>
 
-#define STM32F405xx
-
 #define HAS_CMM 
 
 // usb
 #ifndef NO_USB
 #define USE_USB_OTG_HS 
 #define USE_EMBEDDED_PHY 
-#define USE_USB_OTG_FS
+#define USE_USB_OTG_FS 
 #endif 
-
-typedef uint16_t pixel_t; // 0x0rrrrrgggggbbbbb pixels
-#define RGB(r,g,b)  ((((r)>>3)&0x1f)<<10 | (((g)>>3)&0x1f)<<5 | (((b)>>3)&0x1f))
 
 /*
 #define HSYNC_TIMER TIM5
