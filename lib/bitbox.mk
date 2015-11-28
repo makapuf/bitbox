@@ -80,30 +80,6 @@ $(warning the chiptune engine is about to change. Please change to the chiptune.
 GAME_C_FILES += chiptune_engine.c chiptune_player.c
 endif
 
-# TODO : put me in kconf ...
-# - simple modes
-ifdef VGA_SIMPLE_MODE
-# those modes require kernel mode 800x600
-ifneq ($(filter $(VGA_SIMPLE_MODE),1 2),)
-DEFINES += VGAMODE_800
-endif 
-
-# 800x600 O/C 192 to achieve this mode
-ifneq ($(filter $(VGA_SIMPLE_MODE),11 ),)
-DEFINES += VGAMODE_800_OVERCLOCK
-endif 
-
-# 400x300 mode
-ifeq ($(VGA_SIMPLE_MODE),4)
-DEFINES += VGAMODE_400
-endif
-
-# 320x240 mode
-ifeq ($(VGA_SIMPLE_MODE),5)
-DEFINES += VGAMODE_320
-endif
-endif  # simple modes
-
 # -- Target-specifics 
 MCU=-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -march=armv7e-m -mlittle-endian -nostartfiles
 $(BITBOX_TGT): CC=arm-none-eabi-gcc
