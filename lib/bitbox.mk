@@ -89,13 +89,13 @@ $(BITBOX_TGT): DEFINES += __FPU_USED=1
 
 ifdef LINKER_RAM
 $(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_ram.ld
-stlink: FLASH_START = 0x20000000
+dfu stlink: FLASH_START = 0x20000000
 else ifdef NO_BOOTLOADER 
 $(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_raw.ld
-stlink: FLASH_START = 0x08000000
+dfu stlink: FLASH_START = 0x08000000
 else
 $(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_loader.ld
-stlink: FLASH_START = 0x08004000
+dfu stlink: FLASH_START = 0x08004000
 endif 
 
 $(MICRO_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib//Linker_micro.ld
@@ -216,6 +216,9 @@ test: $(NAME)_test
 debug: $(BITBOX_TGT)
 	arm-none-eabi-gdb $@ --eval-command="target extended-remote :4242"
 
+# using dfu util	
+dfu: $(NAME).bin
+	dfu-util -D $< --dfuse-address $(FLASH_START) -a 0
 
 stlink: $(NAME).bin
 	st-flash write $^ $(FLASH_START)
