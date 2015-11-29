@@ -8,6 +8,7 @@
 
 // Modes implied by simple Modes
 
+#ifdef VGA_SIMPLE_MODE
 #if VGA_SIMPLE_MODE == 1 || VGA_SIMPLE_MODE==2
   #define VGAMODE_800
 #elif VGA_SIMPLE_MODE==11 
@@ -19,6 +20,7 @@
 #else 
   #define VGAMODE_640
 #endif 
+#endif
 
 // basic info about Modes
 
