@@ -1,5 +1,6 @@
 #include "kconf.h"
 
+#include "system.h"
 
 #include "stm32f4xx.h"
 #include "usb_bsp.h"
@@ -10,16 +11,13 @@
 
 ErrorStatus HSEStartUpStatus;
 
-__ALIGN_BEGIN USB_OTG_CORE_HANDLE           USB_OTG_Core __ALIGN_END ;
-__ALIGN_BEGIN USBH_HOST                     USB_Host __ALIGN_END ;
-__ALIGN_BEGIN USB_OTG_CORE_HANDLE           USB_OTG_FS_Core __ALIGN_END ;
-__ALIGN_BEGIN USBH_HOST                     USB_FS_Host __ALIGN_END ;
 
-void TIM7_IRQHandler()
+
+void TIM4_IRQHandler()
 {
-  if (TIM7->SR & TIM_SR_UIF) // no reason not to
+  if (TIM4->SR & TIM_SR_UIF) // no reason not to
   {
-    TIM7->SR &= ~TIM_SR_UIF; // clear UIF flag
+    TIM4->SR &= ~TIM_SR_UIF; // clear UIF flag
 
     // process USB
       #ifdef USE_USB_OTG_FS
@@ -34,6 +32,9 @@ void TIM7_IRQHandler()
 }
 
 #ifdef USE_USB_OTG_FS  
+USB_OTG_CORE_HANDLE USB_OTG_FS_Core;
+USBH_HOST USB_FS_Host;
+
 void OTG_FS_IRQHandler(void)
 {
   USBH_OTG_ISR_Handler(&USB_OTG_FS_Core);
@@ -42,6 +43,9 @@ void OTG_FS_IRQHandler(void)
 
 
 #ifdef USE_USB_OTG_HS  
+USB_OTG_CORE_HANDLE USB_OTG_Core;
+USBH_HOST USB_Host;
+
 void OTG_HS_IRQHandler(void)
 {
   USBH_OTG_ISR_Handler(&USB_OTG_Core);
@@ -59,25 +63,25 @@ void setup_usb()
   USBH_Init(&USB_OTG_FS_Core, USB_OTG_FS_CORE_ID, &USB_FS_Host, &HID_cb);
   #endif
 
-  // Enable 125Hz USB timer timer 7
-  RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
+  // Enable 125Hz USB timer timer 4
+  RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
 
-  TIM7->PSC=999;  // Prescaler = 1000
-  TIM7->ARR = SYSCLK/APB1_DIV/1000/125; // ~ 168MHz /2 / 1000 / 125Hz (65536 max, typically 704)
+  TIM4->PSC=999;  // Prescaler = 1000
+  TIM4->ARR = SYSCLK/APB1_DIV/1000/125; // ~ 168MHz /2 / 1000 / 125Hz (65536 max, typically 704)
   /* XXX verify bInterval ?
     For low- and full-speed interrupt endpoints, the descriptor's bInterval value indicates 
     the requested maximum number of milliseconds between transaction attempts. 
     http://janaxelson.com/usbfaq.htm
   */
-  TIM7->CR1 = TIM_CR1_ARPE; // autoreload preload enable, no other function on
+  TIM4->CR1 = TIM_CR1_ARPE; // autoreload preload enable, no other function on
 
-  InstallInterruptHandler(TIM7_IRQn,TIM7_IRQHandler);
-  NVIC_EnableIRQ(TIM7_IRQn); 
+  InstallInterruptHandler(TIM4_IRQn,TIM4_IRQHandler);
+  NVIC_EnableIRQ(TIM4_IRQn); 
 
-  NVIC_SetPriority(TIM7_IRQn,15); // low priority
+  NVIC_SetPriority(TIM4_IRQn,15); // low priority
 
-  TIM7->DIER = TIM_DIER_UIE; // enable interrupt
-  TIM7->CR1 |= TIM_CR1_CEN; // go timer 7
+  TIM4->DIER = TIM_DIER_UIE; // enable interrupt
+  TIM4->CR1 |= TIM_CR1_CEN; // go timer 7
 }
 
 
