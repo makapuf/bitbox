@@ -25,11 +25,11 @@ void audio_init();
 void game_snd_buffer(uint16_t *buffer, int len); 
 
 // --- VGA interface ----------------------------------------------------------------------
-// micro interface to the kernel. can be used by bitbox also
-// you can do ifeq (TARGET,MICRO) DEFINES += MICRO_INTERFACE by example. Or just assume Micro.
-#ifdef MICRO_INTERFACE
+// micro interface to the kernel (8bpp, mono sound). can be used on bitbox _board_ also.
+
+#ifdef MICROKERNEL
 typedef uint8_t pixel_t; // 0brrrggbbl where l is used for g and b third bit.
-#define RGB(r,g,b)  (((r)>>5)<<5 | ((g)>>5)<<3 | ((b)>>5))
+#define RGB(r,g,b)  (((r)&0xe0) | ((g)&0xc0)>>3 | (((b)&0xe0)>>5))
 typedef uint8_t sample_t; // mono u8
 
 #else
