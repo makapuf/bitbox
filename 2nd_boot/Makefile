@@ -1,7 +1,8 @@
 NAME = 2nd_boot
 GAME_C_FILES = $(NAME).c font.c bg.c  
-GAME_C_OPTS = -DVGAMODE_640
+DEFINES = VGAMODE_640
 USE_SDCARD = 1
+NO_AUDIO=1
 
 # will only be used when not in emulator
 KERNEL_BITBOX = flashit.c
