@@ -31,14 +31,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 // will define which USB core is used
-#if (BOARD==BITBOX)
-#include "kconf_bitbox.h"
-#elif (BOARD==MICRO)
-#include "kconf_micro.h"
-#endif 
-
- #include "stm32f4xx.h"
- #include "stm32f4xx_conf.h"
+#include "kconf.h"
+#include "stm32f4xx.h"
+#include "stm32f4xx_conf.h"
 
 #ifdef USE_USB_OTG_HS 
  #define USB_OTG_HS_CORE
