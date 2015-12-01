@@ -7,20 +7,30 @@
 #   GAME_BIN_FILES : files to embed as part of the main binary ROM. Note: you can use GAME_BIN_FILES=$(wildcard data/*) 
 
 #   GAME_C_OPTS : C language options. Those will be used for the ARM game as well as the emulator.
-#		DEFINES : PROFILE		- enable profiling (red line / pixels onscreen)
+#	C DEFINES : defined in DEFINED Makefile Variable. (will be added as -Dxxx to GAME_C_OPTS, you can use either)
+#       PROFILE		- enable profiling (red line / pixels onscreen)
+#       VGA_MODExxx : define a vga mode. 
 
-#		- define with whatever defines are needed with -DXYZ CFLAGS .
 #		  they can be used to define specific kernel resolution. 
 #   	  In particular, define one of VGAMODE_640, VGAMODE_800, VGAMODE_320 or VGA_640_OVERCLOCK
 #   	  to set up a resolution in the kernel (those will be used in kconf.h)
 #
-#       - Other specific flags : 
-#             NO_USB,       - when you don't want to use USB input related function)
-#			  NO_AUDIO
-#             USE_SDCARD,   - when you want to use or compile SDcard or fatfs related functions in the game 
-#             USE_ENGINE,   - when you want to use the engine
-#             USE_SAMPLER=1
-#             USE_CHIPTUNES 
+#   Specific Makefile flags : 
+#         NO_USB,       - when you don't want to use USB input related function), also exported as C define
+#		  NO_AUDIO      - no sound support (exported as C define)
+#         USE_SDCARD,   - when you want to use or compile SDcard or fatfs related functions in the game (export to C)
+#    
+#         USE_ENGINE,   - when you want to use the engine. 
+#         USE_SAMPLER
+#         USE_CHIPTUNES 
+#
+#         MICROKERNEL : switch the kernel interface will be the micro kernel interface (8bpp colors and sound) 
+#             Note that a micro game can be compiled for multiples target boards : micro, bitbox, sdl or test.
+#			  It's just that the exposed capabilities are different. Exported to C defines when enabled.
+# 
+#		  AUTOKERNEL : use micro kernel on micro, and bitbox kernel interface on other targets. 
+#				will define MICROKERNEL in C on bitbox micro board only.
+#		     
 #   Simple mode related : 
 #        VGA_SIMPLE_MODE=0 .. 12 (see simple.h for modes)
 
@@ -32,6 +42,7 @@
 
 # just the names of the targets in a generic way
 BITBOX_TGT:=$(NAME).elf
+MICRO_TGT:=$(NAME)_micro.elf
 SDL_TGT:=$(NAME) 
 TEST_TGT:=$(NAME)_test
 
@@ -46,13 +57,13 @@ VPATH=.:$(BITBOX)/lib:$(BITBOX)/lib/StdPeriph
 INCLUDES=-I$(BITBOX)/lib/ -I$(BITBOX)/lib/cmsis -I$(BITBOX)/lib/StdPeriph
 
 # language specific (not specific to target)
-C_OPTS =  -std=c99 -g -Wall -ffast-math -fsingle-precision-constant -ffunction-sections -fdata-sections -funroll-loops -fomit-frame-pointer 
+C_OPTS = -std=c99 -g -Wall -ffast-math -fsingle-precision-constant -ffunction-sections -fdata-sections -funroll-loops -fomit-frame-pointer 
 
 LD_FLAGS = -Wl,--gc-sections 
 AUTODEPENDENCY_CFLAGS=-MMD -MF$(@:.o=.d) -MT$@
 
 # functional defines for all targets. -D will be expanded after. 
-DEFINES = 
+#DEFINES = 
 
 # --- Engines (not target specific)
 
@@ -81,11 +92,18 @@ GAME_C_FILES += chiptune_engine.c chiptune_player.c
 endif
 
 # -- Target-specifics 
-MCU=-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -march=armv7e-m -mlittle-endian -nostartfiles
-$(BITBOX_TGT): CC=arm-none-eabi-gcc
-$(BITBOX_TGT): C_OPTS += -O3 $(MCU)
-$(BITBOX_TGT): LD_FLAGS += $(MCU)
-$(BITBOX_TGT): DEFINES += __FPU_USED=1  
+ifdef AUTOKERNEL
+$(MICRO_TGT): DEFINES += MICROKERNEL
+endif 
+
+
+$(BITBOX_TGT): DEFINES += BOARD_BITBOX
+$(MICRO_TGT):  DEFINES += BOARD_MICRO
+
+CORTEXM4F=-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -march=armv7e-m -mlittle-endian -nostartfiles
+$(BITBOX_TGT) $(MICRO_TGT): CC=arm-none-eabi-gcc
+$(BITBOX_TGT) $(MICRO_TGT): C_OPTS += -O3 $(CORTEXM4F)
+$(BITBOX_TGT) $(MICRO_TGT): LD_FLAGS += $(CORTEXM4F)
 
 ifdef LINKER_RAM
 $(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_ram.ld
@@ -99,7 +117,7 @@ dfu stlink: FLASH_START = 0x08004000
 endif 
 
 $(MICRO_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib//Linker_micro.ld
-$(MICRO_TGT): FLASH_START = 0x08000000
+dfu-micro stlink-micro: FLASH_START = 0x08000000
 
 HOST = $(shell uname)
 ifeq ($(HOST), Haiku)
@@ -115,21 +133,30 @@ $(SDL_TGT): HOSTLIBS += $(shell sdl-config --libs)
 
 KERNEL_SDL+=emulator.c
 KERNEL_TEST+=tester.c
+KERNEL_MICRO+=board_micro.c startup.c bitbox_main.c
 KERNEL_BITBOX+=board.c startup.c system.c bitbox_main.c
 
 # -- Optional AND target specific
 
 ifndef NO_VGA
-KERNEL_BITBOX += new_vga.c
+  KERNEL_MICRO += vga_micro.c
+  KERNEL_BITBOX += new_vga.c
+  ifdef MICROKERNEL
+    KERNEL_BITBOX += micro_palette.c
+    KERNEL_SDL += micro_palette.c
+  	DEFINES += MICROKERNEL
+  endif 
 else 
-DEFINES += NO_VGA
+  DEFINES += NO_VGA
 endif
 
 # fatfs related files
-SDCARD_FILES := fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c fatfs/ff.c fatfs/diskio.c stm32f4xx_sdio.c stm32f4xx_dma.c
+SDCARD_FILES := fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c fatfs/ff.c fatfs/diskio.c 
+SDCARD_FILES += stm32f4xx_sdio.c stm32f4xx_rcc.c stm32f4xx_gpio.c stm32f4xx_dma.c misc.c
 ifdef USE_SDCARD
 DEFINES += USE_SDCARD
 KERNEL_BITBOX += $(SDCARD_FILES)
+KERNEL_MICRO += $(SDCARD_FILES)
 endif 
 
 # USB defines
@@ -142,12 +169,14 @@ USB_FILES := usb_bsp.c usb_core.c usb_hcd.c usb_hcd_int.c \
 	usbh_hid_core.c usbh_hid_keybd.c usbh_hid_mouse.c usbh_hid_gamepad.c \
 	usbh_hid_parse.c misc.c
 KERNEL_BITBOX += $(USB_FILES)
+KERNEL_MICRO += $(USB_FILES)
 endif
 
 ifdef NO_AUDIO
 DEFINES+=NO_AUDIO
 else
-KERNEL_BITBOX += audio.c
+KERNEL_BITBOX += audio_bitbox.c
+KERNEL_MICRO += audio_micro.c
 endif
 
 # --- binaries as direct object linking + binaries.h from all data in /data directory (if present)
@@ -185,6 +214,9 @@ ALL_CFLAGS = $(DEFINES:%=-D%) $(C_OPTS) $(INCLUDES) $(GAME_C_OPTS)
 $(BUILD_DIR)/bitbox/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+$(BUILD_DIR)/micro/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 $(BUILD_DIR)/sdl/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
@@ -208,13 +240,17 @@ $(BITBOX_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/bitbox/%.o) $(KERNEL_BITBOX:%.c=$
 	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
 	chmod -x $@
 
+$(MICRO_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/micro/%.o) $(KERNEL_MICRO:%.c=$(BUILD_DIR)/micro/%.o)
+	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
+	chmod -x $@
+
 # --- Helpers
 
 test: $(NAME)_test
 	./$(NAME)_test
 
 debug: $(BITBOX_TGT)
-	arm-none-eabi-gdb $@ --eval-command="target extended-remote :4242"
+	arm-none-eabi-gdb $^ --eval-command="target extended-remote :4242"
 
 # using dfu util	
 dfu: $(NAME).bin
@@ -223,7 +259,15 @@ dfu: $(NAME).bin
 stlink: $(NAME).bin
 	st-flash write $^ $(FLASH_START)
 
+debug-micro: $(MICRO_TGT)
+	arm-none-eabi-gdb $^ --eval-command="target extended-remote :4242"
+
+stlink-micro: $(NAME)_micro.bin
+	st-flash write $^ $(FLASH_START)
+# using dfu util	
+dfu-micro: $(NAME)_micro.bin
+	dfu-util -D $< --dfuse-address $(FLASH_START) -a 0
 
 # double colon to allow extra cleaning
 clean::
-	rm -rf $(BUILD_DIR)$(BITBOX_TGT) $(NAME).bin $(SDL_TGT) $(TEST_TGT)
+	rm -rf $(BUILD_DIR) $(MICRO_TGT) $(BITBOX_TGT) $(NAME).bin $(SDL_TGT) $(TEST_TGT)
