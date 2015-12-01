@@ -13,24 +13,6 @@ ErrorStatus HSEStartUpStatus;
 
 
 
-void TIM4_IRQHandler()
-{
-  if (TIM4->SR & TIM_SR_UIF) // no reason not to
-  {
-    TIM4->SR &= ~TIM_SR_UIF; // clear UIF flag
-
-    // process USB
-      #ifdef USE_USB_OTG_FS
-        USBH_Process(&USB_OTG_FS_Core, &USB_FS_Host);
-      #endif
-
-      #ifdef USE_USB_OTG_HS
-        // set_led(USB_Host.gState == HOST_DEV_DISCONNECTED); // XXX DEBUG
-        USBH_Process(&USB_OTG_Core, &USB_Host);
-      #endif
-  }
-}
-
 #ifdef USE_USB_OTG_FS  
 USB_OTG_CORE_HANDLE USB_OTG_FS_Core;
 USBH_HOST USB_FS_Host;
@@ -51,6 +33,24 @@ void OTG_HS_IRQHandler(void)
   USBH_OTG_ISR_Handler(&USB_OTG_Core);
 }
 #endif
+
+void TIM4_IRQHandler()
+{
+  if (TIM4->SR & TIM_SR_UIF) // no reason not to
+  {
+    TIM4->SR &= ~TIM_SR_UIF; // clear UIF flag
+
+    // process USB
+      #ifdef USE_USB_OTG_FS
+        USBH_Process(&USB_OTG_FS_Core, &USB_FS_Host);
+      #endif
+
+      #ifdef USE_USB_OTG_HS
+        // set_led(USB_Host.gState == HOST_DEV_DISCONNECTED); // XXX DEBUG
+        USBH_Process(&USB_OTG_Core, &USB_Host);
+      #endif
+  }
+}
 
 void setup_usb()
 {
@@ -75,9 +75,8 @@ void setup_usb()
   */
   TIM4->CR1 = TIM_CR1_ARPE; // autoreload preload enable, no other function on
 
-  InstallInterruptHandler(TIM4_IRQn,TIM4_IRQHandler);
+  //InstallInterruptHandler(TIM4_IRQn,TIM4_IRQHandler);
   NVIC_EnableIRQ(TIM4_IRQn); 
-
   NVIC_SetPriority(TIM4_IRQn,15); // low priority
 
   TIM4->DIER = TIM_DIER_UIE; // enable interrupt
@@ -136,7 +135,7 @@ void USB_OTG_BSP_EnableInterrupt(USB_OTG_CORE_HANDLE *pdev)
 
 
 #ifdef USE_USB_OTG_FS
-  InstallInterruptHandler(OTG_FS_IRQn,OTG_FS_IRQHandler);
+  //InstallInterruptHandler(OTG_FS_IRQn,OTG_FS_IRQHandler);
   NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
@@ -147,7 +146,7 @@ void USB_OTG_BSP_EnableInterrupt(USB_OTG_CORE_HANDLE *pdev)
 
 
 #ifdef USE_USB_OTG_HS
-  InstallInterruptHandler(OTG_HS_IRQn,OTG_HS_IRQHandler);
+  //InstallInterruptHandler(OTG_HS_IRQn,OTG_HS_IRQHandler);
   NVIC_InitStructure.NVIC_IRQChannel = OTG_HS_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
