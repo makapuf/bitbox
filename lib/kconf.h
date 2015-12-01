@@ -22,54 +22,25 @@
 #endif 
 #endif
 
-// basic info about Modes
+// --------------------------------------
 
-#if defined (VGAMODE_NONE)
-
-#elif defined(VGAMODE_640_OVERCLOCK)
-
-#define VGA_H_PIXELS 640 
-#define VGA_V_PIXELS 480
-#define VGA_V_BLANK 45
-#define VGA_FPS 60
-
-#elif defined(VGAMODE_800)
-
-#define VGA_H_PIXELS 800 
-#define VGA_V_PIXELS 600
-#define VGA_V_BLANK 19
-#define VGA_FPS 56
-
-#elif defined(VGAMODE_800_OVERCLOCK)
-
-
-#define VGA_H_PIXELS 800 
-#define VGA_V_PIXELS 600
-#define VGA_V_BLANK 19
-#define VGA_FPS 56
-
-#elif defined(VGAMODE_400)
-
-#define VGA_SKIPLINE
-#define VGA_H_PIXELS 400 
-#define VGA_V_PIXELS 300
-#define VGA_V_BLANK 10
-#define VGA_FPS 56
-
-#elif defined(VGAMODE_320)
-
-#define VGA_SKIPLINE
-#define VGA_H_PIXELS 320 
-#define VGA_V_PIXELS 240
-#define VGA_V_FRONTPORCH 10
-#define VGA_FPS 60
-
-#else // default one, use 
-
-#define VGA_H_PIXELS 640 
-#define VGA_V_PIXELS 480
-#define VGA_V_BLANK 20
-#define VGA_FPS 60
-
+#ifdef BOARD_MICRO
+#include "kconf_micro.h"
+#elif defined(BOARD_BITBOX)
+#include "kconf_bitbox.h"
+#elif defined(EMULATOR)
+#include "kconf_emu.h"
 #endif 
 
+// --------------------------------------
+
+#define SYSCLK (8000000UL * PLL_N / PLL_P / PLL_M ) // HZ (and 8*n/q/m = 48MHz)
+
+#ifndef VGAMODE_NONE 
+#ifdef VGA_SKIPLINE 
+// line frequency in Hz, should be >30kHz, 31.5 kHz for vesa 640x480
+#define VGA_VFREQ (VGA_FPS*2*(VGA_V_PIXELS+VGA_V_BACKPORCH+VGA_V_SYNC+VGA_V_FRONTPORCH)) 
+#else 
+#define VGA_VFREQ (VGA_FPS*  (VGA_V_PIXELS+VGA_V_BACKPORCH+VGA_V_SYNC+VGA_V_FRONTPORCH)) 
+#endif
+#endif 
