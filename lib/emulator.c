@@ -17,7 +17,8 @@
 
 #include "fatfs/ff.h"
 
-
+#define WM_TITLE_LED_ON  "Bitbox emu (*)"
+#define WM_TITLE_LED_OFF "Bitbox emu"
 /*
    TODO
    
@@ -32,6 +33,7 @@
 */ 
 
 
+
 // ----------------------------- kernel ----------------------------------
 /* The only function of the kernel is
 - calling game_init and game_frame
@@ -43,6 +45,7 @@
 */
 
 // ticks in ms
+
 
 int screen_width;
 int screen_height;
@@ -60,9 +63,9 @@ int fullscreen; // shall run fullscreen
 int quiet;
 
 SDL_Surface* screen;
-uint16_t mybuffer1[LINE_BUFFER];
-uint16_t mybuffer2[LINE_BUFFER];
-uint16_t *draw_buffer = mybuffer1; // volatile ?
+pixel_t mybuffer1[LINE_BUFFER];
+pixel_t mybuffer2[LINE_BUFFER];
+pixel_t *draw_buffer = mybuffer1; // volatile ?
 volatile uint16_t gamepad_buttons[2]; 
 uint32_t vga_line; 
 volatile uint32_t vga_frame;
@@ -74,7 +77,7 @@ volatile uint8_t data_mouse_buttons;
 int user_button=0; 
 
 // sound
-// uint16_t audio_buffer[BITBOX_SNDBUF_LEN]; // stereo, 31khz 1frame
+// pixel_t audio_buffer[BITBOX_SNDBUF_LEN]; // stereo, 31khz 1frame
 
 // joystick handling.
 static const int gamepad_max_buttons = 12;
@@ -95,14 +98,23 @@ uint32_t time_left(void)
 }
 
 
-/* naive pixel conversion from
-0RRRRRGGGGGBBBBB to 16bit color (565)
-RRRRRGGGGG0BBBBB
+/* naive pixel conversion from either 
+- 8-bit MICROKERNEL pixel 
+- or 16bit bitbox pixel 0RRRRRGGGGGBBBBB 
+to 16bit color (565) RRRRRGGGGG0BBBBB
 */
-static inline uint16_t pixelconv(uint16_t pixel)
+#ifdef MICROKERNEL
+extern uint16_t palette_flash[256];
+static inline uint16_t pixelconv(pixel_t pixel)
+{
+    return (palette_flash[pixel] & (uint16_t)(~0x1f))<<1 | (palette_flash[pixel] & 0x1f);
+}
+#else
+static inline uint16_t pixelconv(pixel_t pixel)
 {
     return (pixel & (uint16_t)(~0x1f))<<1 | (pixel & 0x1f);
 } 
+#endif 
 
 
 static void refresh_screen(SDL_Surface *scr)
@@ -121,7 +133,7 @@ static void refresh_screen(SDL_Surface *scr)
         #endif 
 
         // copy to screen at this position (cheating)
-        uint16_t *src = (uint16_t*) &draw_buffer[0];//[MARGIN];
+        pixel_t *src = (pixel_t*) &draw_buffer[0];
 
         for (int i=0;i<screen_width;i++) 
             *dst++= pixelconv(*src++);
@@ -130,6 +142,8 @@ static void refresh_screen(SDL_Surface *scr)
         draw_buffer = (draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
     }
 }
+
+#ifndef NO_AUDIO
 static void mixaudio(void * userdata, Uint8 * stream, int len)
 // this callback is called each time we need to fill the buffer
 {
@@ -171,6 +185,7 @@ void audio_init(void)
 
 // default empty implementation
 __attribute__((weak)) void game_snd_buffer(uint16_t *buffer, int len)  {}
+#endif
 
 void set_mode(int width, int height)
 {
@@ -182,6 +197,7 @@ void set_mode(int width, int height)
         printf("%s\n",SDL_GetError());
         die(-1,0);
     }
+    SDL_WM_SetCaption(WM_TITLE_LED_OFF, "game");
 }
 
 
@@ -227,12 +243,20 @@ int init(void)
 
     // create a default new window
     set_mode(VGA_H_PIXELS,VGA_V_PIXELS);
+
+    #ifndef NO_AUDIO
     audio_init();
+    #endif 
+
     joy_init();
 
     next_time = SDL_GetTicks();
 
     printf("screen is now %dx%d\n",screen_width,screen_height);
+    #ifdef MICROKERNEL
+    printf("Using 8Bpp interface (micro)");
+    #endif 
+
     return 0;
 }
 
@@ -561,7 +585,7 @@ int button_state() {
 // user LED
 void set_led(int x) {
     printf("Setting LED to %d\n",x);
-    // do nothing : set keyboard LED ? window title ?
+    SDL_WM_SetCaption(x?WM_TITLE_LED_ON:WM_TITLE_LED_OFF, "game");
 }
 
 int main ( int argc, char** argv )
