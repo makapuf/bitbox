@@ -28,6 +28,8 @@ typedef struct {
 
 Blitter blt __attribute__ ((section (".ccm")));
 
+static int blitter_initialized = 0;
+
 void blitter_init()
 {   
     // initialize empty objects array
@@ -38,6 +40,7 @@ void blitter_init()
         blt.objects[i]->ry=INT16_MAX;
     }
     blt.nb_objects = 0; // first unused is first.
+    blitter_initialized=1;
 }
 
 // return ptr to new object
@@ -45,7 +48,7 @@ void blitter_init()
 object* blitter_new() 
 {
     // auto initialize in case it wasn't done
-    if (!blt.objects[0]) 
+    if (!blitter_initialized) 
         blitter_init();
 
     if (blt.nb_objects<MAX_OBJECTS) {
@@ -66,8 +69,8 @@ void blitter_remove(object *o)
 // insertion sort of object ptr array, sorted by Y. Simplest form, just sorting.
 void blitter_sort_objects_y()
 {
-    // consider empty values as bigger than anything (Y = INT16_MAX)
 
+    // consider empty values as bigger than anything (Y = INT16_MAX)
     object *valueToInsert; 
     int holePos;
     int real_nbobjects = blt.objects[0]->ry==INT16_MAX ? 0 : 1; // count the real number of objects. start at 0 or 1
@@ -121,6 +124,9 @@ void activelist_add(object *o)
 
 void graph_frame()
 {
+    if (!blitter_initialized) 
+        return; // ensure initiliaztion is done
+
     object *o;
 
     // transfer y to real y ry
@@ -156,6 +162,9 @@ void graph_frame()
 
 void graph_line()
 {
+    if (!blitter_initialized) 
+        return; // ensure initiliaztion is done
+
     // persist between calls so that one line can continue blitting next frame.
     static object *o; 
 
