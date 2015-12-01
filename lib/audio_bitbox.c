@@ -42,7 +42,7 @@ void audio_init()
 	RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
 
 	TIM6->PSC=0;  // Prescaler = 1 
-	TIM6->ARR = SYSCLK/APB_PRESC/BITBOX_SAMPLERATE; // ~ 168MHz /2 / -> 65536 max !
+	TIM6->ARR = SYSCLK/APB1_DIV/BITBOX_SAMPLERATE; // ~ 168MHz /2 / -> 65536 max !
 	TIM6->CR1 = TIM_CR1_ARPE;	// autoreload preload enable, no other function on
 	TIM6->CR2 = TIM_CR2_MMS_1; // MMS : TRGO Update mode 0b010
 
@@ -59,8 +59,8 @@ void audio_init()
   	// debug DMA with p *((DMA_Stream_TypeDef *) 0x40026088)
 	DMA1_Stream5->CR &= ~DMA_SxCR_EN;
 	
-	NVIC_DisableIRQ(DMA1_Stream5_IRQn);
-	InstallInterruptHandler(DMA1_Stream5_IRQn,DMAAudioCompleteHandler);
+	//NVIC_DisableIRQ(DMA1_Stream5_IRQn);
+	// InstallInterruptHandler(DMA1_Stream5_IRQn,DMA1_Stream5_IRQHandler); // XXX make it a flash one
 	NVIC_EnableIRQ(DMA1_Stream5_IRQn);
 	NVIC_SetPriority(DMA1_Stream5_IRQn,15);
 	
@@ -98,7 +98,7 @@ void audio_init()
 	DAC->CR |= DAC_CR_EN1 | DAC_CR_EN2; 
 }
 
-static void DMAAudioCompleteHandler() {
+static void DMA1_Stream5_IRQHandler() {
 	// Test which case : half or full ?
 
 	// Clear Transfer complete interrupt flag of stream 5
