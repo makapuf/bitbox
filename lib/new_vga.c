@@ -71,8 +71,6 @@ uint16_t LineBuffer2[1024] __attribute__((aligned (1024)));
 uint16_t *display_buffer = LineBuffer1; // will be sent to display 
 uint16_t *draw_buffer = LineBuffer2; // will be drawn (bg already drawn)
 
-static void HSYNCHandler();
-static void DMACompleteHandler();
 
 static inline void vga_output_black()
 {
@@ -100,7 +98,7 @@ void vga_setup()
 		LineBuffer2[i]=0;
 	}
 
-	//EnableAPB2PeripheralClock(RCC_APB2ENR_SYSCFGEN); // ??? useful ?
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 
 	// initialize software state.
 	vga_line=0;	vga_frame=0;
@@ -203,7 +201,7 @@ void vga_setup()
 	// wait for last line ? 
 
 	// Enable HSync timer interrupt and set highest priority.
-	InstallInterruptHandler(TIM5_IRQn,HSYNCHandler);
+	//InstallInterruptHandler(TIM5_IRQn,TIM5_IRQHandler);
 	NVIC_EnableIRQ(TIM5_IRQn);
 	NVIC_SetPriority(TIM5_IRQn,0);
 
@@ -238,8 +236,8 @@ void vga_setup()
 	// Stop it and configure interrupts.
 	DMA2_Stream5->CR&=~DMA_SxCR_EN;
 	
-	NVIC_DisableIRQ(DMA2_Stream5_IRQn);
-	InstallInterruptHandler(DMA2_Stream5_IRQn,DMACompleteHandler);
+	//NVIC_DisableIRQ(DMA2_Stream5_IRQn);
+	//InstallInterruptHandler(DMA2_Stream5_IRQn,DMACompleteHandler);
 	NVIC_EnableIRQ(DMA2_Stream5_IRQn);
 	NVIC_SetPriority(DMA2_Stream5_IRQn,0);
 
@@ -291,8 +289,7 @@ static inline void expand_line( void )
 		draw_buffer[i] = palette_flash[drawbuf8[i]]; 
 }
 #endif 
-
-static void HSYNCHandler()
+ void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
 {
 	TIM5->SR=0; // clear pending interrupts 
 
@@ -303,7 +300,7 @@ static void HSYNCHandler()
 	vga_line++;
 	#endif 
 
-        // starting from line #1, line #0 already in drawbuffer
+       // starting from line #1, line #0 already in drawbuffer
 	if (vga_line < VGA_V_PIXELS) {
 
 		#ifdef VGA_SKIPLINE
@@ -315,8 +312,7 @@ static void HSYNCHandler()
 			t=display_buffer;
 			display_buffer = draw_buffer;
 			draw_buffer = t;
-		}
-		
+		}		
 
 		prepare_pixel_DMA(); // will be triggered 
 
@@ -363,7 +359,7 @@ static void HSYNCHandler()
 	}
 }
 
-static void DMACompleteHandler()
+void __attribute__ ((used)) DMA2_Stream5_IRQHandler() // DMA handler
 {
 	vga_output_black(); // This should not be necessary, as timing is wrong in sw. 
 
