@@ -34,7 +34,6 @@ mode as defined in kconf.h values
 
 #include "system.h" // interrupts 
 #include "kconf.h"
-#include "kconf_bitbox.h"	
 #include "stm32f4xx.h" // ports, timers, profile
 
 // --- local
@@ -100,14 +99,15 @@ void vga_setup()
 		LineBuffer1[i]=0;
 		LineBuffer2[i]=0;
 	}
+
 	//EnableAPB2PeripheralClock(RCC_APB2ENR_SYSCFGEN); // ??? useful ?
 
 	// initialize software state.
 	vga_line=0;	vga_frame=0;
-	/*
+	
 	display_buffer=LineBuffer1;
 	draw_buffer=LineBuffer2;
-	*/
+	
 	
 	// --- GPIO ---------------------------------------------------------------------------------------
 	// init vga gpio ports A0 vsync, A1 hsync B0-11 dac
@@ -243,8 +243,6 @@ void vga_setup()
 	NVIC_EnableIRQ(DMA2_Stream5_IRQn);
 	NVIC_SetPriority(DMA2_Stream5_IRQn,0);
 
-
-
 }
 
 
@@ -280,16 +278,17 @@ static void prepare_pixel_DMA()
 
 }
 
-#ifdef MICRO_INTERFACE
+
+#ifdef MICROKERNEL
 // simulates MICRO interface through palette expansion
-extern const uint16_t MicroPalette[256]; // microX palette
+extern const uint16_t palette_flash[256]; // microX palette in bitbox pixels
 static inline void expand_line( void )
 {
-	uint8_t *drawbuf8=(uint8_t *) draw_buffer;
+	uint8_t  * restrict drawbuf8=(uint8_t *) draw_buffer;
 	// expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb 
 	// XXX unroll loop, read 4 by 4 pixels src, write 2 pixels out by two ... 
-	for (int i=VGA_H_PIXELS;i>=0;i--)
-		draw_buffer[i] = MicroPalette[drawbuf8[i]]; 
+	for (int i=VGA_H_PIXELS-1;i>=0;i--)
+		draw_buffer[i] = palette_flash[drawbuf8[i]]; 
 }
 #endif 
 
@@ -326,22 +325,25 @@ static void HSYNCHandler()
 		#endif
 
 		graph_line(); // Game callback !
-		#ifdef MICRO_INTERFACE // Micro interface to bitbox hardware
-		expand_line();
-		#endif
 
         #ifdef PROFILE
-		line_time = DWT->CYCCNT - line_time; // read the counter 
-		line_time /= VGA_PIXELCLOCK; // scale it to screen width 
+        line_time = DWT->CYCCNT - line_time; // read the counter 
+        line_time /= VGA_PIXELCLOCK; // scale it to screen width 
 
-		// plot from 0 to VGA_V_PIXELS a red element
-		if (line_time<VGA_H_PIXELS) {
-			
-			draw_buffer[line_time-1]=0;
-			draw_buffer[line_time]=0x11111<<10;
-			draw_buffer[line_time+1]=0;
-		}
-
+        // plot from 0 to VGA_V_PIXELS a green or red element
+        uint16_t c=0b1111100000; //green
+        if (line_time>VGA_H_PIXELS) // start over but red
+        {
+            line_time-=VGA_H_PIXELS;
+            c=0b111110000000000; // red
+        }
+        draw_buffer[line_time-1]=0;
+        draw_buffer[line_time]=c;
+        draw_buffer[line_time+1]=0;
+        #endif
+		#if MICROKERNEL // Micro interface to bitbox hardware
+		if (vga_odd)
+			expand_line();
 		#endif
 
 	}  else {
