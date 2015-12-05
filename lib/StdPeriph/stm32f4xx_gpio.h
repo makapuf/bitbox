@@ -35,8 +35,8 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-//#include "stm32f4xx.h"
-#include "../CMSIS/Include/stm32f4xx.h" // XXX Mak absolute path
+#include "stm32f4xx.h"
+//#include "../cmsis/stm32f4xx.h" // XXX Mak absolute path
 
 /** @addtogroup STM32F4xx_StdPeriph_Driver
   * @{
