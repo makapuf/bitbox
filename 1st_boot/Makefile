@@ -27,7 +27,7 @@ C_OPTS = -std=c99 \
 		-g \
 		-Werror \
         -Os \
-        -I../lib/CMSIS/Include \
+        -I../lib/cmsis \
         -I../lib/StdPeriph \
         -mlittle-endian 
         
