@@ -42,7 +42,6 @@ import array, os.path, argparse
 parser = argparse.ArgumentParser(description='Process TMX files to tset/tmap/.h files')
 parser.add_argument('file',help='input .tmx filename')
 parser.add_argument('-o','--output-dir', default='.', help='target directory, default: .')
-parser.add_argument('-c','--to_c_file', default=False, help='outputs directly a C file instead of binaries.', action="store_true")
 parser.add_argument('-m','--micro', default=False, help='outputs a 8-bit data tileset from a palette.', action="store_true")
 parser.add_argument('-p','--palette', help='filename of the 8bit palette image. Defaults to bitbox palette', default="pal_micro.png")
 
@@ -107,27 +106,16 @@ else:
 
 w,h = src.size
 with open(os.path.join(args.output_dir,base_name+'.tset'),'wb') as of: 
-    if args.to_c_file : 
-        print >>c_file,"const uint16_t %s_tset[] = { // from %s"%(base_name,img)
     for tile_y in range(h/tilesize) : 
         for tile_x in range(w/tilesize) : 
             for row in range(tilesize) : 
                 idx = (tile_y*tilesize+row)*w + tile_x*tilesize
-                if args.to_c_file : 
-                    print >>c_file, ",".join(str(x) for x in pixdata[idx:idx+tilesize]),','
-                else : 
-                    pixdata[idx:idx+tilesize].tofile(of) # non extraire des carres de 16x16 avec PIL et les ecrire 
-if args.to_c_file : 
-    print >>c_file,"};"
-
+                pixdata[idx:idx+tilesize].tofile(of) # non extraire des carres de 16x16 avec PIL et les ecrire 
 
 index=0
-if not args.to_c_file : 
-    of = open(os.path.join(args.output_dir,base_name+'.tmap'),'wb') 
+of = open(os.path.join(args.output_dir,base_name+'.tmap'),'wb') 
 
 mw, mh = root.get('width'), root.get('height')
-if args.to_c_file : 
-    print >>c_file, "const %s %s_tmap[][%s*%s]={"%(typename[out_code], base_name,mw,mh)
     
 print '// layers'    
 for layer in root.findall("layer") : 
@@ -144,17 +132,10 @@ for layer in root.findall("layer") :
     
     print "#define %s_%s %d"%(base_name, name, index)
     # output data to binary 
-    if args.to_c_file : 
-        print >>c_file, "{ // %s "%name
-        print >>c_file, ",".join(str(x) for x in tidx)
-        print >>c_file, "},"
-    else : 
-        tidx.tofile(of)
+    tidx.tofile(of)
     index += 1
 
 # output all layers in a big array of arrays
-if args.to_c_file : 
-    print >>c_file, "};"
 
 print '// max indices : ',max(indices)
 
