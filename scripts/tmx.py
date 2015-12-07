@@ -29,7 +29,7 @@ rewrite tileset ? at least, dont output last unused tiles
 
 """
 
-out_code='B' # unsigned bytes by default
+out_code='B' # unsigned bytes by default for tilemap
 typename = {'B':'uint8_t', 'b' : 'int8_t','H':'uint16_t'}
 codes = {'B':'TMAP_U8', 'H':'TMAP_U16' }#0,'b':1,'H':2,'h':3}
 tilesizes = {16:'TSET_16',32:'TSET_32', 8:'TSET_8'}
@@ -43,6 +43,8 @@ parser = argparse.ArgumentParser(description='Process TMX files to tset/tmap/.h 
 parser.add_argument('file',help='input .tmx filename')
 parser.add_argument('-o','--output-dir', default='.', help='target directory, default: .')
 parser.add_argument('-c','--to_c_file', default=False, help='outputs directly a C file instead of binaries.', action="store_true")
+parser.add_argument('-m','--micro', default=False, help='outputs a 8-bit data tileset from a palette.', action="store_true")
+parser.add_argument('-p','--palette', help='filename of the 8bit palette image. Defaults to bitbox palette', default="pal_micro.png")
 
 args = parser.parse_args()
 
@@ -97,7 +99,12 @@ print >>c_file,'#include <stdint.h>'
 print >>c_file,'#include "%s.h"'%base_name
 
 src = Image.open(os.path.join(os.path.dirname(os.path.abspath(args.file)),img)).convert('RGBA')
-pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples. 
+if args.micro : 
+    src = src.convert('RGB').quantize(palette=Image.open(args.palette)) # XXX allow 8-bit adaptive palette ?
+    pixdata = array.array('B',src.getdata()) # direct output bytes
+else: 
+    pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples. 
+
 w,h = src.size
 with open(os.path.join(args.output_dir,base_name+'.tset'),'wb') as of: 
     if args.to_c_file : 
@@ -167,6 +174,8 @@ for objectgroup in root.findall('objectgroup') :
     print >>c_file, "};\n"
 
 print "#define %s_header TMAP_HEADER(%d,%d,%s,%s)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
-
-print "extern const uint16_t %s_tset[]; // from %s"%(base_name,img)
+if args.micro : 
+    print "extern const uint8_t %s_tset[]; // from %s"%(base_name,img)
+else : 
+    print "extern const uint16_t %s_tset[]; // from %s"%(base_name,img)
 print "extern const %s %s_tmap[][%d*%d];"%(typename[out_code], base_name,lw,lh)
