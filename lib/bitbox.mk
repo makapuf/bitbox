@@ -134,7 +134,7 @@ $(SDL_TGT): HOSTLIBS += $(shell sdl-config --libs)
 KERNEL_SDL+=emulator.c
 KERNEL_TEST+=tester.c
 KERNEL_MICRO+=board_micro.c startup.c bitbox_main.c
-KERNEL_BITBOX+=board.c startup.c system.c bitbox_main.c
+KERNEL_BITBOX+=board.c startup.c bitbox_main.c
 
 # -- Optional AND target specific
 
