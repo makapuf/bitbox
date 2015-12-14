@@ -132,7 +132,7 @@
 #define VGA_SKIPLINE
 #define VGA_H_PIXELS 320 
 #define VGA_V_PIXELS 240
-#define VGA_V_FRONTPORCH 10
+#define VGA_V_BLANK 10
 #define VGA_FPS 60
 
 #define VGA_H_FRONTPORCH 8 
