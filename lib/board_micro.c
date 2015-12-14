@@ -8,9 +8,9 @@ uint8_t __isr_vector_sram [0x200];
 void set_led(int value)
 {
     if (value)
-        GPIOB->BSRR |= GPIO_BSRR_BR_0; // PB0
+        GPIOB->BSRRL |= GPIO_BSRR_BR_0; // PB0
     else
-        GPIOB->BSRR |= GPIO_BSRR_BS_0;
+        GPIOB->BSRRH |= GPIO_BSRR_BR_0;
 }
 
 
