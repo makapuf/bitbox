@@ -10,7 +10,7 @@
 // defined for bitbox rev2 : sense is PC7
 #define SD_DETECT_PIN                    GPIO_Pin_7                 /* PC.02 */
 #define SD_DETECT_GPIO_PORT              GPIOC                      /* GPIOC */
-#define SD_DETECT_GPIO_CLK               RCC_AHB1Periph_GPIOC
+#define SD_DETECT_GPIO_CLK               RCC_AHB1ENR_GPIOCEN
 
 
 #define SDIO_FIFO_ADDRESS                ((uint32_t)0x40012C80)
@@ -20,7 +20,7 @@
 #define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x2) // SDIO Data Transfer Frequency (25MHz max)
 
 #define SD_SDIO_DMA                   DMA2
-#define SD_SDIO_DMA_CLK               RCC_AHB1Periph_DMA2
+#define SD_SDIO_DMA_CLK               RCC_AHB1ENR_DMA2EN
 
 #define SD_SDIO_DMA_STREAM3	          3
 //#define SD_SDIO_DMA_STREAM6           6

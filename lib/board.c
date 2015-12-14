@@ -93,9 +93,9 @@ void toggle_led()
 void set_led(int value)
 {
     if (value)
-        GPIOA->BSRR |= GPIO_BSRR_BR_2; // PA2
+        GPIOA->BSRRL |= GPIO_BSRR_BS_2; // PA2 
     else
-        GPIOA->BSRR |= GPIO_BSRR_BS_2;
+        GPIOA->BSRRH |= GPIO_BSRR_BS_2;
 }
 
 

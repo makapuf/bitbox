@@ -57,7 +57,7 @@
  extern "C" {
 #endif /* __cplusplus */
   
-#include "kconf.h" // bitbox base config
+#include "kconf.h" // bitbox base config- used to define processor type
 
 /** @addtogroup Library_configuration_section
   * @{

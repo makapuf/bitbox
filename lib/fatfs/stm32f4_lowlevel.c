@@ -26,13 +26,18 @@ void SD_LowLevel_DeInit(void)
   SDIO_DeInit();
 
   /* Disable the SDIO APB2 Clock */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SDIO, DISABLE);
+  CLEAR_BIT(RCC->APB2ENR,RCC_APB2ENR_SDIOEN);
+
+  // Set GPIOC 8-12 alt funciton as MCO = 0 ie set to zero Alt Function (from 12)
+
 
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource8, GPIO_AF_MCO);
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource9, GPIO_AF_MCO);
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_MCO);
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_MCO);
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource12, GPIO_AF_MCO);
+
+  // set GPIOD.2 as MCO
   GPIO_PinAFConfig(GPIOD, GPIO_PinSource2, GPIO_AF_MCO);
 
   /* Configure PC.08, PC.09, PC.10, PC.11 pins: D0, D1, D2, D3 pins */
@@ -61,13 +66,14 @@ void SD_LowLevel_Init(void)
   GPIO_InitTypeDef  GPIO_InitStructure;
 
   /* GPIOC and GPIOD Periph clock enable */
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | SD_DETECT_GPIO_CLK, ENABLE);
+  SET_BIT(RCC->AHB1ENR,RCC_AHB1ENR_GPIOCEN | RCC_AHB1ENR_GPIODEN | SD_DETECT_GPIO_CLK); 
 
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource8, GPIO_AF_SDIO);
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource9, GPIO_AF_SDIO);
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_SDIO);
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_SDIO);
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource12, GPIO_AF_SDIO);
+  
   GPIO_PinAFConfig(GPIOD, GPIO_PinSource2, GPIO_AF_SDIO);
 
   /* Configure PC.08, PC.09, PC.10, PC.11 pins: D0, D1, D2, D3 pins */
@@ -94,10 +100,11 @@ void SD_LowLevel_Init(void)
   GPIO_Init(SD_DETECT_GPIO_PORT, &GPIO_InitStructure);
 
   /* Enable the SDIO APB2 Clock */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SDIO, ENABLE);
+  SET_BIT(RCC->APB2ENR,RCC_APB2ENR_SDIOEN);
+
 
   /* Enable the DMA2 Clock */
-  RCC_AHB1PeriphClockCmd(SD_SDIO_DMA_CLK, ENABLE);
+  SET_BIT(RCC->APB2ENR,RCC_APB2ENR_SDIOEN);
 }
 
 /**

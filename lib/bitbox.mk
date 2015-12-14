@@ -140,6 +140,7 @@ KERNEL_BITBOX+=board.c startup.c bitbox_main.c
 
 # -- Optional AND target specific
 
+# video related
 ifndef NO_VGA
   KERNEL_MICRO += vga_micro.c
   KERNEL_BITBOX += new_vga.c
@@ -154,9 +155,9 @@ endif
 
 # fatfs related files
 SDCARD_FILES := fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c fatfs/ff.c fatfs/diskio.c 
-SDCARD_FILES += stm32f4xx_sdio.c stm32f4xx_rcc.c stm32f4xx_gpio.c stm32f4xx_dma.c misc.c
+SDCARD_FILES += stm32f4xx_sdio.c stm32f4xx_gpio.c stm32f4xx_dma.c misc.c
 ifdef USE_SDCARD
-DEFINES += USE_SDCARD
+DEFINES += USE_SDCARD USE_STDPERIPH_DRIVER
 KERNEL_BITBOX += $(SDCARD_FILES)
 KERNEL_MICRO += $(SDCARD_FILES)
 endif 
