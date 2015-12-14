@@ -13,4 +13,4 @@ include $(BITBOX)/lib/bitbox.mk
 	$(BITBOX)/scripts/song2C.py $^ > $@
 
 clean::
-	rm $(SONG).c
+	rm -f $(SONG).c
