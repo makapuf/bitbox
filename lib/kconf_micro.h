@@ -3,7 +3,7 @@
  */
 #include <stdint.h>
 
-#define STM32F401xE 
+#define STM32F401xx 
 #define STACKSIZE 4096
 
 // usb

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define HAS_CMM 
-#define STM32F405xx
+#define STM32F40_41xxx
 #define STACKSIZE 8192
  
 // usb

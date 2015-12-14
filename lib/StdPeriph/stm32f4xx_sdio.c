@@ -265,8 +265,8 @@
   */
 void SDIO_DeInit(void)
 {
-  RCC_APB2PeriphResetCmd(RCC_APB2Periph_SDIO, ENABLE);
-  RCC_APB2PeriphResetCmd(RCC_APB2Periph_SDIO, DISABLE);
+  SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_SDIORST);  // enable
+  CLEAR_BIT(RCC->APB2RSTR,RCC_APB2RSTR_SDIORST);  // disable
 }
 
 /**
