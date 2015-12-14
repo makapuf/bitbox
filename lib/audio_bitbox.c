@@ -6,7 +6,7 @@
 
 static uint16_t audio_buffer[BITBOX_SNDBUF_LEN*2]; // u16 stereo samples
 
-static void DMAAudioCompleteHandler();
+// static void DMA1_Stream5_IRQHandler();
 
 void audio_init()
 {
@@ -98,7 +98,7 @@ void audio_init()
 	DAC->CR |= DAC_CR_EN1 | DAC_CR_EN2; 
 }
 
-static void DMA1_Stream5_IRQHandler() {
+void __attribute__((used)) DMA1_Stream5_IRQHandler()  {
 	// Test which case : half or full ?
 
 	// Clear Transfer complete interrupt flag of stream 5
