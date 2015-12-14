@@ -1,6 +1,6 @@
 # Bitbox Makefile helper.
 
-# BITBOX environment variable should point to the base bitbox source  dir (where this file is)
+# BITBOX environment variable should point to the base bitbox source dir (where this file is)
 # DEFINES in outside makefile
 #   NAME : name of the project
 #   GAME_C_FILES c files of the project
@@ -51,6 +51,8 @@ TEST_TGT:=$(NAME)_test
 all: $(SDL_TGT) $(BITBOX_TGT:%.elf=%.bin) $(EXTRA_FILES)
 
 # --- option-only targets (independent from target)
+
+BITBOX:=$(realpath $(BITBOX)) # get canonical one
 
 BUILD_DIR := build
 
