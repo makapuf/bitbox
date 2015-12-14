@@ -2,9 +2,9 @@
 #include "stm32f4xx.h"
 #include "system.h"
 #include "kconf.h"
-#include "kconf_bitbox.h"
 
-static uint8_t stack[8192]  __attribute__ ((section (".ccm")));
+static uint8_t stack[STACKSIZE]  __attribute__ ((section (".ccm"))); // cmm will be put to sram by linker script if needed
+
 
 extern uint32_t _sdata[];
 extern uint32_t _sidata[];
@@ -37,23 +37,29 @@ void Reset_Handler()
 	// Zero fill the bss segment.
 	for(uint32_t *dest=_sbss;dest<_ebss;dest++) *dest=0;
 
-	// Zero fill the CCM segment also
+	#ifdef HAS_CMM
+	// Zero fill the CCM segment also. this is used by kernels to check if they're initialized (bad)
 	for(uint32_t *dest=_sccm;dest<_eccm;dest++) *dest=0;
+	#endif 
 
 	// misc initializations
-	system_init(); // in system.h
+	system_init(); // in board.c
 	board_init();
+	
+	// USB first since it can be lengthy and should not be interrupted
 	#ifndef NO_USB
 	setup_usb();
 	#endif 
+
 	#ifndef NO_AUDIO
 	audio_init();
 	#endif 
-
+	
 	#ifndef NO_VGA
 	// be careful to initialize everything before (line callbacks ..)
 	vga_setup();
 	#endif 
+
 
 
 	// Call the application's entry point.
@@ -73,7 +79,7 @@ void Default_Handler()
 }
 
 void NMI_Handler() __attribute__((weak,alias("Default_Handler")));
-void HardFault_Handler() __attribute__((weak,alias("Default_Handler")));
+void HardFault_Handler() __attribute__((weak,alias("Other_Handler")));
 void MemManage_Handler() __attribute__((weak,alias("Default_Handler")));
 void BusFault_Handler() __attribute__((weak,alias("Default_Handler")));
 void UsageFault_Handler() __attribute__((weak,alias("Default_Handler")));
