@@ -404,10 +404,10 @@ static bool handle_gamepad()
         case SDL_JOYAXISMOTION: // analog position
             switch (sdl_event.jaxis.axis) {
                 case 0: /* X axis */
-                    gamepad_x[0]=sdl_event.jaxis.value>>8;
+                    gamepad_x[sdl_event.jbutton.which]=sdl_event.jaxis.value>>8;
                     break;
                 case 1: /* Y axis*/ 
-                    gamepad_y[0]=sdl_event.jaxis.value>>8;
+                    gamepad_y[sdl_event.jbutton.which]=sdl_event.jaxis.value>>8;
                     break;
             }
             break;
