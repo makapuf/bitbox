@@ -26,10 +26,11 @@ C_OPTS = -std=c99 \
 		-mcpu=cortex-m4 \
 		-g \
 		-Werror \
-        -Os \
-        -I../lib/cmsis \
-        -I../lib/StdPeriph \
+		-Os \
+        -I. \
         -mlittle-endian 
+        #-I../lib/cmsis \
+        #-I../lib/StdPeriph \
         
 CFLAGS = -ffunction-sections -fdata-sections
 LINKER_SCRIPT =Linker_Bootloader.ld
