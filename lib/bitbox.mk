@@ -38,6 +38,8 @@
 #     USE_SD_SENSE  - enabling this will disable being used on rev2 !
 #     DISABLE_ESC_EXIT - for the emulator only, disable quit when pressing ESC
 #     KEYB_FR       - enable AZERTY keybard mapping
+#     EXTRA_FILES : add to this files to make in make all, not necesseraly to embed in a bin files (by example 
+#                 data files to be put in the SD card)
 
 
 # just the names of the targets in a generic way
@@ -46,7 +48,7 @@ MICRO_TGT:=$(NAME)_micro.elf
 SDL_TGT:=$(NAME) 
 TEST_TGT:=$(NAME)_test
 
-all: $(SDL_TGT) $(BITBOX_TGT:%.elf=%.bin) 
+all: $(SDL_TGT) $(BITBOX_TGT:%.elf=%.bin) $(EXTRA_FILES)
 
 # --- option-only targets (independent from target)
 
