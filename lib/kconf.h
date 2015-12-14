@@ -15,7 +15,7 @@
   #define VGAMODE_800_OVERCLOCK
 #elif VGA_SIMPLE_MODE==4
   #define VGAMODE_400
-#elif VGA_SIMPLE_MODE==5
+#elif VGA_SIMPLE_MODE==5 || VGA_SIMPLE_MODE==8
   #define VGAMODE_320
 #else 
   #define VGAMODE_640
