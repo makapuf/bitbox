@@ -1,4 +1,6 @@
-This is an example of loading an image file from SD then displaying it (effectivemy streaming) 
+This is an example of loading an image file from SD then displaying it (effectively streaming).
+It will also test writing to a file by creating it and increasing a 2-digits number on it from 01 to 02 .. 
+Don't forget to put the image.raw file on the root of your sd card.
 
 The lower color band has the following meaning : 
 
