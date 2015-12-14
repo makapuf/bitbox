@@ -50,7 +50,7 @@ void game_frame()
 	// blink "result" times ...
 	if (state==1)
 	{
-		result = f_open (&img_file,"image.bin",FA_READ); // open file		
+		result = f_open (&img_file,"image.raw",FA_READ); // open file		
 
 		if (result==FR_OK)
 		{

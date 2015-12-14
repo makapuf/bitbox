@@ -12,7 +12,7 @@ print "dimensions : ",src.size
 assert src.size[0]*src.size[1]<32000, "too big image ! (must fit in 64k)"
 raw = [reduce(c) for c in src.getdata()]
 
-outfile=open('image.bin','wb')
+outfile=open('image.raw','wb')
 outfile.write(struct.pack('<H',0xb71b)) # B17B0x anagram :)
 outfile.write(struct.pack('<2H',*src.size)) 
 outfile.write(struct.pack('<%dH'%len(raw),*raw)) 
