@@ -74,17 +74,17 @@ uint16_t *draw_buffer = LineBuffer2; // will be drawn (bg already drawn)
 
 static inline void vga_output_black()
 {
-    GPIOE->BSRR |= GPIO_BSRR_BR_0*0x7fff; // Set signal to black. 
+    GPIOE->BSRRH |= GPIO_BSRR_BS_0*0x7fff; // Set signal to black: reset all
 } 
 
 static inline void vga_raise_vsync() 
 {
-	GPIOA->BSRR |= GPIO_BSRR_BS_0; // raise VSync line
+	GPIOA->BSRRL |= GPIO_BSRR_BS_0; // raise VSync line
 }
 
 static inline void vga_lower_vsync() 
 {
-	GPIOA->BSRR |= GPIO_BSRR_BR_0; // raise VSync line
+	GPIOA->BSRRH |= GPIO_BSRR_BS_0; // raise VSync line
 }
 
 
@@ -135,9 +135,8 @@ void vga_setup()
     GPIOA->PUPDR  |=  GPIO_PUPDR_PUPDR0_0 * 0b01 | GPIO_PUPDR_PUPDR1_0 * 0b01 ; // PB1, PB15 pullup 01
 
 	// drive them high
-	//GPIOA->BSRR |= GPIO_BSRR_BS_0 | GPIO_BSRR_BS_1; // raise VSync line
-	GPIOA->BSRR=(1<<1) | (1<<0);
-
+	GPIOA->BSRRL |= GPIO_BSRR_BS_0 | GPIO_BSRR_BS_1; // raise VSync line
+	
 	// --- TIMERS ---------------------------------------------------------------------------------------
 	
 	// TIMER 5
