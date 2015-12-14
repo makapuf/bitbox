@@ -143,7 +143,7 @@ void graph_line() {
 
 // --------------------------------------------------------------
 
-#elif VGA_SIMPLE_MODE==4 // 4BPP 400x300, base 400x300
+#elif VGA_SIMPLE_MODE==4  // 4BPP 400x300, base 800x600 
 
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
 uint16_t palette[1<<BPP]  PALETTE_SECTION;
@@ -177,6 +177,7 @@ void graph_line() {
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] ;
 uint16_t palette[1<<BPP]  PALETTE_SECTION;
 const uint16_t palette_flash[] = { // 256 colors standard VGA palette
+	// XXX replace with micro palette
 	0x0000, 0x0015, 0x02a0, 0x02b5, 0x5400, 0x5415, 0x5540, 0x56b5, 
 	0x294a, 0x295f, 0x2bea, 0x2bff, 0x7d4a, 0x7d5f, 0x7fea, 0x7fff, 
 	0x0000, 0x0842, 0x1084, 0x14a5, 0x1ce7, 0x2108, 0x294a, 0x318c, 
@@ -228,6 +229,42 @@ void graph_line() {
 		*dst++ = palette[(w>>24) & 0xff]<<16 | palette[(w>>16)&0xff];
 	}
 }
+
+
+
+#elif VGA_SIMPLE_MODE==8 // 4BPP 320x200 (base 320x240)
+
+uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
+uint16_t palette[1<<BPP]  PALETTE_SECTION;
+uint16_t palette_flash[]  = {
+	RGB(   0,   0,   0), RGB(   0,   0,0xAA), RGB(   0,0xAA,   0), RGB(   0,0xAA,0xAA),
+	RGB(0xAA,   0,   0), RGB(0xAA,   0,0xAA), RGB(0xAA,0x55,   0), RGB(0xAA,0xAA,0xAA),
+	RGB(0x55,0x55,0x55), RGB(0x55,0x55,0xFF), RGB(0x55,0xFF,0x55), RGB(0x55,0xFF,0xFF),
+	RGB(0xFF,0x55,0x55), RGB(0xFF,0x55,0xFF), RGB(0xFF,0x55,0x55), RGB(0xFF,0xFF,0xFF),
+};
+
+void graph_frame() {} 
+void graph_line() {
+	if (vga_odd) return;
+	// letterbox
+	if (vga_line/2==110) memset(draw_buffer, 0, SCREEN_W*2); // at 220 & 221 to empty both line buffers
+	if (vga_line<20 || vga_line >= 220) return;
+
+	uint32_t *dst=(uint32_t*)draw_buffer;
+	uint32_t *src=&vram[(vga_line-20)*SCREEN_W/(32/BPP)];
+
+	for (int i=0;i<SCREEN_W/(32/BPP);i++) {
+		// read 1 word = 8 pixels
+		uint32_t w = *src++;	
+
+		for (int j=0;j<32;j+=(32/BPP)) {// 4 couples of pixels - drawn 2 times 
+			*dst++ = palette[w>>j & 7] | palette[w>>(j+4)&7]<<16;
+		}
+	}
+}
+
+
+
 // --------------------------------------------------------------
 #elif VGA_SIMPLE_MODE==10 // text mode 80x30 with colors 
 
