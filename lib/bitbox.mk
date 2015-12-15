@@ -52,7 +52,8 @@ all: $(SDL_TGT) $(BITBOX_TGT:%.elf=%.bin) $(EXTRA_FILES)
 
 # --- option-only targets (independent from target)
 
-BITBOX:=$(realpath $(BITBOX)) # get canonical one
+# get canonical Bitbox path
+BITBOX:=$(realpath $(BITBOX))
 
 BUILD_DIR := build
 
