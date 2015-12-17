@@ -62,8 +62,9 @@ from collections import defaultdict
 import sprite_encode2
 
 # XXX
-#sys.argv += ('-amxs','tmap.tmx')
-sys.argv += ('-amxs','alterego/maps.tmx')
+#sys.argv += ('-amxs','alterego/maps.tmx')
+if len(sys.argv)==1 : sys.argv += ('-mxs','tmap.tmx')
+
 
 parser = argparse.ArgumentParser(description='Process TMX files to tset/tmap/.h files')
 parser.add_argument('file',help='input .tmx filename')
@@ -77,7 +78,7 @@ parser.add_argument('-s','--export-sprites', default=False, help='exports object
 
 args = parser.parse_args()
 
-PALETTE = 'pal_micro.png'
+PALETTE = os.path.realpath(__file__)+'/pal_micro.png'
 
 tree = ET.parse(args.file)
 root = tree.getroot()
