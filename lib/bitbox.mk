@@ -146,12 +146,8 @@ KERNEL_BITBOX+=board.c startup.c bitbox_main.c
 # video related
 ifndef NO_VGA
   KERNEL_MICRO += vga_micro.c
-  KERNEL_BITBOX += new_vga.c
-  ifdef MICROKERNEL
-    KERNEL_BITBOX += micro_palette.c
-    KERNEL_SDL += micro_palette.c
-  	DEFINES += MICROKERNEL
-  endif 
+  KERNEL_BITBOX += new_vga.c micro_palette.c
+  KERNEL_SDL += micro_palette.c
 else 
   DEFINES += NO_VGA
 endif

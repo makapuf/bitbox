@@ -276,19 +276,25 @@ static void prepare_pixel_DMA()
 }
 
 
-#ifdef MICROKERNEL
 // simulates MICRO interface through palette expansion
 extern const uint16_t palette_flash[256]; // microX palette in bitbox pixels
-static inline void expand_line( void )
+extern void graph_line8( void );
+void __attribute__((weak)) graph_line ( void )
 {
-	uint8_t  * restrict drawbuf8=(uint8_t *) draw_buffer;
-	// expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb 
-	// XXX unroll loop, read 4 by 4 pixels src, write 2 pixels out by two ... 
-	for (int i=VGA_H_PIXELS-1;i>=0;i--)
-		draw_buffer[i] = palette_flash[drawbuf8[i]]; 
+	graph_line8();
+	#ifdef VGA_SKIPLINE
+	if (vga_odd) 
+	#endif 
+	{
+		uint8_t  * restrict drawbuf8=(uint8_t *) draw_buffer;
+		// expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb 
+		// XXX unroll loop, read 4 by 4 pixels src, write 2 pixels out by two ... 
+		for (int i=VGA_H_PIXELS-1;i>=0;i--)
+			draw_buffer[i] = palette_flash[drawbuf8[i]]; 
+	}
 }
-#endif 
- void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
+
+void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
 {
 	TIM5->SR=0; // clear pending interrupts 
 
@@ -336,10 +342,6 @@ static inline void expand_line( void )
         draw_buffer[line_time]=c;
         draw_buffer[line_time+1]=0;
         #endif
-		#if MICROKERNEL // Micro interface to bitbox hardware
-		if (vga_odd)
-			expand_line();
-		#endif
 
 	}  else {
 		if (vga_line== VGA_V_PIXELS) {

@@ -27,26 +27,21 @@ void game_snd_buffer(uint16_t *buffer, int len);
 // --- VGA interface ----------------------------------------------------------------------
 // micro interface to the kernel (8bpp, mono sound). can be used on bitbox _board_ also.
 
-#ifdef MICROKERNEL
-typedef uint8_t pixel_t; // 0brrrggbbl where l is used for g and b third bit.
-#define RGB(r,g,b)  (((r)&0xe0) | ((g)&0xc0)>>3 | (((b)&0xe0)>>5))
-typedef uint8_t sample_t; // mono u8
-
-#else
-typedef uint16_t pixel_t; // 0x0rrrrrgggggbbbbb pixels
+#define RGB8(r,g,b)  (((r)&0xe0) | ((g)&0xc0)>>3 | (((b)&0xe0)>>5))
 #define RGB(r,g,b)  ((((r)>>3)&0x1f)<<10 | (((g)>>3)&0x1f)<<5 | (((b)>>3)&0x1f))
-typedef uint16_t sample_t; // stereo u8
-#endif 
 
 extern uint32_t vga_line; // should be const
 extern volatile uint32_t vga_frame; 
 extern volatile int vga_odd; // in a physical line (on screen) but not a buffer refresh line (only used in 240-height modes)
 
-extern void graph_line(void); // user provided graphical 
+extern void graph_line(void); // user provided graphical for 16 bit kernel function
+extern void graph_line8(void); // user provided graphical for 8 bit kernel function
+
 extern void graph_frame(void); // user provided graphical blitting algorithms
 
-// 0x0rrrrrgggggbbbbb pixels
-extern pixel_t *draw_buffer; // drawing next line 
+// 0x0rrrrrgggggbbbbb pixels or 0xrrrggbbl according to the mode used.
+extern uint16_t *draw_buffer; // drawing next line 
+
 // also check kconf.h for video modes.
 
 

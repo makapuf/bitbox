@@ -63,9 +63,9 @@ int fullscreen; // shall run fullscreen
 int quiet;
 
 SDL_Surface* screen;
-pixel_t mybuffer1[LINE_BUFFER];
-pixel_t mybuffer2[LINE_BUFFER];
-pixel_t *draw_buffer = mybuffer1; // volatile ?
+uint16_t mybuffer1[LINE_BUFFER];
+uint16_t mybuffer2[LINE_BUFFER];
+uint16_t *draw_buffer = mybuffer1; // volatile ?
 volatile uint16_t gamepad_buttons[2]; 
 uint32_t vga_line; 
 volatile uint32_t vga_frame;
@@ -98,26 +98,32 @@ uint32_t time_left(void)
 }
 
 
-/* naive pixel conversion from either 
-- 8-bit MICROKERNEL pixel 
-- or 16bit bitbox pixel 0RRRRRGGGGGBBBBB 
+extern uint16_t palette_flash[256];
+
+void __attribute__ ((weak, optimize("-O3"))) graph_line(void) 
+{
+    graph_line8();
+    // expand line from u8 to u16 bitbox 
+    if (vga_odd) {
+        uint8_t  * restrict drawbuf8=(uint8_t *) draw_buffer;
+        // expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb 
+        // XXX unroll loop, read 4 by 4 pixels src, write 2 pixels out by two ... 
+        for (int i=VGA_H_PIXELS-1;i>=0;i--)
+            draw_buffer[i] = palette_flash[drawbuf8[i]]; 
+    }
+}
+
+/* naive pixel conversion 
+from 16bit bitbox pixel 0RRRRRGGGGGBBBBB 
 to 16bit color (565) RRRRRGGGGG0BBBBB
 */
-#ifdef MICROKERNEL
-extern uint16_t palette_flash[256];
-static inline uint16_t pixelconv(pixel_t pixel)
-{
-    return (palette_flash[pixel] & (uint16_t)(~0x1f))<<1 | (palette_flash[pixel] & 0x1f);
-}
-#else
-static inline uint16_t pixelconv(pixel_t pixel)
+static inline uint16_t pixelconv(uint16_t pixel)
 {
     return (pixel & (uint16_t)(~0x1f))<<1 | (pixel & 0x1f);
 } 
-#endif 
 
 
-static void refresh_screen(SDL_Surface *scr)
+static void __attribute__ ((optimize("-O3"))) refresh_screen(SDL_Surface *scr)
 // uses global line + vga_odd
 {
     uint16_t *dst = (uint16_t*)scr->pixels;
@@ -133,7 +139,7 @@ static void refresh_screen(SDL_Surface *scr)
         #endif 
 
         // copy to screen at this position (cheating)
-        pixel_t *src = (pixel_t*) &draw_buffer[0];
+        uint16_t *src = (uint16_t*) draw_buffer;
 
         for (int i=0;i<screen_width;i++) 
             *dst++= pixelconv(*src++);
