@@ -78,7 +78,7 @@ parser.add_argument('-s','--export-sprites', default=False, help='exports object
 
 args = parser.parse_args()
 
-PALETTE = os.path.realpath(__file__)+'/pal_micro.png'
+PALETTE = os.path.dirname(__file__)+'/pal_micro.png'
 
 tree = ET.parse(args.file)
 root = tree.getroot()
@@ -304,7 +304,10 @@ if args.export_objects or args.export_sprites :
                 print "/* Sprite data : ",imgsrc,len(srcs),',frames,to:',sprfile
 
                 f=open(sprfile,'w+')
-                sprite_encode2.image_encode(src,f,ts_h,'p4') 
+                if args.micro : 
+                    sprite_encode8.image_encode(src,f,ts_h) 
+                else : 
+                    sprite_encode2.image_encode(src,f,ts_h,'p4') 
                 print "*/"
 
                 # XXX encode for 8bit!
