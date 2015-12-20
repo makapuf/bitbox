@@ -76,7 +76,7 @@ void graph_line() {
 
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
 uint16_t palette[2]  PALETTE_SECTION;
-const uint16_t palette_flash[] = {0, RGB(0xAA, 0xAA, 0xAA)};
+const uint16_t initial_palette[] = {0, RGB(0xAA, 0xAA, 0xAA)};
 
 uint32_t cp[1<<(BPP*2)]; // couples palette
 
@@ -106,7 +106,7 @@ void graph_line() {
 
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32]; 
 uint16_t palette[1<<BPP]  PALETTE_SECTION;
-const uint16_t palette_flash[] = {
+const uint16_t initial_palette[] = {
 	RGB(0,0,0), 
 	RGB(0x55, 0xff, 0xff), 
 	RGB(0xff, 0x55, 0x55), 
@@ -147,7 +147,7 @@ void graph_line() {
 
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
 uint16_t palette[1<<BPP]  PALETTE_SECTION;
-uint16_t palette_flash[]  = {
+uint16_t initial_palette[]  = {
 	RGB(   0,   0,   0), RGB(   0,   0,0xAA), RGB(   0,0xAA,   0), RGB(   0,0xAA,0xAA),
 	RGB(0xAA,   0,   0), RGB(0xAA,   0,0xAA), RGB(0xAA,0x55,   0), RGB(0xAA,0xAA,0xAA),
 	RGB(0x55,0x55,0x55), RGB(0x55,0x55,0xFF), RGB(0x55,0xFF,0x55), RGB(0x55,0xFF,0xFF),
@@ -176,7 +176,7 @@ void graph_line() {
 
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] ;
 uint16_t palette[1<<BPP]  PALETTE_SECTION;
-const uint16_t palette_flash[] = { // 256 colors standard VGA palette
+const uint16_t initial_palette[] = { // 256 colors standard VGA palette
 	// XXX replace with micro palette
 	0x0000, 0x0015, 0x02a0, 0x02b5, 0x5400, 0x5415, 0x5540, 0x56b5, 
 	0x294a, 0x295f, 0x2bea, 0x2bff, 0x7d4a, 0x7d5f, 0x7fea, 0x7fff, 
@@ -236,7 +236,7 @@ void graph_line() {
 
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
 uint16_t palette[1<<BPP]  PALETTE_SECTION;
-uint16_t palette_flash[]  = {
+uint16_t initial_palette[]  = {
 	RGB(   0,   0,   0), RGB(   0,   0,0xAA), RGB(   0,0xAA,   0), RGB(   0,0xAA,0xAA),
 	RGB(0xAA,   0,   0), RGB(0xAA,   0,0xAA), RGB(0xAA,0x55,   0), RGB(0xAA,0xAA,0xAA),
 	RGB(0x55,0x55,0x55), RGB(0x55,0x55,0xFF), RGB(0x55,0xFF,0x55), RGB(0x55,0xFF,0xFF),
@@ -418,7 +418,7 @@ void graph_line() {
 void clear() 
 {
    memset(vram, 0, sizeof(vram));
-   memcpy(palette,palette_flash,sizeof(palette_flash));
+   memcpy(palette,initial_palette,sizeof(initial_palette));
 }
 
 void draw_pixel(int x,int y,int c)
