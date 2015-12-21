@@ -6,9 +6,10 @@
 
 #include "cmsis/stm32f4xx.h"
 #include "kconf_micro.h"
+#include <string.h> // memset
 
-#if KERNEL!=MICRO // Micro interface is the only supported on micro hardware
-    #error only MICRO interface is suported on MICRO hardware (set KERNEL=MICRO on makefile. See lib/bitbox.mk)
+#ifndef MICROKERNEL // Micro interface is the only supported on micro hardware
+    #error only MICRO interface is suported on MICRO hardware (define MICROKERNEL on makefile. See lib/bitbox.mk)
 #endif 
 
 
@@ -63,7 +64,7 @@ void __attribute__((weak)) graph_line(void)  {}
 
 static inline void output_black(void)
 {
-    GPIOA->BSRR |= GPIO_BSRR_BR_0*0xff; // output black pins 0-7
+    GPIOA->BSRRH |= GPIO_BSRR_BS_0*0xff; // output black pins 0-7
 }
 
 void vga_setup() 
@@ -276,9 +277,9 @@ void  __attribute__ ((used)) TIM3_IRQHandler(void) // attribute used neded if ca
                 vga_frame++; // new frame sync now. 
                 graph_frame(); 
             } else if (vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) {
-                GPIOB->BSRR |= GPIO_BSRR_BR_15; // lower VSync line 
+                GPIOB->BSRRH |= GPIO_BSRR_BS_15; // lower VSync line 
             } else if(vga_line==VGA_V_PIXELS+1+VGA_V_FRONTPORCH+VGA_V_SYNC) {
-                GPIOB->BSRR |= GPIO_BSRR_BS_15; // raise VSync line
+                GPIOB->BSRRL |= GPIO_BSRR_BS_15; // raise VSync line
             } 
         }
 
