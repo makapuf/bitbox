@@ -41,7 +41,6 @@
 #define VGA_V_FRONTPORCH 10
 #define VGA_V_SYNC 2
 #define VGA_V_BACKPORCH 33
-#define VGA_V_PIXELS 480
 #define VGA_V_BLANK 45
 
 #define VGA_PIXELCLOCK 7 // DMA clocks per pixel
