@@ -53,9 +53,9 @@ int screen_height;
 #define EMU_FRAMES 10*60*60 // 1 minute 
  
 uint16_t audio[BITBOX_SNDBUF_LEN];
-pixel_t mybuffer1[LINE_BUFFER];
-pixel_t mybuffer2[LINE_BUFFER];
-pixel_t *draw_buffer = mybuffer1; // volatile ?
+uint16_t mybuffer1[LINE_BUFFER];
+uint16_t mybuffer2[LINE_BUFFER];
+uint16_t *draw_buffer = mybuffer1; // volatile ?
 volatile uint16_t gamepad_buttons[2]; 
 uint32_t vga_line; 
 volatile uint32_t vga_frame;
@@ -99,6 +99,12 @@ static void refresh_screen()
 
 // default empty implementation
 __attribute__((weak)) void game_snd_buffer(uint16_t *buffer, int len)  {}
+
+__attribute__((weak)) void graph_line( void )  {
+    // just call graph_line8
+    graph_line8();
+}
+
 
 static void handle_gamepad()
 // generate random gamepad events ?
