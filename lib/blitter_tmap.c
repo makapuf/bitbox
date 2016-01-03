@@ -55,27 +55,28 @@ void tilemap_u8_line(object *o)
     // --- column related
 
     // horizontal tile offset in tilemap
-    int tile_x = ((o->x<0?-o->x:0)/tilesize)&(tilemap_w-1);  // positive modulo
-    // positive modulo : i&(tilemap_w-1) if tilemap size is a power of two 
+    int tile_x = ((o->x<0?-o->x:0)/tilesize) & (tilemap_w-1);  // positive modulo as tilemap_w is a power of two
 
     uint32_t * restrict dst = (uint32_t*) &draw_buffer[o->x<0?0:o->x]; 
 
     // pixel addr of the last pixel
     const uint32_t *dst_max = (uint32_t*) &draw_buffer[min(o->x+o->w, VGA_H_PIXELS)]; 
-        
+    
     uint32_t *tiledata = (uint32_t *)o->a;
     uint32_t * restrict src;
     
-    // first, finish first tile, 2 pix at a time
-    if (o->x<0) {        
+    // first, finish first tile (if not on a boundary) , 2 pix at a time
+    if (o->x<0 && o->x%tilesize) { 
         if (idxptr[tile_x]) {
             src = &tiledata[(idxptr[tile_x]*tilesize + offset)*tilesize*2/4 + (-o->x%tilesize)/2];  
-            for (int i=0;i<(32+o->x%tilesize)/2;i++) *dst++ = *src++;
+            for (int i=0;i<(o->x%tilesize)/2;i++) 
+                *dst++ = *src++;
         } else { // skip the tile
-            dst += tilesize/2; // words per tile
+            dst += (o->x%tilesize)/2; // words per tile
         }
         tile_x++; 
     }
+    
 
     // blit to end of line (and maybe a little more)
     while (dst<dst_max) {
@@ -83,11 +84,11 @@ void tilemap_u8_line(object *o)
 
         // blit one tile, 2pix=32bits at a time, 8 times = 16pixels, 16 times=32pixels
         if (idxptr[tile_x]) {
-            src = &tiledata[(idxptr[tile_x]*tilesize + offset)*tilesize*2/4];  
+            src = &tiledata[(idxptr[tile_x]*tilesize + offset)*tilesize*2/4];
 
             for (int i=0;i<4;i++) *dst++=*src++; // 4 words = 8pixels
             if (tilesize>=16) // 16 or 32
-                for (int i=0;i<4;i++) *dst++=*src++; // 8 more 
+                for (int i=0;i<4;i++) *dst++=*src++; // 8 more
             if (tilesize==32)
                 for (int i=0;i<8;i++) *dst++=*src++; // 16 more
 
@@ -96,7 +97,8 @@ void tilemap_u8_line(object *o)
         }
         tile_x++; 
 
-    }   
+    }  
+     
 }
 
 
@@ -136,10 +138,11 @@ void tilemap_u16_line(object *o)
     uint32_t * restrict src;
     
     // first, finish first tile, 2 pix at a time
-    if (o->x<0) {        
+    if (o->x<0) {    
         if (idxptr[tile_x]) {
             src = &tiledata[(idxptr[tile_x]*tilesize + offset)*tilesize*2/4 + (-o->x%tilesize)/2];  
-            for (int i=0;i<(32+o->x%tilesize)/2;i++) *dst++ = *src++;
+            for (int i=0;i<(o->x%tilesize)/2;i++) 
+                *dst++ = *src++;
         } else { // skip the tile
             dst += tilesize/2; // words per tile
         }
