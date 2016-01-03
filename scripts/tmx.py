@@ -140,11 +140,10 @@ src = Image.open(os.path.join(os.path.dirname(os.path.abspath(args.file)),img)).
 if args.micro : 
     src = src.convert('RGB').quantize(palette=Image.open(PALETTE)) # XXX allow 8-bit adaptive palette ?
     pixdata = array.array('B',src.getdata()) # direct output bytes
-    print "extern const uint8_t %s_tset[]; // from %s"%(base_name,img)
 else: 
     pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples. 
-    print "extern const uint16_t %s_tset[]; // from %s"%(base_name,img)
 
+print "extern const uint%d_t %s%s_tset[]; // from %s"%(8 if args.micro else 16,dirname, base_name,img)
 w,h = src.size
 
 with open(os.path.join(base_path,base_name+'.tset'),'wb') as of: 
@@ -230,7 +229,7 @@ if args.export_objects or args.export_sprites :
         print "\n#define %s_%s_nb %d"%(base_name,name,len(pos))
         print "extern const struct MapObjectRef %s_%s[%s_%s_nb];"%(base_name,name,base_name,name)
 
-        print >> c_file,"const struct MapObjectRef %s_%s[%s_%s_nb] = { // x,y,tid,name_id,type_id "%(base_name,name,base_name,name)
+        print >>c_file,"const struct MapObjectRef %s_%s[%s_%s_nb] = { // x,y,tid,name_id,type_id "%(base_name,name,base_name,name)
         for c in pos :
             print >>c_file, "    {%d,%d,%d,%d,%d},"%(c[0],c[1],all_sprites.index(c[2]) if args.export_sprites else c[2],all_names.index(c[3]),all_types.index(c[4]))
         print >>c_file, "};\n"
@@ -300,32 +299,28 @@ if args.export_objects or args.export_sprites :
                 src = Image.new("RGBA", (ts_w,ts_h*len(srcs)))
                 for i,im in enumerate(srcs) : 
                     src.paste(im,(0,i*ts_h))
-                
+
                 # export data as spr
                 #sprfile=imgsrc.rsplit('.',1)[0]+'.spr' type if grouped by name
                 sprfile='%s_%d_%s.spr'%(base_name,tid,imgsrc.rsplit('.',1)[0])
                 print "/* Sprite data : ",imgsrc,len(srcs),',frames,to:',sprfile
 
-                f=open(sprfile,'w+')
+                f=open(os.path.join(base_path,sprfile),'w+')
                 if args.micro : 
                     sprite_encode8.image_encode(src,f,ts_h) 
                 else : 
-                    sprite_encode2.image_encode(src,f,ts_h,'p4') 
+                    sprite_encode2.image_encode(src,f,ts_h,'p4')
+
                 print "*/"
+                print "extern uint8_t %s%s[];"%(dirname,sprfile.replace('.','_'))
 
-                # XXX encode for 8bit!
-                # XXX encode anim list !
+                print >>c_file,"    &%s%s, // tile %d, tile inside %d"%(dirname,sprfile.replace('.','_'),tid, tid-int(last_ts.get('firstgid')))
 
-                print >>c_file,"    &%s, // tile %d, tile inside %d"%(sprfile.replace('.','_'),tid, tid-int(last_ts.get('firstgid')))
-                # animation data
 
-                #image_encode(src,f,frame_height,mode)
             print >>c_file,'};'
 
+            # animation data
             print >>c_file,"uint8_t *%s_anims[] = {"%base_name
             for an in anims : 
-                print >>c_file,'{'+','.join(str(tid) for tid in an)+', 255 },'
+                print >>c_file,'    (uint8_t []){'+','.join(str(tid) for tid in an)+', 255 },'
             print >>c_file,'};'
-
-
-
