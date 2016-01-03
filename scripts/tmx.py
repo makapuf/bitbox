@@ -269,12 +269,12 @@ if args.export_objects or args.export_sprites :
 
                 animtile = last_ts.find("tile[@id='%s']"%(tid-firstgid))
 
-                # find animation. if no animation, animation is done from the tile id
+                # find animation. if no animation, animation is made from only one tile : the tile id
                 anim_elt = animtile.find('animation')
                 if anim_elt != None : 
-                    animation_tid = [ int(frame_elt.get('tileid'))+firstgid for frame_elt in anim_elt.findall('frame')]
+                    animation_tid = [ int(frame_elt.get('tileid')) for frame_elt in anim_elt.findall('frame')]
                 else : 
-                    animation_tid = [ tid + firstgid ]
+                    animation_tid = [ tid  ]
                 animation_tid_unique = sorted(set(animation_tid))
                 animation_tid_remapped = [animation_tid_unique.index(frame) for frame in animation_tid]
 
