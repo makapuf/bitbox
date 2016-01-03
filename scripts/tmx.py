@@ -68,7 +68,7 @@ if len(sys.argv)==1 : sys.argv += ('-mxs','tmap.tmx')
 
 parser = argparse.ArgumentParser(description='Process TMX files to tset/tmap/.h files')
 parser.add_argument('file',help='input .tmx filename')
-parser.add_argument('-o','--output-dir', default='.', help='target directory, default: .')
+parser.add_argument('-o','--output-dir', help='target directory, default: tmx file source')
 parser.add_argument('-m','--micro', default=False, help='outputs a 8-bit data tileset from a palette.', action="store_true")
 parser.add_argument('-a','--export-tile-attributes', default=False, help='exports a bitfield property from tiles from is_xxx boolean tile attributes as an u8 bin array, after tileset data.',action="store_true")
 parser.add_argument('-x','--export-objects', default=False, help='exports object data directly to c file.', action="store_true")
@@ -86,7 +86,10 @@ def error(msg) :
     print msg
     sys.exit(1)
 
-base_name = args.file.rsplit('.',1)[0].split('/')[-1] # no path.
+base_path,base_name = os.path.split(args.file.rsplit('.',1)[0])
+if args.output_dir :
+    base_path = args.output_dir
+dirname=base_path.replace('/','_')+'_' if base_path else ''
 
 tilesets = root.findall('tileset')
 
@@ -144,7 +147,7 @@ else:
 
 w,h = src.size
 
-with open(os.path.join(args.output_dir,base_name+'.tset'),'wb') as of: 
+with open(os.path.join(base_path,base_name+'.tset'),'wb') as of: 
     for tile_y in range(h/tilesize) : 
         for tile_x in range(w/tilesize) : 
             for row in range(tilesize) : 
@@ -168,7 +171,7 @@ with open(os.path.join(args.output_dir,base_name+'.tset'),'wb') as of:
         print "#define %s_tset_attrs_offset %s"%(base_name, pos_attrs),'// offset in bytes in tset file of tiles attibutes.'
 print '\n // -- Tilemaps'
 index=0
-of = open(os.path.join(args.output_dir,base_name+'.tmap'),'wb') 
+of = open(os.path.join(base_path,base_name+'.tmap'),'wb') 
 mw, mh = root.get('width'), root.get('height')
 
 print '\n// Layers'    
@@ -196,7 +199,7 @@ for layer in root.findall("layer") :
     index += 1
 
 print "#define %s_header TMAP_HEADER(%d,%d,%s,%s)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
-print "extern const %s %s_tmap[][%d*%d];"%(typename[out_code], base_name,lw,lh)
+print "extern const %s %s%s_tmap[][%d*%d];"%(typename[out_code],dirname, base_name,lw,lh)
 
 # output all layers in a big array of arrays
 print '// max indices : ',max(indices)
@@ -210,7 +213,7 @@ if args.export_objects or args.export_sprites :
     all_types = ['']
     all_sprites = [] # tile_id of all sprites if export sprite
 
-    c_file = open(os.path.join(args.output_dir,base_name+'_objects.c'),'wb')
+    c_file = open(os.path.join(base_path,base_name+'_objects.c'),'wb')
     print >>c_file,'#include "%s.h"'%base_name
 
     for objectgroup in root.findall('objectgroup') : 
