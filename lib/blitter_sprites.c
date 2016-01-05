@@ -240,62 +240,67 @@ static void sprite_p4_line (object *o)
     uint32_t *p;
     do {
         uint32_t *restrict src = (uint32_t *)o->c;
-        uint32_t w = *src; 
         p=src;
+        uint32_t w = *src++; 
+
 
         x += SKIP(w); // skip : advance x 
             
         // now, palette blit it 
         uint32_t data_len = LEN(w); // in pixels
         uint32_t i=data_len; // remaining pixels to blit
-        uint32_t *restrict dst = (uint32_t*) &draw_buffer[x]; // 2 pixels at a time
+        uint32_t *restrict dst = (uint32_t*) &draw_buffer[x&0xfffe]; // 2 pixels at a time
 
         if (x&1) { // non aligned = u16 aligned target ab bc cd de ... 
             uint32_t a; // prec unblitted last pixel is in a 
+            
             // finish w
-            a=*dst&0xffff0000;
+            a=*dst & 0x0000ffff; // little endian
+
             if (i>=4) { // at least 4 pixels : blit those 4 pixels
-                *dst++ = a | pal[w>>16&0xf];
-                *dst++ = pal[w>>20&0xf]<<16 | pal[w>>24&0xf];
-                a = pal[w>>28&0xf]<<16;            
-                i -=4; w=*src++; // reload it
+                *dst++ = a              | pal[w>>16&0xf]<<16;
+                *dst++ = pal[w>>20&0xf] | pal[w>>24&0xf]<<16;
+                a = pal[w>>28&0xf];            
+                i -=4; w=*src++; // load next word
             } else { 
                 w>>=16; // let the loop finish it, by realigning it
             }
 
-            for (;i>8;i-=8) // blit a source word
+            for (;i>=8;i-=8) // blit a source word
             {
                 *dst++ = a              | pal[w>> 0&0xf]<<16;
                 *dst++ = pal[w>> 4&0xf] | pal[w>> 8&0xf]<<16;
                 *dst++ = pal[w>>12&0xf] | pal[w>>16&0xf]<<16;
                 *dst++ = pal[w>>20&0xf] | pal[w>>24&0xf]<<16;
-                a = pal[w>>28&0xf]<<16;
+                a = pal[w>>28&0xf];
                 w=*src++;
             }
 
-            // finish with 1, 2..7 u16 pixels int the last word
-            while (i>2) { // first with couples (ie u32)
+            // finish with 1, 2..7 u16 pixels in the last word
+            while (i>=2) { // first with couples (ie u32)
                 *dst++ = a | pal[w&0xf] <<16;
                 a = pal[w>> 4&0xf];
                 i -=2; w>>=8;
             }
-            // last one is there is one - nec. left one
-            if (i) {
-                *dst = pal[w&0xf] | (*dst&0xffff0000) ;
-                dst++;
+
+            if (i) { // a + 1 pixel
+                *dst = a | pal[w&0xf]<<16;
+            } else { // a + empty
+                *dst = a | (*dst&0xffff0000) ;
             }
+            dst++;
 
 
         } else { // aligned target 
             if (i>=4) { // at least 4 pixels : blit those 4 pixels
                 *dst++ = pal[w>>16&0xf] | pal[w>>20&0xf]<<16;
                 *dst++ = pal[w>>24&0xf] | pal[w>>28&0xf]<<16;            
-                i -=4; w=*src++; // reload it
+                i -=4; w=*src++; // load next input word
             } else { 
                 w>>=16; // let the loop finish it, by realigning it
             }
 
-            for (;i>8;i-=8) // blit a source word
+            for (;i>=8;i-=8) // blit a source word
             {
                 *dst++ = pal[w    &0xf] | pal[w>> 4&0xf]<<16;
                 *dst++ = pal[w>> 8&0xf] | pal[w>>12&0xf]<<16;
@@ -305,7 +310,7 @@ static void sprite_p4_line (object *o)
             }
 
             // finish with 1, 2..7 u16 pixels int the last word
-            while (i>2) { // first with couples (ie u32)
+            while (i>=2) { // first with couples (ie u32)
                 *dst++ = pal[w   &0xf] | pal[w>> 4&0xf]<<16;
                 i -=2; w>>=8;
             }
@@ -315,6 +320,7 @@ static void sprite_p4_line (object *o)
                 dst++;
             }
         }
+
         // advances x and pointer to next blit
         x += data_len; // next x
         o->c += 2+2*((data_len+3)/4);
@@ -405,19 +411,5 @@ static void sprite_c8_line (object *o)
     } while (!(EOL(*p))); // stop if it was an eol
 
 }
-
-/* test blitter : 2 triangles (fait un trou au milieu) 128x32, 2 couleurs pour simplifier (+transp), /\ 
- fond vert
- - d'abord 5 triangles start a zero
-
- - ensuite 6 decales de 32 a G (x=-32 ... )
-
- ^ start @-32 ^ end screen : parfois coupe ds skip parfois ds blit, debut et fin
-
- Cf. rendu ecran, perfs, 
- un fond ?
-
- */
-
 
 
