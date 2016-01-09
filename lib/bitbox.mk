@@ -4,7 +4,7 @@
 # DEFINES in outside makefile
 #   NAME : name of the project
 #   GAME_C_FILES c files of the project
-#   GAME_BIN_FILES : files to embed as part of the main binary ROM. Note: you can use GAME_BIN_FILES=$(wildcard data/*) 
+#   GAME_BINARY_FILES : files to embed as part of the main binary ROM. Note: you can use GAME_BIN_FILES=$(wildcard data/*) 
 
 #   GAME_C_OPTS : C language options. Those will be used for the ARM game as well as the emulator.
 #	C DEFINES : defined in DEFINED Makefile Variable. (will be added as -Dxxx to GAME_C_OPTS, you can use either)
@@ -24,13 +24,6 @@
 #         USE_SAMPLER
 #         USE_CHIPTUNES 
 #
-#         MICROKERNEL : switch the kernel interface will be the micro kernel interface (8bpp colors and sound) 
-#             Note that a micro game can be compiled for multiples target boards : micro, bitbox, sdl or test.
-#			  It's just that the exposed capabilities are different. Exported to C defines when enabled.
-# 
-#		  AUTOKERNEL : use micro kernel on micro, and bitbox kernel interface on other targets. 
-#				will define MICROKERNEL in C on bitbox micro board only.
-#		     
 #   Simple mode related : 
 #        VGA_SIMPLE_MODE=0 .. 12 (see simple.h for modes)
 
