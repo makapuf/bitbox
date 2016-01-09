@@ -16,7 +16,7 @@
 #include "fatfs/ff.h"
 
 #include "flashit.h"
-
+#include "build/binaries.h"
 
 enum {INIT =4, MOUNT=5, OPEN=6, READ=7}; // where we died - bootloader 2
 #define MAX_FILES 50
@@ -232,7 +232,15 @@ int read_icon(const char *filename)
 	f_close(&file);
 	return res;
 }
- 
+
+void default_icon( void )
+{	
+	uint8_t *p = bitbox_pbm;
+	for (int i=0;i<3;i++) 
+		while(*p++ != '\n'); // skip line
+	memcpy(icon_data, p, sizeof(icon_data));
+}
+
 char *HEX_Digits;
 
 void game_init() {
@@ -251,14 +259,9 @@ void game_init() {
 	
 	memset(icon_data, 0x55, sizeof(icon_data));
 	icon_x = 400;
-	r=read_icon("bitbox.pbm");
-	if (r==FR_OK) 
-		icon_y=200; 
-	else {
-		vram_char[16][1] = HEX_Digits[r&0xf];
-		vram_char[16][0] = HEX_Digits[(r>>4)&0xf];
-		icon_y=1024; // don't display it now
-	}
+	icon_y=200; 
+	
+	default_icon();
 
 	list_roms();
 	if (!nb_files)
@@ -320,7 +323,7 @@ void game_frame()
 		strcpy(c,".pbm");
 		int r=read_icon(icon_name);
 		if (r!=FR_OK)
-			r=read_icon("bitbox.pbm"); // missed, try standard one
+			default_icon();
 	}
 	
 	// Start flashing ?
