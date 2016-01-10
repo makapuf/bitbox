@@ -32,9 +32,9 @@ void graph_line()
 {	
 
 	// last 15 lines as RGB bits
-	if (vga_line>=480-30){
-		for (int i=0;i<640;i++)
-			draw_buffer[i] = 1<<((vga_line-(480-30))/2);
+	if (vga_line>=VGA_V_PIXELS-30){
+		for (int i=0;i<VGA_H_PIXELS;i++)
+			draw_buffer[i] = 1<<((vga_line-(VGA_V_PIXELS-30))/2);
 		return;		
 	}
 

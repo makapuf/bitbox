@@ -30,6 +30,8 @@
 #include "kconf_bitbox.h"
 #elif defined(EMULATOR)
 #include "kconf_emu.h"
+#elif defined(BOARD_PAL)
+#include "kconf_pal.h"
 #endif 
 
 // --------------------------------------

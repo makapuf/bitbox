@@ -40,7 +40,9 @@ BITBOX_TGT:=$(NAME).elf
 MICRO_TGT:=$(NAME)_micro.elf
 SDL_TGT:=$(NAME) 
 TEST_TGT:=$(NAME)_test
+PAL_TGT:=$(NAME)_pal.elf 
 
+# default : build bitbox + sdl binaries
 all: $(SDL_TGT) $(BITBOX_TGT:%.elf=%.bin) $(EXTRA_FILES)
 
 # --- option-only targets (independent from target)
@@ -90,18 +92,14 @@ GAME_C_FILES += chiptune_engine.c chiptune_player.c
 endif
 
 # -- Target-specifics 
-ifdef AUTOKERNEL
-$(MICRO_TGT): DEFINES += MICROKERNEL
-endif 
-
-
-$(BITBOX_TGT): DEFINES += BOARD_BITBOX
+$(BITBOX_TGT): DEFINES += BOARD_BITBOX	
 $(MICRO_TGT):  DEFINES += BOARD_MICRO
+$(PAL_TGT): DEFINES += BOARD_PAL
 
 CORTEXM4F=-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -march=armv7e-m -mlittle-endian -nostartfiles
-$(BITBOX_TGT) $(MICRO_TGT): CC=arm-none-eabi-gcc
-$(BITBOX_TGT) $(MICRO_TGT): C_OPTS += -O3 $(CORTEXM4F)
-$(BITBOX_TGT) $(MICRO_TGT): LD_FLAGS += $(CORTEXM4F)
+$(BITBOX_TGT) $(MICRO_TGT) $(PAL_TGT): CC=arm-none-eabi-gcc
+$(BITBOX_TGT) $(MICRO_TGT) $(PAL_TGT): C_OPTS += -O3 $(CORTEXM4F)
+$(BITBOX_TGT) $(MICRO_TGT) $(PAL_TGT): LD_FLAGS += $(CORTEXM4F)
 
 ifdef LINKER_RAM
 $(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_ram.ld
@@ -113,6 +111,9 @@ else
 $(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_loader.ld
 dfu stlink: FLASH_START = 0x08004000
 endif 
+
+$(PAL_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_loader.ld
+stlink-pal: FLASH_START = 0x08004000
 
 $(MICRO_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib//Linker_micro.ld
 dfu-micro stlink-micro: FLASH_START = 0x08000000
@@ -133,6 +134,7 @@ KERNEL_SDL+=emulator.c
 KERNEL_TEST+=tester.c
 KERNEL_MICRO+=board_micro.c startup.c bitbox_main.c
 KERNEL_BITBOX+=board.c startup.c bitbox_main.c
+KERNEL_PAL+=board.c startup.c bitbox_main.c
 
 # -- Optional AND target specific
 
@@ -140,6 +142,7 @@ KERNEL_BITBOX+=board.c startup.c bitbox_main.c
 ifndef NO_VGA
   KERNEL_MICRO += vga_micro.c
   KERNEL_BITBOX += new_vga.c micro_palette.c
+  KERNEL_PAL += vga_pal.c micro_palette.c
   KERNEL_SDL += micro_palette.c
 else 
   DEFINES += NO_VGA
@@ -152,19 +155,21 @@ ifdef USE_SDCARD
 DEFINES += USE_SDCARD USE_STDPERIPH_DRIVER
 KERNEL_BITBOX += $(SDCARD_FILES)
 KERNEL_MICRO += $(SDCARD_FILES)
+KERNEL_PAL += $(SDCARD_FILES)
 endif 
 
 # USB defines
 ifdef NO_USB
 DEFINES += NO_USB
 else 
-$(BITBOX_TGT) $(MICRO_TGT): DEFINES += USE_STDPERIPH_DRIVER
+$(BITBOX_TGT) $(MICRO_TGT) $(PAL_TGT): DEFINES += USE_STDPERIPH_DRIVER
 USB_FILES := usb_bsp.c usb_core.c usb_hcd.c usb_hcd_int.c \
 	usbh_core.c usbh_hcs.c usbh_stdreq.c usbh_ioreq.c \
 	usbh_hid_core.c usbh_hid_keybd.c usbh_hid_mouse.c usbh_hid_gamepad.c \
 	usbh_hid_parse.c misc.c
 KERNEL_BITBOX += $(USB_FILES)
 KERNEL_MICRO += $(USB_FILES)
+KERNEL_PAL += $(USB_FILES)
 endif
 
 ifdef NO_AUDIO
@@ -172,6 +177,7 @@ DEFINES+=NO_AUDIO
 else
 KERNEL_BITBOX += audio_bitbox.c
 KERNEL_MICRO += audio_micro.c
+KERNEL_PAL += audio_bitbox.c
 endif
 
 # --- binaries as direct object linking + binaries.h from all data in /data directory (if present)
@@ -205,7 +211,7 @@ $(BUILD_DIR)/%.c: %
 
 ALL_CFLAGS = $(DEFINES:%=-D%) $(C_OPTS) $(INCLUDES) $(GAME_C_OPTS)
 
-# must put 4 rules and not only once since multi target pattern rules are special :)
+# must put different rules and not only once since multi target pattern rules are special :)
 $(BUILD_DIR)/bitbox/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
@@ -218,6 +224,10 @@ $(BUILD_DIR)/sdl/%.o: %.c
 $(BUILD_DIR)/test/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+$(BUILD_DIR)/pal/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+
 
 %.bin: %.elf
 	arm-none-eabi-objcopy -O binary $^ $@
@@ -232,6 +242,10 @@ $(TEST_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/test/%.o) $(KERNEL_TEST:%.c=$(BUILD
 	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
 
 $(BITBOX_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/bitbox/%.o) $(KERNEL_BITBOX:%.c=$(BUILD_DIR)/bitbox/%.o)
+	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
+	chmod -x $@
+
+$(BITBOX_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/pal/%.o) $(KERNEL_PAL:%.c=$(BUILD_DIR)/pal/%.o)
 	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
 	chmod -x $@
 
@@ -263,6 +277,9 @@ stlink-micro: $(NAME)_micro.bin
 dfu-micro: $(NAME)_micro.bin
 	dfu-util -D $< --dfuse-address $(FLASH_START) -a 0
 
+stlink-pal: $(NAME)_pal.bin
+	st-flash write $^ $(FLASH_START)
+
 # double colon to allow extra cleaning
 clean::
-	rm -rf $(BUILD_DIR) $(MICRO_TGT) $(BITBOX_TGT) $(NAME).bin $(SDL_TGT) $(TEST_TGT)
+	rm -rf $(BUILD_DIR) $(MICRO_TGT) $(BITBOX_TGT) $(PAL_TGT) $(NAME).bin $(SDL_TGT) $(TEST_TGT)
