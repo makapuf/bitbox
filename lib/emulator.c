@@ -17,8 +17,8 @@
 
 #include "fatfs/ff.h"
 
-#define WM_TITLE_LED_ON  "Bitbox emu (*)"
-#define WM_TITLE_LED_OFF "Bitbox emu"
+#define WM_TITLE_LED_ON  "Bitbox emulator (*)"
+#define WM_TITLE_LED_OFF "Bitbox emulator"
 /*
    TODO
    
@@ -243,6 +243,7 @@ int init(void)
         printf( "Unable to init SDL: %s\n", SDL_GetError() );
         return 1;
     }
+    set_led(0); // off by default
 
     // make sure SDL cleans up before exit
     atexit(SDL_Quit);
