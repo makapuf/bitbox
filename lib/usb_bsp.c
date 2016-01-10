@@ -40,7 +40,7 @@ void TIM4_IRQHandler()
   {
     TIM4->SR &= ~TIM_SR_UIF; // clear UIF flag
 
-    // process USB
+      // process USB
       #ifdef USE_USB_OTG_FS
         USBH_Process(&USB_OTG_FS_Core, &USB_FS_Host);
       #endif
@@ -90,27 +90,27 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
 
 
   // OTG FS
-  /* Configure VBUS:PA9 ID:PA10 DM:PA11 DP:PA12 Pins  - STM32F405 here ! */
-  
+  RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+
+  /* Configure VBUS:PA9 ID:PA10 DM:PA11 DP:PA12 Pins  - STM32F405 here ! */  
+
   #ifdef USE_USB_OTG_FS
   RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
   GPIOA->MODER |= GPIO_MODER_MODER9_0 * 0b10101010; // mode = AF(0b10)
   GPIOA->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR9_0 * 0b11111111; // SPEED=100MHz 
   GPIOA->PUPDR   &= ~(GPIO_PUPDR_PUPDR9_0*0b11111111); // set to 0 = no pull
   GPIOA->AFR[1] |= 0x000AAAA0 ; // PA9-12 alt func nb 10 (datasheet p45 + refman p153)
-
-  RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
   RCC->AHB2ENR |= RCC_AHB2ENR_OTGFSEN;
   #endif 
   
 
-  // OTG HS - pins PB12 13 14 15 / 100MHz / Alt / USB_OTG2_FS
+  // OTG HS - pins PB12:id 13:vbus 14:dm 15:dp / 100MHz / Alt / USB_OTG2_FS
   #ifdef  USE_USB_OTG_HS 
   RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
   GPIOB->MODER |= GPIO_MODER_MODER12_0 * 0b10101010; // mode = AF(0b10)
   GPIOB->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR12_0 * 0b11111111; // SPEED=100MHz 
   GPIOB->PUPDR   &= ~(GPIO_PUPDR_PUPDR12_0*0b11111111); // set to 0 = no pull
-  GPIOB->AFR[1] |= 0xAAAA0000UL ; // PB12-15 alt func nb 10 (datasheet p45 + refman p153)
+  GPIOB->AFR[1] |= 0xCCCC0000UL ; // PB12-15 alt func nb 12 (datasheet p45 + refman p153)
   RCC->AHB1ENR |= RCC_AHB1ENR_OTGHSEN; 
   #endif
 
