@@ -245,7 +245,7 @@ $(BITBOX_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/bitbox/%.o) $(KERNEL_BITBOX:%.c=$
 	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
 	chmod -x $@
 
-$(BITBOX_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/pal/%.o) $(KERNEL_PAL:%.c=$(BUILD_DIR)/pal/%.o)
+$(PAL_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/pal/%.o) $(KERNEL_PAL:%.c=$(BUILD_DIR)/pal/%.o)
 	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
 	chmod -x $@
 
