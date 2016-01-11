@@ -7,10 +7,10 @@
 
 // 405 usb
 #ifndef NO_USB
-#define USE_USB_OTG_HS 
-#define USE_EMBEDDED_PHY 
-#define USE_USB_OTG_FS 
-#endif 
+#define USE_USB_OTG_HS
+#define USE_EMBEDDED_PHY
+#define USE_USB_OTG_FS
+#endif
 
 
 // If the game didn't specify anything, let's pick a default mode
@@ -22,9 +22,9 @@
   #endif
 
   // PAL-optimized mode 384x271
-  #ifdef VGAMODE_360
+  #ifdef VGAMODE_384
     #define PAL_MODE 384
-  #endif 
+  #endif
 
   #ifndef PAL_MODE
     #define PAL_MODE 384
@@ -66,7 +66,7 @@
 #define PLL_N 336
 #define PLL_P 2
 #define PLL_Q 7
-#define APB_PRESC 2 
+#define APB_PRESC 2
 
 // ----
 // No changes below this line please.
@@ -89,16 +89,16 @@
 // ----------------------------------------------------------------------------
 // Standard defines, shared with the standard bitbox platform
 //
-#define HAS_CMM 
+#define HAS_CMM
 #define STM32F40_41xxx
 #define STACKSIZE 8192
- 
+
 // usb
 #ifndef NO_USB
-#define USE_USB_OTG_HS 
-#define USE_EMBEDDED_PHY 
-#define USE_USB_OTG_FS 
-#endif 
+#define USE_USB_OTG_HS
+#define USE_EMBEDDED_PHY
+#define USE_USB_OTG_FS
+#endif
 
 #define AHB_PRE RCC_CFGR_HPRE_DIV1
 #define APB1_PRE RCC_CFGR_PPRE2_DIV2 // PCLK2 = HCLK / 2
