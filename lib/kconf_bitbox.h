@@ -1,18 +1,18 @@
-/* This is bitbox standard kernel configuration options. A standard dev should not modify it, 
- * as this one is used to tune clocks / overclocking, VGA clocks ... 
+/* This is bitbox standard kernel configuration options. A standard dev should not modify it,
+ * as this one is used to tune clocks / overclocking, VGA clocks ...
  */
 #include <stdint.h>
 
-#define HAS_CMM 
+#define HAS_CMM
 #define STM32F40_41xxx
 #define STACKSIZE 8192
- 
+
 // usb
 #ifndef NO_USB
-#define USE_USB_OTG_HS 
-#define USE_EMBEDDED_PHY 
-#define USE_USB_OTG_FS 
-#endif 
+#define USE_USB_OTG_HS
+#define USE_EMBEDDED_PHY
+#define USE_USB_OTG_FS
+#endif
 
 #define AHB_PRE RCC_CFGR_HPRE_DIV1
 #define APB1_PRE RCC_CFGR_PPRE2_DIV2 // PCLK2 = HCLK / 2
@@ -30,11 +30,11 @@
 
 // 640 480 VESA on 192 MHz SYSCLK
 
-#define VGA_H_PIXELS 640 
+#define VGA_H_PIXELS 640
 #define VGA_V_PIXELS 480
 #define VGA_FPS 60
- 
-#define VGA_H_FRONTPORCH 16 
+
+#define VGA_H_FRONTPORCH 16
 #define VGA_H_SYNC 96
 #define VGA_H_BACKPORCH 48
 
@@ -54,11 +54,11 @@
 
 // 800 600 non VESA on lightly O/C core (180MHz) - ~ 30kHz, 56fps
 
-#define VGA_H_PIXELS 800 
+#define VGA_H_PIXELS 800
 #define VGA_V_PIXELS 600
 #define VGA_FPS 56
 
-#define VGA_H_FRONTPORCH 64 
+#define VGA_H_FRONTPORCH 64
 #define VGA_H_SYNC 128
 #define VGA_H_BACKPORCH 50
 
@@ -78,12 +78,12 @@
 #elif defined(VGAMODE_800_OVERCLOCK)
 
 // 800 600 non VESA O/C core (192Hz) - ~ 34kHz, 56fps
-#define VGA_H_PIXELS 800 
+#define VGA_H_PIXELS 800
 #define VGA_V_PIXELS 600
 #define VGA_V_BLANK 19
 #define VGA_FPS 56
 
-#define VGA_H_FRONTPORCH 32 
+#define VGA_H_FRONTPORCH 32
 #define VGA_H_SYNC 80
 #define VGA_H_BACKPORCH 50
 
@@ -103,13 +103,13 @@
 // 400x300 based on 800x600 + skipline / non VESA on lightly O/C core (180MHz) - ~ 30kHz, 56fps
 
 #define VGA_SKIPLINE
-#define VGA_H_PIXELS 400 
+#define VGA_H_PIXELS 400
 #define VGA_V_PIXELS 300
 #define VGA_V_BLANK 10
 #define VGA_FPS 56
 
 
-#define VGA_H_FRONTPORCH 32 
+#define VGA_H_FRONTPORCH 32
 #define VGA_H_SYNC 64
 #define VGA_H_BACKPORCH 25
 
@@ -129,12 +129,12 @@
 
 // 320 240 non completely VESA on non O/C core (168MHz) - 30kHz, 60fps
 #define VGA_SKIPLINE
-#define VGA_H_PIXELS 320 
+#define VGA_H_PIXELS 320
 #define VGA_V_PIXELS 240
 #define VGA_V_BLANK 10
 #define VGA_FPS 60
 
-#define VGA_H_FRONTPORCH 8 
+#define VGA_H_FRONTPORCH 8
 #define VGA_H_SYNC 48
 #define VGA_H_BACKPORCH 24
 
@@ -151,12 +151,12 @@
 
 #else // default one, use 640 480 non completely VESA on non O/C core (168MHz) - 30kHz, 60fps
 
-#define VGA_H_PIXELS 640 
+#define VGA_H_PIXELS 640
 #define VGA_V_PIXELS 480
 #define VGA_V_BLANK 20
 #define VGA_FPS 60
 
-#define VGA_H_FRONTPORCH 16 
+#define VGA_H_FRONTPORCH 16
 #define VGA_H_SYNC 64
 #define VGA_H_BACKPORCH 80
 
@@ -173,3 +173,9 @@
 
 #endif
 
+#ifdef VGA_SKIPLINE
+// line frequency in Hz, should be >30kHz, 31.5 kHz for vesa 640x480
+#define VGA_VFREQ (VGA_FPS*2*(VGA_V_PIXELS+VGA_V_BACKPORCH+VGA_V_SYNC+VGA_V_FRONTPORCH))
+#else
+#define VGA_VFREQ (VGA_FPS*  (VGA_V_PIXELS+VGA_V_BACKPORCH+VGA_V_SYNC+VGA_V_FRONTPORCH))
+#endif
