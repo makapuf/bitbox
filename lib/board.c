@@ -1,7 +1,7 @@
 // board.c : misc board elements definitions ; buttons, LED, debug blinks  ...
 // interface in bitbox.h
 
-#include "kconf_bitbox.h"
+#include "kconf.h"
 #include "stm32f4xx.h"
 
 extern uint32_t __isr_vector_start[]; // flash vector

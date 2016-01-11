@@ -38,7 +38,7 @@
 
 #define SYSCLK (8000000UL * PLL_N / PLL_P / PLL_M ) // HZ (and 8*n/q/m = 48MHz)
 
-#ifndef VGAMODE_NONE 
+#if !defined(BOARD_PAL) && !defined(VGAMODE_NONE)
 #ifdef VGA_SKIPLINE 
 // line frequency in Hz, should be >30kHz, 31.5 kHz for vesa 640x480
 #define VGA_VFREQ (VGA_FPS*2*(VGA_V_PIXELS+VGA_V_BACKPORCH+VGA_V_SYNC+VGA_V_FRONTPORCH)) 

@@ -13,16 +13,23 @@
 #endif 
 
 
-// Compatible VGA mode : 320x240
-#ifdef VGAMODE_320
-#define PAL_MODE 25 
+// If the game didn't specify anything, let's pick a default mode
+#ifndef PAL_MODE
+
+  // Compatible VGA mode : 320x271 (should be 320x240)
+  #ifdef VGAMODE_320
+    #define PAL_MODE 25 
+  #endif
+
+  // PAL-optimized mode 384x271
+  #ifdef VGAMODE_360
+    #define PAL_MODE 21
+  #endif 
+
+  #ifndef PAL_MODE
+    #define PAL_MODE 21
+  #endif
 #endif
-
-// PAL-optimized mode 360x271
-#ifdef VGAMODE_360
-#define PAL_MODE 21
-#endif 
-
 
 #define VGA_PIXELCLOCK (8064/PAL_MODE) // DMA clocks per pixel
 
@@ -113,5 +120,21 @@
 #define VGA_V_BACKPORCH 27
 // Total of these 4 must be 312 lines
 
-#define COMPOSITE_SYNC 1 // not used anymore in vga_pal
+// ----------------------------------------------------------------------------
+// Standard defines, shared with the standard bitbox platform
+//
+#define HAS_CMM 
+#define STM32F40_41xxx
+#define STACKSIZE 8192
+ 
+// usb
+#ifndef NO_USB
+#define USE_USB_OTG_HS 
+#define USE_EMBEDDED_PHY 
+#define USE_USB_OTG_FS 
+#endif 
 
+#define AHB_PRE RCC_CFGR_HPRE_DIV1
+#define APB1_PRE RCC_CFGR_PPRE2_DIV2 // PCLK2 = HCLK / 2
+#define APB2_PRE RCC_CFGR_PPRE1_DIV4 // PCLK1 = HCLK / 4
+#define APB1_DIV 2
