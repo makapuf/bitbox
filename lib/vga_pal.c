@@ -3,7 +3,8 @@
 
 	mode as defined in kconf.h values 
 	- output is on PORT E, lower 15 bits
-	- sync is on PORT A, pin0 (vsync), pin1 (hsync)
+	- sync is on PORT A, pin1 (composite sync)
+	- PORT A, pin 0 always high (used for switching the TV to SCART-RGB)
 
 */
 
@@ -14,10 +15,24 @@
 */
 
 /* 
-	PA1 (HSYNC) output is driven by Timer5 with CC 2 (see Table9 of datasheet, p60) using pwm mode
+	PA1 (SYNC) output is driven by Timer5 with CC 2 (see Table9 of datasheet, p60) using pwm mode
 	Timer 1 (PIXEL DMA) is started as a slave of Timer5 CC1 via ITR1 (see config options table 76, p463 of refman)
    	TIM1_UP drives the DMA2 on stream 5 channel 6 (ref manual p164)
 	DMA2 outputs to gpio PE0-15 ( refman p48 - DMA1 cannot drive AHB1 )
+
+	The SYNC pulses are "short" for most lines (the width is defined by VGA_H_SYNC)
+	During vertical sync lines, they are "long" (the duration is 64µS - VGA_H_SYNC)
+
+	    _________________________________________________
+	|___| <- 'short' pulse
+	                                                 ____
+	|________________________________________________| <- 'long' pulse
+
+	There is no half-line at the end of the VSync currently, we will need to add
+	this for interlace support.
+
+	vga_raise_vsync and vga_lower_vsync switch between these two.
+	The rest of the file is completely identical to the VGA one with separate sync.
 */
 
 

@@ -20,10 +20,22 @@
 
 enum {INIT =4, MOUNT=5, OPEN=6, READ=7}; // where we died - bootloader 2
 #define MAX_FILES 50
-#define LIST_Y 6
+
+#define SCR_LINES (VGA_V_PIXELS / 16) // Total number of text-lines
 #define MSG_X 40
-#define MSG_Y 25
-#define DISPLAY_LINES 19
+
+#if BOARD_PAL
+  #define DISPLAY_LINES 12
+  #define HEAD_Y 0
+  #define MSG_Y 13
+  #define LIST_Y 4
+#else
+  #define DISPLAY_LINES 19
+  #define HEAD_Y 2
+  #define MSG_Y 25
+  #define LIST_Y 6
+#endif
+
 FATFS fs32;
 // load from sd to RAM
 // flash LED, boot
@@ -92,7 +104,7 @@ void jump(uint32_t address)
 
 
 extern const uint8_t font_data [256][16];
-char vram_char[30][80];
+char vram_char[SCR_LINES][80];
 
 int nb_files;
 char filenames[MAX_FILES][13]; // 8+3 +. + 1 chr0
@@ -246,8 +258,8 @@ char *HEX_Digits;
 void game_init() {
 	flash_init();
 
-	window(2,2,78,4);
-	print_at(5,3, " BITBOX bootloader \x01 Hi ! Here are the current files");
+	window(2,HEAD_Y,78,HEAD_Y+2);
+	print_at(5,HEAD_Y+1, " BITBOX bootloader \x01 Hi ! Here are the current files");
 
     // init FatFS
 	memset(&fs32, 0, sizeof(FATFS));
@@ -259,7 +271,7 @@ void game_init() {
 	
 	memset(icon_data, 0x55, sizeof(icon_data));
 	icon_x = 400;
-	icon_y=200; 
+	icon_y= VGA_V_PIXELS / 2 - 80;
 	
 	default_icon();
 
@@ -286,8 +298,8 @@ void game_frame()
 		if (x==59) dir_x = -1;
 		if (x==0)  dir_x = 1;
 
-		if (y==6)  dir_y = 1;
-		if (y==29) dir_y = -1;
+		if (y==HEAD_Y+3)  dir_y = 1;
+		if (y==SCR_LINES - 1) dir_y = -1;
 
 		x += dir_x;
 		y += dir_y;

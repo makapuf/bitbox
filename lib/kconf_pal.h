@@ -13,71 +13,41 @@
 #endif 
 
 
-// Compatible VGA mode : 320x240
-#ifdef VGAMODE_320
-#define PAL_MODE 25 
+// If the game didn't specify anything, let's pick a default mode
+#ifndef PAL_MODE
+
+  // Compatible VGA mode : 320x271 (should be 320x240)
+  #ifdef VGAMODE_320
+    #define PAL_MODE 322
+  #endif
+
+  // PAL-optimized mode 384x271
+  #ifdef VGAMODE_360
+    #define PAL_MODE 384
+  #endif 
+
+  #ifndef PAL_MODE
+    #define PAL_MODE 384
+  #endif
 #endif
-
-// PAL-optimized mode 360x271
-#ifdef VGAMODE_360
-#define PAL_MODE 21
-#endif 
-
 
 #define VGA_PIXELCLOCK (8064/PAL_MODE) // DMA clocks per pixel
 
-// Possible values => Horizontal resolution (8064 / DMA divider)
+// Possible values for PAL_MODE (in pixels):
 // (at 168MHz CPU, PLL_N=336)
 
-//  7 and lower => Not possible, maximal DMA speed is 6 cycles per transfer!
-//                 (well... may be possible with some hacks, but who need a
-//                 resolution that high anyway?)
-//  8 =>1008px *
-//  9 => 896px
-// 10 => 806px (almost Atari ST medres/ CPC mode 2)
-// 11 => 733px
-// 12 => 672px *
-// 13 => 620px
-// 14 => 576px *
-// 15 => 537px
-// 16 => 504px *
-// 17 => 474px
-// 18 => 448px
-// 19 => 424px
-// 20 => 403px
-// 21 => 384px * (Same as Amstrad CPC mode 1 / Atari ST lowres)
-// 22 => 366px
-// 23 => 350px
-// 24 => 336px *
-// 25 => 322px
-// 26 => 310px
-// 27 => 298px
-// 28 => 288px *
-// 29 => 278px
-// 30 => 268px
-// 31 => 260px
-// 32 => 252px *
-// 33 => 244px
-// 34 => 237px
-// 35 => 230px
-// 36 => 224px
-// 37 => 217px
-// 38 => 212px
-// 39 => 206px
-// 40 => 201px
-// 41 => 196px
-// 42 => 192px * (Same as Amstrad CPC mode 0)
-// 43 => 187px
-// 44 => 183px
-// ...
-// 48 => 168px *
-// 56 => 144px *
-// 64 => 126px *
-// 84 =>  96px *
-// 96 =>  84px *
-// 112=>  72px *
-// (multiply one of the above by two to get more with even larger pixels...)
-// 672=>  12px (minimum possible value)
+// 1008* (maximal resolution)
+//  896
+//  806 (slightly lower than Atari ST medres / CPC mode 2)
+//  733, 672*, 620, 576*, 537, 504*, 474, 448, 424, 403
+//  384* (same as Amstrad CPC Mode 1 / Atari ST lowres)
+//  366, 350, 336*, 322, 310, 298, 288*, 278, 268, 260, 252*, 244, 237, 230,
+//  224, 217, 212, 206, 201, 196,
+//  192* (same as Amstrad CPC mode 0)
+//  187, 183, 179, 175, 171, 168*, 164, 161, 158, 155, 152, 149, 146, 144*,
+//  141, 139, 136, 134, 132, 130, 128, 126*, 124, 122, 120, 118, 116, 115,
+//  ... 96*, ..., 84*, ..., 72*, ...,
+//  12 (lowest possible resolution)
 //
 // Resolutions marked * are "exact", that is, the DMA speed is an integer
 // divisor of the horizontal refresh rate. Just so you know, because this doesn't
@@ -87,7 +57,10 @@
 // 10 => 1024 (CPC Mode 2/ST medres)
 //
 // Vertical resolution is fixed at 312 total lines (including sync), of which
-// max. 288 are visible (probably a bit less depending on the TV used).
+// max. 288 are visible (probably a bit less depending on the TV used). We add
+// a safety margin to that and make 271 lines part of the framebuffer. This can
+// be further reduced, as long as the front and backporch are adjusted to keep
+// the total 312 lines. For example it can be set to 200 or 240.
 
 #define PLL_M 8
 #define PLL_N 336
@@ -113,5 +86,21 @@
 #define VGA_V_BACKPORCH 27
 // Total of these 4 must be 312 lines
 
-#define COMPOSITE_SYNC 1 // not used anymore in vga_pal
+// ----------------------------------------------------------------------------
+// Standard defines, shared with the standard bitbox platform
+//
+#define HAS_CMM 
+#define STM32F40_41xxx
+#define STACKSIZE 8192
+ 
+// usb
+#ifndef NO_USB
+#define USE_USB_OTG_HS 
+#define USE_EMBEDDED_PHY 
+#define USE_USB_OTG_FS 
+#endif 
 
+#define AHB_PRE RCC_CFGR_HPRE_DIV1
+#define APB1_PRE RCC_CFGR_PPRE2_DIV2 // PCLK2 = HCLK / 2
+#define APB2_PRE RCC_CFGR_PPRE1_DIV4 // PCLK1 = HCLK / 4
+#define APB1_DIV 2
