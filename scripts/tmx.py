@@ -288,9 +288,9 @@ if args.export_objects or args.export_sprites :
 
         # export global names and types
         print "// types"
-        print "enum %s_type = {"%base_name,','.join('%s_t_%s'%(base_name,nm) for nm in all_types),'};'
+        print "enum %s_type {"%base_name,','.join('%s_t_%s'%(base_name,nm) for nm in all_types),'};'
         current_type = None
-        print 'enum %s_states= {'%base_name
+        print 'enum %s_states {'%base_name
         print ', \n'.join('    %s_st_%s_%s'%(base_name, t,n) for t,n in all_states_sorted)
         print '};'
 
