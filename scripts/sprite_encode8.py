@@ -1,5 +1,5 @@
 #! /usr/bin/python
-from itertools import groupby 
+from itertools import groupby
 import sys, struct, os
 from sprite_encode2 import add_record
 from PIL import Image # using the PIL library, maybe you'll need to install it. python should come with t.
@@ -17,18 +17,17 @@ def reduce(c) :
     a=c[3]
     return r<<5 | (g&~1)<<4 | (b&~1)<<2 | (g&1) if a>128 else TRANSP
 
-def p4_encode(data, palette) : 
+# wrong : pack to bytes !
+def p4_encode(data, palette) :
     linedata=[]
-    for i in range(0,len(data),4) : 
+    for i in range(0,len(data),4) :
         w=0
-        for j in range(4) : 
+        for j in range(4) :
             w |= (palette.index(data[i+j]) if (len(data)>i+j) else 0)<<(j*4)
         linedata.append(w)
     return struct.pack('<%dH'%len(linedata),*linedata)
 
-def image_encode(src,f,frame_height) : 
-    # reduce colors ?
-
+def image_encode(src,f,frame_height, mode) :
     # Get the alpha band
     alpha = src.split()[-1]
     r,g,b= src.convert('RGB').convert('P', palette=Image.ADAPTIVE, colors=16).convert('RGB').split()
@@ -41,68 +40,74 @@ def image_encode(src,f,frame_height) :
     print '//',len(palette),'colors '
 
     s_blits = [] # stringified blits for all image
-    
+
     start_file = f.tell()
-    line16=[] # offsets from start as u16 index on  words 
+    line16=[] # offsets from start as u16 index on  words
 
     for y in range(h) :
-        if y%16==0 : 
+        if y%16==0 :
             ofs = sum(len(x) for x in s_blits)
-            line16.append(ofs/4) # XXX use /4 but need to align 
+            line16.append(ofs/4) # XXX use /4 but need to align
 
         skipped=0
         blits=[]
 
         line=data[y*w:(y+1)*w] # byte/none data
-        singles=[] 
-        for c,g in groupby(line, lambda x:x!=TRANSP) : 
+        singles=[]
+        for c,g in groupby(line, lambda x:x!=TRANSP) :
             t = tuple(g)
-            if not c : 
-                skipped = len(t)                
-                # if skip too big, split ! 
-                while (skipped>MAXSKIP) : 
+            if not c :
+                skipped = len(t)
+                # if skip too big, split !
+                while (skipped>MAXSKIP) :
                     blits.append([MAXSKIP,(),False])
                     skipped -= MAXSKIP
             else :
-                # idem 
+                # idem
                 while t :
                     blits.append([skipped,t[:MAXBLIT],False])
                     skipped=0
                     t=t[MAXBLIT:]
 
         # enleve derniers blits si vides
-        while(blits and blits[-1][1])==() : 
+        while(blits and blits[-1][1])==() :
             del blits[-1]
 
-        # set EOL 
-        if blits : 
+        # set EOL
+        if blits :
             blits[-1][2]=True
-        else : 
+        else :
             blits.append([0,[],True])
 
 
         # now encode line : (header + blit) x n
-        for skip, blit, eol in blits :          
+        for skip, blit, eol in blits :
             header=(skip<<4) | (len(blit) << 1) | (1 if eol else 0)
             s = struct.pack('B', header)
-            s+= p4_encode(blit,palette=palette) 
+            if mode=='p4' :
+                s+= p4_encode(blit,palette=palette)
+            elif mode=='u8': # keep native
+                s+= struct.pack('%dB'%len(blit),*blit)
+            else :
+                raise ValueError,"bad mode"
             # pad it
             #s+= '\000'*((-len(s))%4)
             s_blits.append(s)
+
     data = ''.join(s_blits)
     data+= '\0'*((-len(data))%4)
-    return palette, data, line16 
 
     # -- save to file
 
     # save header
-    add_record(f,'header',struct.pack("<2I",w,frame_height)) # 1 frame for now
+    add_record(f,'header',struct.pack("<2I",w,frame_height))
 
     # save palette
-    add_record(f,'palette',struct.pack("<%dB"%len(palette),*palette))
-            
+    if mode in ('p4',) :
+        add_record(f,'palette',struct.pack("<%dB"%len(palette),*palette))
+
     # write data
-    add_record(f,'p4',''.join(s_blits))
+    add_record(f,mode,''.join(s_blits))
 
     # line16 record
     add_record(f,'line16',struct.pack("%dH"%len(line16),*line16))
