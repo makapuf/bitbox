@@ -303,8 +303,8 @@ if args.export_objects or args.export_sprites :
         print >>c_file, "};\n"
 
         print "\n#define %s_%s_st_nb %d"%(base_name,name,len(all_states_sorted))
-        print "extern const uint8_t %s_%s[%s_%s_st_nb]; // lookup table state -> type"%(base_name,name,base_name,name)
-        print >>c_file,"const uint8_t %s_%s[%s_%s_st_nb] = {  "%(base_name,name,base_name,name)
+        print "extern const uint8_t %s_%s_types[%s_%s_st_nb]; // lookup table state -> type"%(base_name,name,base_name,name)
+        print >>c_file,"const uint8_t %s_%s_types[%s_%s_st_nb] = {  "%(base_name,name,base_name,name)
         for t,n in all_states_sorted :
             print >>c_file, "    %d, // %s"%(all_types.index(t), '%s_%s'%(t,n))
         print >>c_file, "};\n"
