@@ -10,7 +10,7 @@ NO_USB=1
 include $(BITBOX)/lib/bitbox.mk
 
 %.c: %.song
-	$(BITBOX)/scripts/song2C.py $^ > $@
+	python $(BITBOX)/scripts/song2C.py $^ > $@
 
 clean::
 	rm -f $(SONG).c

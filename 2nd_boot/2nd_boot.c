@@ -265,7 +265,7 @@ void game_init() {
 	memset(&fs32, 0, sizeof(FATFS));
 	FRESULT r = f_mount(&fs32,"",1); // mount now
 	if (r != FR_OK) {
-		print_at(5,20,"Cannot mount disk");
+		print_at(5,SCR_LINES / 2,"Cannot mount disk");
 		die(MOUNT,r);
 	}
 
