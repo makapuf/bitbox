@@ -124,6 +124,7 @@ ifeq ($(HOST), Haiku)
 else
   HOSTLIBS = -lm -lc -lstdc++
 endif
+LIBS = -lm
 $(SDL_TGT) $(TEST_TGT): CC=gcc
 $(SDL_TGT) $(TEST_TGT): DEFINES += EMULATOR
 $(SDL_TGT): C_OPTS += -Og 
@@ -242,15 +243,15 @@ $(TEST_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/test/%.o) $(KERNEL_TEST:%.c=$(BUILD
 	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
 
 $(BITBOX_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/bitbox/%.o) $(KERNEL_BITBOX:%.c=$(BUILD_DIR)/bitbox/%.o)
-	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
+	$(CC) $(LD_FLAGS) $^ -o $@ $(LIBS) 
 	chmod -x $@
 
 $(PAL_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/pal/%.o) $(KERNEL_PAL:%.c=$(BUILD_DIR)/pal/%.o)
-	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
+	$(CC) $(LD_FLAGS) $^ -o $@ $(LIBS) 
 	chmod -x $@
 
 $(MICRO_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/micro/%.o) $(KERNEL_MICRO:%.c=$(BUILD_DIR)/micro/%.o)
-	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
+	$(CC) $(LD_FLAGS) $^ -o $@ $(LIBS) 
 	chmod -x $@
 
 # --- Helpers
