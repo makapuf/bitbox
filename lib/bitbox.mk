@@ -262,6 +262,16 @@ test: $(NAME)_test
 debug: $(BITBOX_TGT)
 	arm-none-eabi-gdb $^ --eval-command="target extended-remote :4242"
 
+# Build the project for the given target
+
+pal: $(PAL_TGT)
+
+bitbox: $(BITBOX_TGT)
+
+micro: $(MICRO_TGT)
+
+emu: $(SDL_TGT)
+
 # using dfu util	
 dfu: $(NAME).bin
 	dfu-util -D $< --dfuse-address $(FLASH_START) -a 0
@@ -284,3 +294,5 @@ stlink-pal: $(NAME)_pal.bin
 # double colon to allow extra cleaning
 clean::
 	rm -rf $(BUILD_DIR) $(MICRO_TGT) $(BITBOX_TGT) $(PAL_TGT) $(NAME).bin $(SDL_TGT) $(TEST_TGT)
+
+.PHONY: clean stlink-pal dfu-micro stlink-micro debug-micro stlink dfu emu micro bitbox pal debug test
