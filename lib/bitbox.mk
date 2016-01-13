@@ -4,43 +4,43 @@
 # DEFINES in outside makefile
 #   NAME : name of the project
 #   GAME_C_FILES c files of the project
-#   GAME_BINARY_FILES : files to embed as part of the main binary ROM. Note: you can use GAME_BIN_FILES=$(wildcard data/*) 
+#   GAME_BINARY_FILES : files to embed as part of the main binary ROM. Note: you can use GAME_BIN_FILES=$(wildcard data/*)
 
 #   GAME_C_OPTS : C language options. Those will be used for the ARM game as well as the emulator.
 #	C DEFINES : defined in DEFINED Makefile Variable. (will be added as -Dxxx to GAME_C_OPTS, you can use either)
 #       PROFILE		- enable profiling (red line / pixels onscreen)
-#       VGA_MODExxx : define a vga mode. 
+#       VGA_MODExxx : define a vga mode.
 
-#		  they can be used to define specific kernel resolution. 
+#		  they can be used to define specific kernel resolution.
 #   	  In particular, define one of VGAMODE_640, VGAMODE_800, VGAMODE_320 or VGA_640_OVERCLOCK
 #   	  to set up a resolution in the kernel (those will be used in kconf.h)
 #
-#   Specific Makefile flags : 
+#   Specific Makefile flags :
 #         NO_USB,       - when you don't want to use USB input related function), also exported as C define
 #		  NO_AUDIO      - no sound support (exported as C define)
 #         USE_SDCARD,   - when you want to use or compile SDcard or fatfs related functions in the game (export to C)
-#    
-#         USE_ENGINE,   - when you want to use the engine. 
-#         USE_SAMPLER
-#         USE_CHIPTUNES 
 #
-#   Simple mode related : 
+#         USE_ENGINE,   - when you want to use the engine.
+#         USE_SAMPLER
+#         USE_CHIPTUNES
+#
+#   Simple mode related :
 #        VGA_SIMPLE_MODE=0 .. 12 (see simple.h for modes)
 
-# More arcane options : 
+# More arcane options :
 #     USE_SD_SENSE  - enabling this will disable being used on rev2 !
 #     DISABLE_ESC_EXIT - for the emulator only, disable quit when pressing ESC
 #     KEYB_FR       - enable AZERTY keybard mapping
-#     EXTRA_FILES : add to this files to make in make all, not necesseraly to embed in a bin files (by example 
+#     EXTRA_FILES : add to this files to make in make all, not necesseraly to embed in a bin files (by example
 #                 data files to be put in the SD card)
 
 
 # just the names of the targets in a generic way
 BITBOX_TGT:=$(NAME).elf
 MICRO_TGT:=$(NAME)_micro.elf
-SDL_TGT:=$(NAME) 
+SDL_TGT:=$(NAME)
 TEST_TGT:=$(NAME)_test
-PAL_TGT:=$(NAME)_pal.elf 
+PAL_TGT:=$(NAME)_pal.elf
 
 # default : build bitbox + sdl binaries
 all: $(SDL_TGT) $(BITBOX_TGT:%.elf=%.bin) $(EXTRA_FILES)
@@ -57,17 +57,17 @@ VPATH=.:$(BITBOX)/lib:$(BITBOX)/lib/StdPeriph
 INCLUDES=-I$(BITBOX)/lib/ -I$(BITBOX)/lib/cmsis -I$(BITBOX)/lib/StdPeriph
 
 # language specific (not specific to target)
-C_OPTS = -std=c99 -g -Wall -ffast-math -fsingle-precision-constant -ffunction-sections -fdata-sections -funroll-loops -fomit-frame-pointer 
+C_OPTS = -std=c99 -g -Wall -ffast-math -fsingle-precision-constant -ffunction-sections -fdata-sections -funroll-loops -fomit-frame-pointer
 
-LD_FLAGS = -Wl,--gc-sections 
+LD_FLAGS = -Wl,--gc-sections
 AUTODEPENDENCY_CFLAGS=-MMD -MF$(@:.o=.d) -MT$@
 
-# functional defines for all targets. -D will be expanded after. 
-#DEFINES = 
+# functional defines for all targets. -D will be expanded after.
+#DEFINES =
 
 # --- Engines (not target specific)
 
-GAME_C_FILES += evt_queue.c 
+GAME_C_FILES += evt_queue.c
 
 # - tiles & sprites
 ifdef USE_ENGINE
@@ -78,7 +78,7 @@ endif
 ifdef VGA_SIMPLE_MODE
 DEFINES += VGA_SIMPLE_MODE=$(VGA_SIMPLE_MODE)
 GAME_C_FILES += simple.c fonts.c
-endif # vga kernel mode defined in kconf.h 
+endif # vga kernel mode defined in kconf.h
 
 # - simple sampler
 ifdef USE_SAMPLER
@@ -86,13 +86,13 @@ GAME_C_FILES += sampler.c
 endif
 
 # - chiptune engine
-ifdef USE_CHIPTUNE 
+ifdef USE_CHIPTUNE
 $(warning the chiptune engine is about to change. Please change to the chiptune.h file)
 GAME_C_FILES += chiptune_engine.c chiptune_player.c
 endif
 
-# -- Target-specifics 
-$(BITBOX_TGT): DEFINES += BOARD_BITBOX	
+# -- Target-specifics
+$(BITBOX_TGT): DEFINES += BOARD_BITBOX
 $(MICRO_TGT):  DEFINES += BOARD_MICRO
 $(PAL_TGT): DEFINES += BOARD_PAL
 
@@ -104,13 +104,13 @@ $(BITBOX_TGT) $(MICRO_TGT) $(PAL_TGT): LD_FLAGS += $(CORTEXM4F)
 ifdef LINKER_RAM
 $(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_ram.ld
 dfu stlink: FLASH_START = 0x20000000
-else ifdef NO_BOOTLOADER 
+else ifdef NO_BOOTLOADER
 $(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_raw.ld
 dfu stlink: FLASH_START = 0x08000000
 else
 $(BITBOX_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_loader.ld
 dfu stlink: FLASH_START = 0x08004000
-endif 
+endif
 
 $(PAL_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib/Linker_bitbox_loader.ld
 stlink-pal: FLASH_START = 0x08004000
@@ -127,7 +127,7 @@ endif
 LIBS = -lm
 $(SDL_TGT) $(TEST_TGT): CC=gcc
 $(SDL_TGT) $(TEST_TGT): DEFINES += EMULATOR
-$(SDL_TGT): C_OPTS += -Og 
+$(SDL_TGT): C_OPTS += -Og
 $(SDL_TGT): C_OPTS += $(shell sdl-config --cflags)
 $(SDL_TGT): HOSTLIBS += $(shell sdl-config --libs)
 
@@ -145,24 +145,24 @@ ifndef NO_VGA
   KERNEL_BITBOX += new_vga.c micro_palette.c
   KERNEL_PAL += vga_pal.c micro_palette.c
   KERNEL_SDL += micro_palette.c
-else 
+else
   DEFINES += NO_VGA
 endif
 
 # fatfs related files
-SDCARD_FILES := fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c fatfs/ff.c fatfs/diskio.c 
+SDCARD_FILES := fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c fatfs/ff.c fatfs/diskio.c
 SDCARD_FILES += stm32f4xx_sdio.c stm32f4xx_gpio.c stm32f4xx_dma.c misc.c
 ifdef USE_SDCARD
 DEFINES += USE_SDCARD USE_STDPERIPH_DRIVER
 KERNEL_BITBOX += $(SDCARD_FILES)
 KERNEL_MICRO += $(SDCARD_FILES)
 KERNEL_PAL += $(SDCARD_FILES)
-endif 
+endif
 
 # USB defines
 ifdef NO_USB
 DEFINES += NO_USB
-else 
+else
 $(BITBOX_TGT) $(MICRO_TGT) $(PAL_TGT): DEFINES += USE_STDPERIPH_DRIVER
 USB_FILES := usb_bsp.c usb_core.c usb_hcd.c usb_hcd_int.c \
 	usbh_core.c usbh_hcs.c usbh_stdreq.c usbh_ioreq.c \
@@ -199,11 +199,11 @@ $(BUILD_DIR)/binaries.h: $(GAME_BINARY_FILES)
 	@mkdir -p $(dir $@)
 	echo "// AUTO GENERATED BY bitbox.mk DO NOT MODIFY " > $@
 	echo "// -- binaries " > $@
-	echo $^ | sed s/[/\.]/_/g | sed "s/ /\n/g" | sed "s/.*/extern const unsigned char \0[];/" >> $@ 
+	echo $^ | sed s/[/\.]/_/g | sed "s/ /\n/g" | sed "s/.*/extern const unsigned char \0[];/" >> $@
 	echo "// -- lengths " >> $@
-	echo $^ | sed s/[/\.]/_/g | sed "s/ /\n/g" | sed "s/.*/extern const unsigned int \0_len;/">> $@ 
+	echo $^ | sed s/[/\.]/_/g | sed "s/ /\n/g" | sed "s/.*/extern const unsigned int \0_len;/">> $@
 
-$(BUILD_DIR)/%.c: % 
+$(BUILD_DIR)/%.c: %
 	@mkdir -p $(dir $@)
 	$(info * embedding $^ as $@)
 	xxd -i $^ | sed "s/unsigned/const unsigned/" > $@
@@ -234,24 +234,24 @@ $(BUILD_DIR)/pal/%.o: %.c
 	arm-none-eabi-objcopy -O binary $^ $@
 	chmod -x $@
 
-# --- Targets 
+# --- Targets
 
 $(SDL_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/sdl/%.o) $(KERNEL_SDL:%.c=$(BUILD_DIR)/sdl/%.o)
 	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS)
 
 $(TEST_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/test/%.o) $(KERNEL_TEST:%.c=$(BUILD_DIR)/test/%.o)
-	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS) 
+	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS)
 
 $(BITBOX_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/bitbox/%.o) $(KERNEL_BITBOX:%.c=$(BUILD_DIR)/bitbox/%.o)
-	$(CC) $(LD_FLAGS) $^ -o $@ $(LIBS) 
+	$(CC) $(LD_FLAGS) $^ -o $@ $(LIBS)
 	chmod -x $@
 
 $(PAL_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/pal/%.o) $(KERNEL_PAL:%.c=$(BUILD_DIR)/pal/%.o)
-	$(CC) $(LD_FLAGS) $^ -o $@ $(LIBS) 
+	$(CC) $(LD_FLAGS) $^ -o $@ $(LIBS)
 	chmod -x $@
 
 $(MICRO_TGT): $(GAME_C_FILES:%.c=$(BUILD_DIR)/micro/%.o) $(KERNEL_MICRO:%.c=$(BUILD_DIR)/micro/%.o)
-	$(CC) $(LD_FLAGS) $^ -o $@ $(LIBS) 
+	$(CC) $(LD_FLAGS) $^ -o $@ $(LIBS)
 	chmod -x $@
 
 # --- Helpers
@@ -272,7 +272,7 @@ micro: $(MICRO_TGT)
 
 emu: $(SDL_TGT)
 
-# using dfu util	
+# using dfu util
 dfu: $(NAME).bin
 	dfu-util -D $< --dfuse-address $(FLASH_START) -a 0
 
@@ -284,7 +284,7 @@ debug-micro: $(MICRO_TGT)
 
 stlink-micro: $(NAME)_micro.bin
 	st-flash write $^ $(FLASH_START)
-# using dfu util	
+# using dfu util
 dfu-micro: $(NAME)_micro.bin
 	dfu-util -D $< --dfuse-address $(FLASH_START) -a 0
 
