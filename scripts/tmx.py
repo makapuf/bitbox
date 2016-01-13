@@ -28,6 +28,7 @@ DOC
 export a,b,c custom object data (or even change name)
 
 sprites :
+    hitbox (as 4bytes ?)
     options to set number of colors of sprites ?
     multilayer ?
     external tilesheets for shared sprites between tmx ?
@@ -151,7 +152,8 @@ def export_sprite(outfile,tiles,tileset_elt) :
     for i,im in enumerate(srcs) :
         src.paste(im,(0,i*ts_h))
 
-    # src.save(outfile.name+'.png')  # make it an option ?
+    # SAVE_SPRITES ?
+    src.save(outfile.name+'.png')  # make it an option ?
 
     # export data as spr
     print "/* Sprite data : ",imgsrc,len(srcs),' frames, in file:',sprfile
@@ -209,8 +211,9 @@ with open(os.path.join(base_path,base_name+'.tset'),'wb') as of:
             print "#define %s_prop_%s %d"%(base_name,p,1<<n)
 
         for tid in range(1,w*h/tilesize/tilesize+1) :
-            of.write(chr(sum(1<<n for n,k in enumerate(props) if tid in tilebools[k])))
-        print "#define %s_tset_attrs_offset %s"%(base_name, pos_attrs),'// offset in bytes in tset file of tiles attibutes.'
+            prop = sum(1<<n for n,k in enumerate(props) if tid in tilebools[k])
+            of.write(chr(prop))
+        print "#define %s_tset_attrs_offset %s"%(base_name, pos_attrs-1),'// offset in bytes in tset file of tiles attibutes.'
 
 
 print '\n // -- Tilemaps'
@@ -287,10 +290,13 @@ if args.export_objects or args.export_sprites :
         all_types = sorted(all_types)
 
         # export global names and types
-        print "// types"
-        print "enum %s_type {"%base_name,','.join('%s_t_%s'%(base_name,nm) for nm in all_types),'};'
+        print "// types and states"
+        print "enum %s_type {"%base_name
+        print ',\n'.join('    %s_t_%s'%(base_name,nm) for nm in all_types)
+        print '};'
+
         current_type = None
-        print 'enum %s_states {'%base_name
+        print '\nenum %s_states {'%base_name
         print ', \n'.join('    %s_st_%s_%s'%(base_name, t,n) for t,n in all_states_sorted)
         print '};'
 
@@ -348,7 +354,7 @@ if args.export_objects or args.export_sprites :
             # export sprites themselves
             print >>c_file, "\n// sprites"
             print >>c_file, "void *%s_sprites[] = { // sprites[type_id] -> sprite data "%base_name
-            for t in typ_tiles_sorted :
+            for t in sorted(typ_tiles_sorted) :
                 # export data as spr
                 sprfile='%s_%s.spr'%(base_name,t)
                 with open(os.path.join(base_path,sprfile),'w+') as f :
