@@ -16,7 +16,7 @@
 #define VIDEO_DAC_GPIO GPIOA
 */
 
-#if defined (VGAMODE_NONE)
+#if defined (NO_VGA)
 
 #elif defined(VGAMODE_400)
 // 400x300 based on 800x600 + skipline

@@ -19,7 +19,7 @@
 #define APB2_PRE RCC_CFGR_PPRE1_DIV4 // PCLK1 = HCLK / 4
 #define APB1_DIV 2
 
-#if defined (VGAMODE_NONE)
+#if defined (NO_VGA)
 
 #define PLL_M 8
 #define PLL_N 336
