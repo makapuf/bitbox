@@ -28,11 +28,15 @@ DOC
 export a,b,c custom object data (or even change name)
 
 sprites :
+    hidden groups / layers positions are not exported
     hitbox (as 4bytes ?)
     options to set number of colors of sprites ?
     multilayer ?
     external tilesheets for shared sprites between tmx ?
 tilemap :
+    export properties as terrains (handle blocking as 4 bits ?)
+
+    handle H?V symmetry ?
     allow change export order horizontally / vertically / bottom/up or top/down ex : xY yX ...  ?
     allow reordering tiles / not including unused ones in tileset ? (optional, data could be organized by lines)
         at least, dont output last unused tiles
@@ -274,7 +278,7 @@ if args.export_objects or args.export_sprites :
         name=objectgroup.get('name')
         if name[0]=='_' : continue # skip
 
-        # XXX also finds a,b,c bytes
+        # XXX also finds a,b,c bytes / only output shown in a shown layer
         pos = [(int(float(o.get('x'))),int(float(o.get('y'))), int(o.get('gid')), o.get('name',''), o.get('type','')) for o in objectgroup.findall('object')]
         for x,y,gid,nm,typ in pos :
             all_types.add(typ)
@@ -287,12 +291,12 @@ if args.export_objects or args.export_sprites :
                 all_states[(typ,nm)]=gid
 
         all_states_sorted = sorted(all_states)
-        all_types = sorted(all_types)
+        all_types_sorted = sorted(all_types)
 
         # export global names and types
         print "// types and states"
         print "enum %s_type {"%base_name
-        print ',\n'.join('    %s_t_%s'%(base_name,nm) for nm in all_types)
+        print ',\n'.join('    %s_t_%s'%(base_name,nm) for nm in all_types_sorted)
         print '};'
 
         current_type = None
@@ -312,7 +316,7 @@ if args.export_objects or args.export_sprites :
         print "extern const uint8_t %s_%s_types[%s_%s_st_nb]; // lookup table state -> type"%(base_name,name,base_name,name)
         print >>c_file,"const uint8_t %s_%s_types[%s_%s_st_nb] = {  "%(base_name,name,base_name,name)
         for t,n in all_states_sorted :
-            print >>c_file, "    %d, // %s"%(all_types.index(t), '%s_%s'%(t,n))
+            print >>c_file, "    %d, // %s"%(all_types_sorted.index(t), '%s_%s'%(t,n))
         print >>c_file, "};\n"
 
         # export sprites themselves and reference them in a table
