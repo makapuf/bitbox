@@ -16,3 +16,6 @@
 */build
 # build dependencies
 *.d
+
+#python
+*.pyc
