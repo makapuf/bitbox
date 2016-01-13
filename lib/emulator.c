@@ -21,16 +21,16 @@
 #define WM_TITLE_LED_OFF "Bitbox emulator"
 /*
    TODO
-   
- handle SLOW + PAUSE + FULLSCREEN (alt-enter) as keyboard handles 
- handle properly gamepads, second gamepad, 
- handle mouse, 
+
+ handle SLOW + PAUSE + FULLSCREEN (alt-enter) as keyboard handles
+ handle properly gamepads, second gamepad,
+ handle mouse,
  keyboard (treat keyboard gamepads as config for quick saves)
  handling other events (plugged, ...)
 
- really handle set_led (as window title) 
+ really handle set_led (as window title)
 
-*/ 
+*/
 
 
 
@@ -40,7 +40,7 @@
 - calling update draw_buffer (which calls object_blitX)
 
 - displaying other buffer updating line, frame
-- read user input and update gamepad 
+- read user input and update gamepad
 
 */
 
@@ -66,15 +66,15 @@ SDL_Surface* screen;
 uint16_t mybuffer1[LINE_BUFFER];
 uint16_t mybuffer2[LINE_BUFFER];
 uint16_t *draw_buffer = mybuffer1; // volatile ?
-volatile uint16_t gamepad_buttons[2]; 
-uint32_t vga_line; 
+volatile uint16_t gamepad_buttons[2];
+uint32_t vga_line;
 volatile uint32_t vga_frame;
 volatile int vga_odd;
 
 volatile int data_mouse_x, data_mouse_y;
 volatile uint8_t data_mouse_buttons;
 
-int user_button=0; 
+int user_button=0;
 
 // sound
 // pixel_t audio_buffer[BITBOX_SNDBUF_LEN]; // stereo, 31khz 1frame
@@ -100,34 +100,34 @@ uint32_t time_left(void)
 
 extern uint16_t palette_flash[256];
 
-void __attribute__ ((weak, optimize("-O3"))) graph_line(void) 
+void __attribute__ ((weak, optimize("-O3"))) graph_line(void)
 {
     graph_line8();
-    // expand line from u8 to u16 bitbox 
+    // expand line from u8 to u16 bitbox
     if (vga_odd) {
         uint8_t  * restrict drawbuf8=(uint8_t *) draw_buffer;
-        // expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb 
-        // XXX unroll loop, read 4 by 4 pixels src, write 2 pixels out by two ... 
+        // expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
+        // XXX unroll loop, read 4 by 4 pixels src, write 2 pixels out by two ...
         for (int i=VGA_H_PIXELS-1;i>=0;i--)
-            draw_buffer[i] = palette_flash[drawbuf8[i]]; 
+            draw_buffer[i] = palette_flash[drawbuf8[i]];
     }
 }
 
-/* naive pixel conversion 
-from 16bit bitbox pixel 0RRRRRGGGGGBBBBB 
+/* naive pixel conversion
+from 16bit bitbox pixel 0RRRRRGGGGGBBBBB
 to 16bit color (565) RRRRRGGGGG0BBBBB
 */
 static inline uint16_t pixelconv(uint16_t pixel)
 {
     return (pixel & (uint16_t)(~0x1f))<<1 | (pixel & 0x1f);
-} 
+}
 
 
 static void __attribute__ ((optimize("-O3"))) refresh_screen(SDL_Surface *scr)
 // uses global line + vga_odd
 {
     uint16_t *dst = (uint16_t*)scr->pixels;
-    
+
     draw_buffer = mybuffer1;
     graph_frame();
 
@@ -136,12 +136,12 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen(SDL_Surface *scr)
         graph_line(); // using line, updating draw_buffer ...
         #ifdef VGA_SKIPLINE
         vga_odd=1; graph_line(); //  a second time for SKIPLINE modes
-        #endif 
+        #endif
 
         // copy to screen at this position (cheating)
         uint16_t *src = (uint16_t*) draw_buffer;
 
-        for (int i=0;i<screen_width;i++) 
+        for (int i=0;i<screen_width;i++)
             *dst++= pixelconv(*src++);
 
         // swap lines buffers to simulate double line buffering
@@ -153,7 +153,7 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen(SDL_Surface *scr)
 static void mixaudio(void * userdata, Uint8 * stream, int len)
 // this callback is called each time we need to fill the buffer
 {
-    game_snd_buffer((uint16_t *)stream,len/2); 
+    game_snd_buffer((uint16_t *)stream,len/2);
 }
 
 void audio_init(void)
@@ -162,7 +162,7 @@ void audio_init(void)
 
     desired.freq = BITBOX_SAMPLERATE;
     desired.format = AUDIO_U8;
-    desired.channels = 2; 
+    desired.channels = 2;
 
     /* Le tampon audio contiendra at least one vga_frame worth samples */
     desired.samples = BITBOX_SNDBUF_LEN*2; // XXX WHY is it halved ??
@@ -170,7 +170,7 @@ void audio_init(void)
     /* Mise en place de la fonction de rappel et des données utilisateur */
     desired.callback = &mixaudio;
     desired.userdata = NULL;
-   
+
     if (!quiet) {
        printf("sndbuflen : %d\n",BITBOX_SNDBUF_LEN);
        printf("Paramètres audio desired (before): format %d,%d canaux, fs=%d, %d samples.\n",
@@ -213,14 +213,14 @@ static void joy_init()
 {
     int i;
     int joy_count;
-    
+
     /* Initilize the Joystick, and disable all later joystick code if an error occured */
-    
+
     if (SDL_InitSubSystem(SDL_INIT_JOYSTICK))
         return;
-    
+
     joy_count = SDL_NumJoysticks();
-    
+
     if (!joy_count)
         return;
 
@@ -229,7 +229,7 @@ static void joy_init()
     {
         SDL_JoystickOpen(i);
     }
-    
+
     /* make sure that Joystick sdl_event polling is a go */
     SDL_JoystickEventState(SDL_ENABLE);
 }
@@ -253,7 +253,7 @@ int init(void)
 
     #ifndef NO_AUDIO
     audio_init();
-    #endif 
+    #endif
 
     joy_init();
 
@@ -262,7 +262,7 @@ int init(void)
     printf("screen is now %dx%d\n",screen_width,screen_height);
     #ifdef MICROKERNEL
     printf("Using 8Bpp interface (micro)");
-    #endif 
+    #endif
 
     return 0;
 }
@@ -291,7 +291,7 @@ const char * gamepad_names[] = {
     "gamepad_select",
     "gamepad_start",
 
-    "gamepad_up",    
+    "gamepad_up",
     "gamepad_down",
     "gamepad_left",
     "gamepad_right",
@@ -325,10 +325,10 @@ uint8_t key_trans[256] = { // scan_code -> USB BootP code
 
     [0x0a]=30,31,32,33,34,35,36,37,38,39,45,46, // 1234567890-=
     [0x18]=20,26, 8,21,23,28,  24,  12,  18,  19,  // qwertyuiop
-    [0x22]=47,48, // [] 
+    [0x22]=47,48, // []
     [0x26]= 4,22, 7, 9,10,11,13,14,15,16, // asdfghjklm
     [0x30]=52,53, // ' and `
-    [0x33]=49,  //  backslash 
+    [0x33]=49,  //  backslash
     [0x34]=29,27, 6,25, 5,17,16,54,55,56, // zxcvbnm,./
 
     [0x6e]=74, // home
@@ -372,12 +372,12 @@ static bool handle_gamepad()
             #ifndef DISABLE_ESC_EXIT
             if (sdl_event.key.keysym.sym == SDLK_ESCAPE)
                 return true; // quit now
-            #endif 
-            
-            /* note that this event WILL be propagated so on emulator 
-            you'll see both button and keyboard. It's ot really a problem since 
-            programs rarely use the button and the keyboard */                
-            if (sdl_event.key.keysym.sym == USER_BUTTON_KEY) 
+            #endif
+
+            /* note that this event WILL be propagated so on emulator
+            you'll see both button and keyboard. It's ot really a problem since
+            programs rarely use the button and the keyboard */
+            if (sdl_event.key.keysym.sym == USER_BUTTON_KEY)
                 user_button=1;
 
             // now create the keyboard event
@@ -392,11 +392,11 @@ static bool handle_gamepad()
 
             break;
 
-        case SDL_KEYUP:               
+        case SDL_KEYUP:
 
             if (sdl_event.key.keysym.sym == USER_BUTTON_KEY)
                 user_button=0;
-            
+
             // now create the keyboard event
             key = key_trans[sdl_event.key.keysym.scancode];
             mod = sdl_event.key.keysym.mod;
@@ -404,7 +404,7 @@ static bool handle_gamepad()
                 .type= evt_keyboard_release,
                 .kbd={ .key=key,.mod=mod,.sym=kbd_map(mod,key) }
             });
-           
+
             break;
 
         // joypads
@@ -413,7 +413,7 @@ static bool handle_gamepad()
                 case 0: /* X axis */
                     gamepad_x[sdl_event.jbutton.which]=sdl_event.jaxis.value>>8;
                     break;
-                case 1: /* Y axis*/ 
+                case 1: /* Y axis*/
                     gamepad_y[sdl_event.jbutton.which]=sdl_event.jaxis.value>>8;
                     break;
             }
@@ -442,7 +442,7 @@ static bool handle_gamepad()
             if (sdl_event.jhat.value & SDL_HAT_RIGHT)   gamepad_buttons[sdl_event.jbutton.which] |= gamepad_right;
             break;
 
-        // mouse 
+        // mouse
         case SDL_MOUSEBUTTONDOWN:
             event_push((struct event){.type=evt_mouse_click, .button={.port=0, .id=sdl_event.button.button-1}});
             data_mouse_buttons |= 1<<(sdl_event.button.button-1);
@@ -453,7 +453,7 @@ static bool handle_gamepad()
             break;
         case SDL_MOUSEMOTION :
             event_push( (struct event){
-                .type=evt_mouse_move, 
+                .type=evt_mouse_move,
                 .mov={.port=0, .x=sdl_event.motion.xrel, .y=sdl_event.motion.yrel}
             });
             data_mouse_x += sdl_event.motion.xrel;
@@ -468,7 +468,7 @@ static bool handle_gamepad()
 
 // -------------------------------------------------
 // limited fatfs-related functions.
-// XXX add non readonly features 
+// XXX add non readonly features
 FRESULT f_mount (FATFS* fs, const TCHAR* path, BYTE opt)
 {
     return FR_OK;
@@ -482,14 +482,14 @@ FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode)
     if (mode & FA_OPEN_ALWAYS) {
         if (!access(path, F_OK)) // 0 if OK
             mode_host = "r+";
-        else 
+        else
             mode_host = "w+";
 
     } else switch (mode) {
-        // Not a very good approximation, should rewrite to handle properly 
+        // Not a very good approximation, should rewrite to handle properly
         case FA_READ | FA_OPEN_EXISTING : mode_host="r"; break;
         case FA_READ | FA_WRITE | FA_OPEN_EXISTING : mode_host="r+"; break;
-        case FA_WRITE | FA_OPEN_EXISTING : mode_host="r+"; break; // faked 
+        case FA_WRITE | FA_OPEN_EXISTING : mode_host="r+"; break; // faked
 
         case FA_WRITE | FA_CREATE_NEW : mode_host="wx"; break;
         case FA_READ | FA_WRITE | FA_CREATE_NEW : mode_host="wx+"; break;
@@ -497,10 +497,10 @@ FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode)
         case FA_READ | FA_WRITE | FA_CREATE_ALWAYS : mode_host="w+"; break;
         case FA_WRITE | FA_CREATE_ALWAYS : mode_host="w"; break;
 
-        default : 
+        default :
             return FR_DISK_ERR;
     }
-    
+
     fp->fs = (FATFS*) fopen ((const char*)path,mode_host); // now ignores mode.
     return fp->fs ? FR_OK : FR_DISK_ERR; // XXX duh.
 }
@@ -510,19 +510,19 @@ FRESULT f_close (FIL* fp)
     int res = fclose( (FILE*) fp->fs);
     fp->fs=NULL;
     return res?FR_DISK_ERR:FR_OK; // FIXME handle reasons ?
-}               
+}
 
 FRESULT f_read (FIL* fp, void* buff, UINT btr, UINT* br)
 {
     *br = fread ( buff, 1,btr, (FILE *)fp->fs);
     return FR_OK; // XXX handle ferror
-}          
+}
 
 FRESULT f_write (FIL* fp, const void* buff, UINT btr, UINT* br)
 {
     *br = fwrite ( buff,1, btr, (FILE *)fp->fs);
     return FR_OK; // XXX handle ferror
-}          
+}
 
 
 FRESULT f_lseek (FIL* fp, DWORD ofs)
@@ -534,8 +534,8 @@ FRESULT f_lseek (FIL* fp, DWORD ofs)
 /* Change current directory */
 FRESULT f_chdir (const char* path)
 {
-    int res = chdir(path); 
-    return res ? FR_DISK_ERR : FR_OK; 
+    int res = chdir(path);
+    return res ? FR_DISK_ERR : FR_OK;
 }
 
 
@@ -553,7 +553,7 @@ FRESULT f_opendir ( DIR* dp, const TCHAR* path )
 }
 
 
-FRESULT f_readdir ( DIR* dp, FILINFO* fno ) 
+FRESULT f_readdir ( DIR* dp, FILINFO* fno )
 {
     errno=0;
     struct dirent *de = readdir((NIX_DIR *)dp->fs); // updates ?
@@ -565,7 +565,7 @@ FRESULT f_readdir ( DIR* dp, FILINFO* fno )
     } else {
         if (errno) {
             printf("Error reading directory %s : %s\n",dp->dir, strerror(errno)); // not neces an erro, can be end of dir.
-            return FR_DISK_ERR;        
+            return FR_DISK_ERR;
         } else {
             fno->fname[0]='\0';
             return FR_OK;
@@ -599,27 +599,27 @@ int main ( int argc, char** argv )
 {
 
     fullscreen = (argc>1 && !strcmp(argv[1],"--fullscreen"));
-    if (fullscreen) 
+    if (fullscreen)
         printf("Running fullscreen.\n");
-    else 
+    else
         printf("Invoke with --fullscreen argument to run fullscreen.\n");
 
     slow = (argc>1 && !strcmp(argv[1],"--slow"));
-    if (slow) 
+    if (slow)
         printf("Running slow.\n");
-    else 
+    else
         printf("Invoke with --slow argument to run slower (fullscreen not supported).\n");
 
     quiet = (argc>1 && !strcmp(argv[1],"--quiet"));
 
     if (!quiet) {
         instructions();
-        printf(" - Starting\n");        
+        printf(" - Starting\n");
     }
 
     gamepad_buttons[0] = 0; // all up
     gamepad_buttons[1] = 0;
-    
+
     if (init()) return 1;
     game_init();
 
