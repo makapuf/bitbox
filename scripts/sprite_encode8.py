@@ -13,9 +13,9 @@ MAXBLIT = 15
 
 def reduce(c) :
     'R8G8B8A8 to R3G2B2L1'
-    r,g,b =[x*7/255 for x in c[:3]] # convert to three bits
+    r,g,b =[(x*7+127)/255 for x in c[:3]] # convert to three bits
     a=c[3]
-    return r<<5 | (g&~1)<<4 | (b&~1)<<2 | (g&1) if a>128 else TRANSP
+    return r<<5 | (g&~1)<<2 | (b&~1) | (g&1) if a>128 else TRANSP
 
 # wrong : pack to bytes !
 def p4_encode(data, palette) :
@@ -47,7 +47,7 @@ def image_encode(src,f,frame_height, mode) :
     for y in range(h) :
         if y%16==0 :
             ofs = sum(len(x) for x in s_blits)
-            line16.append(ofs/4) # XXX use /4 but need to align
+            line16.append(ofs)
 
         skipped=0
         blits=[]
@@ -90,8 +90,6 @@ def image_encode(src,f,frame_height, mode) :
                 s+= struct.pack('%dB'%len(blit),*blit)
             else :
                 raise ValueError,"bad mode"
-            # pad it
-            #s+= '\000'*((-len(s))%4)
             s_blits.append(s)
 
     data = ''.join(s_blits)
