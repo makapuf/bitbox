@@ -247,7 +247,7 @@ int read_icon(const char *filename)
 
 void default_icon( void )
 {
-	uint8_t *p = (uint8_t*)bitbox_pbm;
+	const uint8_t *p = bitbox_pbm;
 	for (int i=0;i<3;i++)
 		while(*p++ != '\n'); // skip line
 	memcpy(icon_data, p, sizeof(icon_data));
