@@ -153,7 +153,7 @@ def export_sprite(outfile,tiles,tileset_elt) :
         src.paste(im,(0,i*ts_h))
 
     # SAVE_SPRITES ?
-    src.save(outfile.name+'.png')  # make it an option ?
+    #src.save(outfile.name+'.png')  # make it an option ?
 
     # export data as spr
     print "/* Sprite data : ",imgsrc,len(srcs),' frames, in file:',sprfile
