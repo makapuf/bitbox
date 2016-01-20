@@ -34,6 +34,7 @@
 #     EXTRA_FILES : add to this files to make in make all, not necesseraly to embed in a bin files (by example
 #                 data files to be put in the SD card)
 
+HOST = $(shell uname)
 
 # just the names of the targets in a generic way
 BITBOX_TGT:=$(NAME).elf
@@ -59,7 +60,13 @@ INCLUDES=-I$(BITBOX)/lib/ -I$(BITBOX)/lib/cmsis -I$(BITBOX)/lib/StdPeriph
 # language specific (not specific to target)
 C_OPTS = -std=c99 -g -Wall -ffast-math -fsingle-precision-constant -ffunction-sections -fdata-sections -funroll-loops -fomit-frame-pointer
 
-LD_FLAGS = -Wl,--gc-sections
+ifneq ($(HOST), Darwin)
+  LD_FLAGS = -Wl,--gc-sections
+else
+  LD_FLAGS = 
+  $(BITBOX_TGT): LD_FLAGS = -Wl,--gc-sections
+endif
+
 AUTODEPENDENCY_CFLAGS=-MMD -MF$(@:.o=.d) -MT$@
 
 # functional defines for all targets. -D will be expanded after.
@@ -118,7 +125,6 @@ stlink-pal: FLASH_START = 0x08004000
 $(MICRO_TGT): LD_FLAGS+=-Wl,-T,$(BITBOX)/lib//Linker_micro.ld
 dfu-micro stlink-micro: FLASH_START = 0x08000000
 
-HOST = $(shell uname)
 ifeq ($(HOST), Haiku)
   HOSTLIBS =
 else
@@ -127,7 +133,11 @@ endif
 LIBS = -lm
 $(SDL_TGT) $(TEST_TGT): CC=gcc
 $(SDL_TGT) $(TEST_TGT): DEFINES += EMULATOR
-$(SDL_TGT): C_OPTS += -Og
+ifeq ($(HOST), Darwin)
+  $(SDL_TGT): C_OPTS += -O0
+else
+  $(SDL_TGT): C_OPTS += -Og
+endif
 $(SDL_TGT): C_OPTS += $(shell sdl-config --cflags)
 $(SDL_TGT): HOSTLIBS += $(shell sdl-config --libs)
 
