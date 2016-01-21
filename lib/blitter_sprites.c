@@ -219,10 +219,10 @@ static void sprite_frame8 (object *o, int start_line)
 
     start_line += o->fr*o->h;
     o->c = (intptr_t)o->data;
-/*
+
     o->c += ((uint16_t*)o->b)[start_line/16]; // skip bytes
     start_line %= 16; // remainder
-*/
+
 
     // Skip first lines as needed
     while (start_line) {
