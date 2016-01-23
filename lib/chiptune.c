@@ -14,6 +14,7 @@
  * easily be tweaked. This version has a somewhat bigger but much simplified song format.
  */
 
+// #define DEBUG_CHIPTUNE
 
 #define MAX_CHANNELS 8
 #include "bitbox.h"
@@ -215,9 +216,13 @@ static void chip_song_update()
 			if(playsong) {
 				if(songpos >= current_song->songlen) {
 					playsong = 0;
+					#ifdef DEBUG_CHIPTUNE
 					message("Stopping song\n");
+					#endif
 				} else {
+					#ifdef DEBUG_CHIPTUNE
 					message("Now at position %d of song\n",songpos);
+					#endif
 					for(int ch = 0; ch < nchan; ch++) {
 						// read each of the track pattern
 						channel[ch].tnum = current_song->tracklist[songpos*nchan+ch];
@@ -229,7 +234,10 @@ static void chip_song_update()
 		}
 
 		if(playsong) {
+			#ifdef DEBUG_CHIPTUNE
 			message ("%d |",trackpos);
+			#endif
+
 			for(int ch = 0; ch < nchan; ch++) {
 				if (!channel[ch].tnum)
 					continue;
@@ -242,7 +250,9 @@ static void chip_song_update()
 				uint8_t cmd2 = (fields>>16) & 0xf;
 				uint8_t par1 = (fields>>8) & 0xff;
 				uint8_t par2 = (fields>>0) & 0xff;
+				#ifdef DEBUG_CHIPTUNE
 				message("Note:%02x %x %02x / %x %02x |",note, cmd1,par1,cmd2,par2);
+				#endif
 
 				if(cmd1) runcmd(ch, cmd1, par1,1);
 				if(cmd2) runcmd(ch, cmd2, par2,2);
@@ -251,7 +261,9 @@ static void chip_song_update()
 					chip_note(ch,note + channel[ch].transp, channel[ch].lastinstr);
 
 			}
+			#ifdef DEBUG_CHIPTUNE
 			message("\n");
+			#endif
 
 			trackpos++;
 			if (trackpos == current_song->tracklength)
