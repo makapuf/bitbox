@@ -21,13 +21,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "chiptune.h"
- 
-int16_t songwait; // >0 means wait N frames, 0 means play now. <0 means stop playing now.
-uint8_t trackpos;
-uint8_t songspeed;
-uint8_t playsong;
-uint8_t nchan; // number of active channels
-uint16_t songpos;
+
+static int16_t songwait; // >0 means wait N frames, 0 means play now. <0 means stop playing now.
+static uint8_t trackpos;
+static uint8_t songspeed;
+static uint8_t playsong;
+static uint8_t nchan; // number of active channels
+static uint16_t songpos;
 
 static const uint16_t freqtable[] = {
 	0x010b, 0x011b, 0x012c, 0x013e, 0x0151, 0x0165, 0x017a, 0x0191, 0x01a9,
@@ -137,7 +137,7 @@ static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param, uint8_t context) {
 		case 8: // t = timing (for instrument, song speed for track context)
 			if (!context)
 				channel[ch].iwait = param;
-			else 
+			else
 				songspeed = param;
 			break;
 		case 9: // v = volume
@@ -153,26 +153,26 @@ static void runcmd(uint8_t ch, uint8_t cmd, uint8_t param, uint8_t context) {
 			channel[ch].vdepth = param >> 4;
 			channel[ch].vrate = param & 15;
 			break;
-		case 12: // + = set relative note 
+		case 12: // + = set relative note
 			channel[ch].inote = param + channel[ch].tnote - 12 * 4;
 			break;
 		case 13: // = = set absolute note in instrument context or instrument in pattern context
 			if (!context)
 				channel[ch].inote = param;
-			else 
+			else
 				channel[ch].lastinstr = param;
 			break;
-		case 14: 
+		case 14:
 			osc[ch].bitcrush=param;
 	}
 }
 
 void chip_play(const struct ChipSong *song) {
-	current_song = (struct ChipSong*) song;
-	if (!song) { // if given NULL, just stop it now
+	if (!song) { // if given NULL, just stop it now - don't unload
 		playsong=0;
 		return;
 	}
+	current_song = (struct ChipSong*) song;
 	nchan = current_song->numchannels; // number of channels
 
 	songwait = 0;
@@ -188,7 +188,7 @@ void chip_play(const struct ChipSong *song) {
 	}
 }
 
-void chip_note(uint8_t ch, uint8_t note, uint8_t instrument) 
+void chip_note(uint8_t ch, uint8_t note, uint8_t instrument)
 {
 	channel[ch].tnote = note ;
 	channel[ch].inum = instrument;
@@ -202,14 +202,14 @@ void chip_note(uint8_t ch, uint8_t note, uint8_t instrument)
 }
 
 static void chip_song_update()
-// this shall be called each 1/60 sec. 
+// this shall be called each 1/60 sec.
 // one buffer is 512 samples @32kHz, which is ~ 62.5 Hz,
 // calling each song frame should be OK
 {
 	if(songwait) {
 		songwait--;
 	} else {
-		songwait = songspeed; 
+		songwait = songspeed;
 
 		if(!trackpos) {
 			if(playsong) {
@@ -230,10 +230,10 @@ static void chip_song_update()
 
 		if(playsong) {
 			message ("%d |",trackpos);
-			for(int ch = 0; ch < nchan; ch++) { 
-				if (!channel[ch].tnum) 
+			for(int ch = 0; ch < nchan; ch++) {
+				if (!channel[ch].tnum)
 					continue;
-				
+
 				uint32_t fields = current_song->tracks[channel[ch].tnum-1][trackpos];
 
 				// field = x:1 note:7 cmd1:4 cmd2:4 par1:8 par2:8
@@ -247,7 +247,7 @@ static void chip_song_update()
 				if(cmd1) runcmd(ch, cmd1, par1,1);
 				if(cmd2) runcmd(ch, cmd2, par2,2);
 
-				if(note) 
+				if(note)
 					chip_note(ch,note + channel[ch].transp, channel[ch].lastinstr);
 
 			}
@@ -276,7 +276,7 @@ static void chip_osc_update()
 			runcmd(ch, ins>>8, ins & 0xff,0);
 		}
 
-		if(channel[ch].iwait) 
+		if(channel[ch].iwait)
 			channel[ch].iwait--;
 
 		if(channel[ch].inertia) {
@@ -389,8 +389,8 @@ void game_snd_buffer(uint16_t* buffer, int len) {
 	if (current_song) {
 		if (playsong)
 			chip_song_update();
-			// even if there's no song, update oscillators in case a "chip_note" gets called.
-		chip_osc_update(); 
+			// even if song is not playing, update oscillators in case a "chip_note" gets called.
+		chip_osc_update();
 	}
 	// Just generate enough samples to fill the buffer.
 	for (int i = 0; i < len; i++) {

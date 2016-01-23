@@ -20,7 +20,7 @@
 		C : command2 (0-f)
 		p : parameter1 (0-ff)
 		P : parameter2 (0-ff)
- 
+
 	 0 : no command
 	 1: 0 = note off
 	 2: d = duty cycle
@@ -35,7 +35,7 @@
 	 11: ~ = vibrato
 	 12: + = set relative note
 	 13: = = set absolute note (or instrument in pattern context)
-	 14: ! = set instrument 
+	 14: ! = set instrument
 
 
 that means that only one command 'f' is available unless we differentiate for instruments and track commands)
@@ -47,16 +47,16 @@ struct ChipSong {
 	uint8_t tracklength; // 32 notes per track by default
 	uint8_t *tracklist; // id of tracks. songlen * numchannels
 	int8_t *transpose; // number of semitones. songlen * numchannels
-	
+
 	uint16_t **instruments; // pointer to an array of pointers to command<<8 | parameter
 
-	uint32_t **tracks; // array of pointer to 32 u32 elements. 
+	uint32_t **tracks; // array of pointer to 32 u32 elements.
 };
 
-// init with a song. use 0 to stop playing
-void chip_play(const struct ChipSong *song); 
+// init with a song. use 0 to stop playing current song (but keep it loaded !)
+void chip_play(const struct ChipSong *song);
 
-// play a note of this instrument now - useful for FX ! 
+// play a note of this instrument now - useful for FX !
 void chip_note(uint8_t ch, uint8_t note, uint8_t instrument);
 
 int chip_song_playing();
