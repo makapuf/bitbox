@@ -14,24 +14,24 @@ args = parser.parse_args()
 print 'reducing tiles (tilesize %d,'%args.tilesize+('hflip' if args.hflip else '')+('vflip' if args.vflip else '')+')'
 
 TS=args.tilesize
-src = Image.open(args.file)
+src = Image.open(args.file).convert('RGBA')
 w,h = src.size
 
 seen_tiles = set()
 same=diff=empty=0
-for tile_y in range(h/TS) : 
-    for tile_x in range(w/TS) : 
+for tile_y in range(h/TS) :
+    for tile_x in range(w/TS) :
         im = src.crop((tile_x*TS,tile_y*TS,(tile_x+1)*TS,(tile_y+1)*TS))
         data = tuple(im.getdata())
-        if all(x[3]==0 for x in data) : 
+        if all(x[3]==0 for x in data) :
             empty+=1
-        else : 
+        else :
             if data in seen_tiles :
                 im.putdata([(255,0,255)]*TS*TS) # fill the tile
-                # put it back 
+                # put it back
                 src.paste(im,(tile_x*TS,tile_y*TS))
                 same+=1
-            else: 
+            else:
                 seen_tiles.add(data)
                 if args.hflip :
                     seen_tiles.add(tuple(im.transpose(Image.FLIP_LEFT_RIGHT).getdata()))
