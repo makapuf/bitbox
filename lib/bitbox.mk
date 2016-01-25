@@ -39,7 +39,7 @@ HOST = $(shell uname)
 # just the names of the targets in a generic way
 BITBOX_TGT:=$(NAME).elf
 MICRO_TGT:=$(NAME)_micro.elf
-SDL_TGT:=$(NAME)_emu
+SDL_TGT:=$(NAME)
 TEST_TGT:=$(NAME)_test
 PAL_TGT:=$(NAME)_pal.elf
 
