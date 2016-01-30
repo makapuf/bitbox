@@ -5,6 +5,12 @@
 #include <stdint.h>
 #include "kconf.h" // kernel conf can be the basis of values
 
+#ifdef __MACH__
+// for a Mac OS build, they want attributes specified differently:
+#define FASTMEM __attribute__ ((used, section ("__DATA, .ccm")))
+#else
+#define FASTMEM __attribute__ ((section (".ccm")))
+#endif
 
 
 // --- Main -----------------------------------------------------------------------------
