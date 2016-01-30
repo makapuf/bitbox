@@ -5,6 +5,7 @@
 #include <stdlib.h> // abs
 #include <string.h> // memset
 
+// make sure to use CCM_MEMORY instead of .ccm for Mac based builds...
 #define PALETTE_SECTION //__attribute__ ((section (".ccm")))
 
 
@@ -12,7 +13,7 @@
 #if VGA_SIMPLE_MODE==0 // text mode 80x25
 
 extern const uint8_t font16_data[256][16];
-uint8_t font16_data_cached[256][16]  __attribute__ ((section (".ccm")));
+uint8_t font16_data_cached[256][16] CCM_MEMORY;
 
 char vram[SCREEN_H][SCREEN_W];
 uint16_t palette[2]={0,0x56b5};
@@ -43,7 +44,7 @@ void graph_line() {
 #elif VGA_SIMPLE_MODE==1 // mini text mode 132x75, chars 8x6, base 800
 
 extern const uint8_t font8_data[256][8];
-uint8_t font8_data_cached[256][8]  __attribute__ ((section (".ccm")));
+uint8_t font8_data_cached[256][8] CCM_MEMORY;
 
 uint16_t palette[2]={0,0x56b5};
 char vram[SCREEN_H][SCREEN_W];
@@ -269,7 +270,7 @@ void graph_line() {
 #elif VGA_SIMPLE_MODE==10 // text mode 80x30 with colors
 
 extern const uint8_t font16_data[256][16];
-uint8_t font16_data_cached[256][16]  __attribute__ ((section (".ccm")));
+uint8_t font16_data_cached[256][16] CCM_MEMORY;
 
 char vram[SCREEN_H][SCREEN_W];
 char vram_attr[SCREEN_H][SCREEN_W];
@@ -309,7 +310,7 @@ void graph_line() {
 #elif VGA_SIMPLE_MODE==11 // text mode 132x75 with colors
 
 extern const uint8_t font8_data[256][8];
-uint8_t font8_data_cached[256][8]  __attribute__ ((section (".ccm")));
+uint8_t font8_data_cached[256][8] CCM_MEMORY;
 
 char vram[SCREEN_H][SCREEN_W];
 char vram_attr[SCREEN_H][SCREEN_W];
@@ -369,7 +370,7 @@ void graph_line( void )
 #elif VGA_SIMPLE_MODE==12 // text mode 80x60 with colors (8x8)
 
 extern const uint8_t font88_data[256][8];
-uint8_t font88_data_cached[256][8]  __attribute__ ((section (".ccm")));
+uint8_t font88_data_cached[256][8] CCM_MEMORY;
 
 char vram[SCREEN_H][SCREEN_W];
 char vram_attr[SCREEN_H][SCREEN_W];
