@@ -7,9 +7,9 @@
 
 #ifdef __MACH__
 // for a Mac OS build, they want attributes specified differently:
-#define FASTMEM __attribute__ ((used, section ("__DATA, .ccm")))
+#define CCM_MEMORY __attribute__ ((used, section ("__DATA, .ccm")))
 #else
-#define FASTMEM __attribute__ ((section (".ccm")))
+#define CCM_MEMORY __attribute__ ((section (".ccm")))
 #endif
 
 
