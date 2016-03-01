@@ -12,6 +12,22 @@
 #define USE_USB_OTG_FS
 #endif
 
+/* Try to match the VGA simple modes as much as possible. There is often no
+ * exact match possible, so we add or remove a few pixels.
+ * No matter what we do, the vertical resolution is always 271 lines. */
+#ifdef VGA_SIMPLE_MODE
+#if VGA_SIMPLE_MODE == 1 || VGA_SIMPLE_MODE==2
+  #define PAL_MODE 806
+#elif VGA_SIMPLE_MODE==11 
+  #define PAL_MODE 733
+#elif VGA_SIMPLE_MODE==4
+  #define PAL_MODE 403
+#elif VGA_SIMPLE_MODE==5 || VGA_SIMPLE_MODE==8
+  #define PAL_MODE 310
+#else 
+  #define PAL_MODE 620
+#endif 
+#endif
 
 // If the game didn't specify anything, let's pick a default mode
 #ifndef PAL_MODE
@@ -26,6 +42,7 @@
     #define PAL_MODE 384
   #endif
 
+  // Really don't care? Let's pick a default one then.
   #ifndef PAL_MODE
     #define PAL_MODE 384
   #endif

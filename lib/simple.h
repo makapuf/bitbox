@@ -25,35 +25,64 @@
 
     13 - b&w textmode 66x37 ( based on 400x300 with 6x8 chars ) - TODO
     14 - b&w textmode 40x30 (320x240 with 6x8 chars) - TODO
-    
 */
 
 #if   VGA_SIMPLE_MODE==0 
-#define SCREEN_W 80
-#define SCREEN_H 30
+  #if BOARD_PAL
+    #define SCREEN_W 80
+    #define SCREEN_H 17
+  #else
+    #define SCREEN_W 80
+    #define SCREEN_H 30
+  #endif
 
 #elif VGA_SIMPLE_MODE==1
-#define SCREEN_W 132
-#define SCREEN_H 75
+  #if BOARD_PAL
+    #define SCREEN_W 134
+    #define SCREEN_H 17
+  #else
+    #define SCREEN_W 132
+    #define SCREEN_H 75
+  #endif
 
 #elif VGA_SIMPLE_MODE==2
-#define SCREEN_W 800
-#define SCREEN_H 600
+  #if BOARD_PAL
+    #define SCREEN_W 806
+    #define SCREEN_H 271
+  #else
+    #define SCREEN_W 800
+    #define SCREEN_H 600
+  #endif
 #define BPP 1
 
 #elif VGA_SIMPLE_MODE==3
-#define SCREEN_W 640
-#define SCREEN_H 400
+  #if BOARD_PAL
+    #define SCREEN_W 672
+    #define SCREEN_H 271
+  #else
+    #define SCREEN_W 640
+    #define SCREEN_H 400
+  #endif
 #define BPP 2
 
 #elif VGA_SIMPLE_MODE==4 
-#define SCREEN_W 400
-#define SCREEN_H 300
+  #if BOARD_PAL
+    #define SCREEN_W 403
+    #define SCREEN_H 271
+  #else
+    #define SCREEN_W 400
+    #define SCREEN_H 300
+  #endif
 #define BPP 4    
 
 #elif VGA_SIMPLE_MODE==5 
-#define SCREEN_W 320
-#define SCREEN_H 200
+  #if BOARD_PAL
+    #define SCREEN_W 322
+    #define SCREEN_H 271
+  #else
+    #define SCREEN_W 320
+    #define SCREEN_H 200
+  #endif
 #define BPP 8
 /*
 #elif VGA_SIMPLE_MODE==6 
@@ -67,23 +96,43 @@
 #define BPP 2    
 */
 #elif VGA_SIMPLE_MODE==8
-#define SCREEN_W 320
-#define SCREEN_H 200
+  #if BOARD_PAL
+    #define SCREEN_W 322
+    #define SCREEN_H 271
+  #else
+    #define SCREEN_W 320
+    #define SCREEN_H 200
+  #endif
 #define BPP 4    
 
 #elif VGA_SIMPLE_MODE==10
-#define SCREEN_W 80
-#define SCREEN_H 30
+  #if BOARD_PAL
+    #define SCREEN_W 80
+    #define SCREEN_H 17
+  #else
+    #define SCREEN_W 80
+    #define SCREEN_H 30
+  #endif
 #define COLOR_TEXT
 
 #elif VGA_SIMPLE_MODE==11
-#define SCREEN_W 120
-#define SCREEN_H 75
+  #if BOARD_PAL
+    #define SCREEN_W 120
+    #define SCREEN_H 34
+  #else
+    #define SCREEN_W 120
+    #define SCREEN_H 75
+  #endif
 #define COLOR_TEXT
 
 #elif VGA_SIMPLE_MODE==12
-#define SCREEN_W 80
-#define SCREEN_H 60
+  #if BOARD_PAL
+    #define SCREEN_W 77
+    #define SCREEN_H 34
+  #else
+    #define SCREEN_W 80
+    #define SCREEN_H 60
+  #endif
 #define COLOR_TEXT
 
 /*
