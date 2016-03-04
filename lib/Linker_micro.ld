@@ -11,9 +11,9 @@ stack_size = 1024;
 
 
 /* define start / end of stack at end of sram */
-_sstack = ORIGIN(sram)+LENGTH(sram); 
-_estack = _sstack - stack_size; 
- 
+_sstack = ORIGIN(sram)+LENGTH(sram);
+_estack = _sstack - stack_size;
+
 SECTIONS
 {
     .text :

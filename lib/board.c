@@ -19,12 +19,12 @@ void system_init()
 	RCC->CR&=0xFFFBFFFF; // Reset HSEBYP bit
 	RCC->CIR=0x00000000; // Disable all interrupts
 
-	// Configure the System clock source, PLL Multiplier and Divider factors, 
+	// Configure the System clock source, PLL Multiplier and Divider factors,
 	// AHB/APBx prescalers and Flash settings
 	setup_clocks();
 
 	// Set vector table offset to flash memory start. This is the new (after bootloader) one
-	SCB->VTOR=(uint32_t) __isr_vector_start; 
+	SCB->VTOR=(uint32_t) __isr_vector_start;
 
 	// Set up interrupts to 4 bits preemption priority.
 	SCB->AIRCR=0x05FA0000|0x300;
@@ -33,17 +33,17 @@ void system_init()
 
 void board_init()
 {
-	// User LED  
+	// User LED
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // enable gpioA
 	GPIOA->MODER |= (1 << 4) ; // set pin 2 to be general purpose output
 
 	// button is PE15
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; // enable GPIO 
-	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR15_0; // set input / pullup 
-	
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; // enable GPIO
+	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR15_0; // set input / pullup
+
 	// SDIO sense is PC7
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // enable GPIO 
-	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR7_0; // set input / pullup 
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // enable GPIO
+	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR7_0; // set input / pullup
 
 	// Profiling
 	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
@@ -61,7 +61,7 @@ static void setup_clocks()
 
 	// Enable high performance mode, System frequency up to 168 MHz.
 	RCC->APB1ENR|=RCC_APB1ENR_PWREN;
-	PWR->CR|=PWR_CR_PMODE;  
+	PWR->CR|=PWR_CR_PMODE;
 
 	RCC->CFGR|=RCC_CFGR_HPRE_DIV1; // HCLK = SYSCLK / 1
 	RCC->CFGR|=RCC_CFGR_PPRE2_DIV2; // PCLK2 = HCLK / 2
@@ -73,7 +73,7 @@ static void setup_clocks()
 	// Enable the main PLL and wait until it is ready.
 	RCC->CR|=RCC_CR_PLLON;
 	while(!(RCC->CR&RCC_CR_PLLRDY));
-   
+
 	// Configure Flash prefetch, Instruction cache, Data cache and wait state
 	FLASH->ACR=FLASH_ACR_ICEN|FLASH_ACR_DCEN|FLASH_ACR_LATENCY_5WS;
 
@@ -93,7 +93,7 @@ void toggle_led()
 void set_led(int value)
 {
     if (value)
-        GPIOA->BSRRL |= GPIO_BSRR_BS_2; // PA2 
+        GPIOA->BSRRL |= GPIO_BSRR_BS_2; // PA2
     else
         GPIOA->BSRRH |= GPIO_BSRR_BS_2;
 }
@@ -122,7 +122,7 @@ void wait(int k) {
 }
 
 void blink(int times, int speed) {
-	for (int i=0;i<times;i++) 
+	for (int i=0;i<times;i++)
 		{
 			set_led(1);wait(speed);
 			set_led(0);wait(speed);
