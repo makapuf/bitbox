@@ -28,6 +28,13 @@ void system_init()
 
 	// Set up interrupts to 4 bits preemption priority.
 	SCB->AIRCR=0x05FA0000|0x300;
+
+	// enable hard FPU
+	SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));    /* set CP10 and CP11 Full Access */
+
+	// Profiling
+	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk ; // enable the cycle counter
 }
 
 
@@ -45,9 +52,7 @@ void board_init()
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // enable GPIO
 	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR7_0; // set input / pullup
 
-	// Profiling
-	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk ; // enable the cycle counter
+
 }
 
 

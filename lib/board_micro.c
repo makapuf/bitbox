@@ -3,8 +3,6 @@
 #include "kconf.h"
 #include "cmsis/stm32f4xx.h"
 
-uint8_t __isr_vector_sram [0x200];
-
 void set_led(int value)
 {
     if (value)
@@ -27,15 +25,18 @@ int sdio_sense_state()
 void setup_clocks();
 
 // misc setups : flash, fpu, profiling, LED
-void system_init(void) 
+void system_init(void)
 {
 
     // Setup flash latency : 2WS + prefetch ON, I/C caches enabled
     SET_BIT(FLASH->ACR, FLASH_ACR_LATENCY_2WS | \
-    	FLASH_ACR_PRFTEN | FLASH_ACR_ICEN | FLASH_ACR_DCEN ); 
+    	FLASH_ACR_PRFTEN | FLASH_ACR_ICEN | FLASH_ACR_DCEN );
 
 	// enable hard FPU
 	SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));    /* set CP10 and CP11 Full Access */
+
+	// Set up interrupts to 4 bits preemption priority.
+	SCB->AIRCR=0x05FA0000|0x300;
 
 	// Enable Profiling
 	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
@@ -44,28 +45,27 @@ void system_init(void)
 	setup_clocks();
 }
 
-// default empty implementation 
+// default empty implementation
 __attribute__((weak)) void audio_init ( void ) {}
 
 void board_init(void)
 {
-
 	// LED init
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
 	// 00 IN, 01 OUT, 10 ALT, 11 ANALOG x 16 bits
-	GPIOB->MODER |= 0b01 ; // PB0 as output  
-	// output : push pull is default , Speed is 50M (0->3 ), default slow. 
+	GPIOB->MODER |= 0b01 ; // PB0 as output
+	// output : push pull is default , Speed is 50M (0->3 ), default slow.
 }
 
 // Setup Clocks (from default reset state)
 void setup_clocks(void)
 {
-    SET_BIT(RCC->CR,RCC_CR_HSEON);  // switch hse on 
-    while (!READ_BIT(RCC->CR, RCC_CR_HSERDY));  // wait till RCC_CR_HSE Ready 
-    
+    SET_BIT(RCC->CR,RCC_CR_HSEON);  // switch hse on
+    while (!READ_BIT(RCC->CR, RCC_CR_HSERDY));  // wait till RCC_CR_HSE Ready
+
     // system PLL from HSE (value from kconf.h, HSE=8Mhz)
     // SRC = HSE 8MHz. M=8, N=336, P=4 Q=7 => 84MHz clock
-    
+
     RCC->PLLCFGR = (RCC_PLLCFGR_PLLM_0*PLL_M) | \
     	(RCC_PLLCFGR_PLLN_0*PLL_N) | \
     	(RCC_PLLCFGR_PLLP_0 * ((PLL_P-2)/2)) | \
@@ -75,9 +75,9 @@ void setup_clocks(void)
     // Prescaling : AHB=1, APB1=2, APB2=1 (kconf)
     RCC->CFGR = AHB_PRE | APB1_PRE | APB2_PRE;
 
-    SET_BIT(RCC->CR,RCC_CR_PLLON); 
+    SET_BIT(RCC->CR,RCC_CR_PLLON);
     while (!READ_BIT(RCC->CR, RCC_CR_PLLRDY));  // wait till OK
-    
+
     SET_BIT(RCC->CFGR, RCC_CFGR_SW_PLL);  // Use PLL
     while (!READ_BIT(RCC->CFGR, RCC_CFGR_SWS_PLL)); // wait till done
 }
@@ -94,7 +94,7 @@ void wait(int k) {
 }
 
 void blink(int times, int speed) {
-	for (int i=0;i<times;i++) 
+	for (int i=0;i<times;i++)
 		{
 			set_led(1);wait(speed);
 			set_led(0);wait(speed);
