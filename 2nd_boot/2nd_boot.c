@@ -175,6 +175,7 @@ void list_roms()
             res = f_readdir(&dir, &fno);                   /* Read a directory item */
             if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
             if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
+            if (strcmp(fno.fname, "2ND_BOOT.BIN") == 0) continue;/* Ignore 2nd boot */
 #if _USE_LFN
             fn = *fno.lfname ? fno.lfname : fno.fname;
 #else
