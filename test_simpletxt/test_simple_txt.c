@@ -19,9 +19,9 @@ void game_init() {
 
     // print text (crudely, no \n or \t interpreting)
     print_at(0,18,lorem);
-    print_at(30,5, "Hello Bitbox simple text !");
+    print_at(20,5, "Hello Bitbox simple text !");
     for (int i=0;i<16;i++)
-      print_at(28+2*i,6,"##");
+      print_at(18+2*i,6,"##");
 
 }
 

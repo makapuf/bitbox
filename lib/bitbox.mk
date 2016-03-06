@@ -81,11 +81,6 @@ ifdef USE_ENGINE
 GAME_C_FILES +=  blitter.c blitter_btc.c blitter_sprites.c blitter_tmap.c
 endif
 
-# - simple modes
-ifdef VGA_SIMPLE_MODE
-DEFINES += VGA_SIMPLE_MODE=$(VGA_SIMPLE_MODE)
-GAME_C_FILES += simple.c fonts.c
-endif # vga kernel mode defined in kconf.h
 
 # - simple sampler
 ifdef USE_SAMPLER
@@ -190,6 +185,17 @@ KERNEL_BITBOX += audio_bitbox.c
 KERNEL_MICRO += audio_micro.c
 KERNEL_PAL += audio_bitbox.c
 endif
+
+# - simple modes
+# vga kernel mode itself is defined in kconf.h
+ifdef VGA_SIMPLE_MODE
+DEFINES += VGA_SIMPLE_MODE=$(VGA_SIMPLE_MODE)
+KERNEL_BITBOX += simple.c fonts.c
+KERNEL_SDL += simple.c fonts.c
+KERNEL_MICRO += simple_micro.c fonts.c
+KERNEL_PAL += simple_micro.c fonts.c
+endif
+
 
 # --- binaries as direct object linking + binaries.h from all data in /data directory (if present)
 
