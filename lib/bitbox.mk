@@ -194,6 +194,7 @@ KERNEL_BITBOX += simple.c fonts.c
 KERNEL_SDL += simple.c fonts.c
 KERNEL_MICRO += simple_micro.c fonts.c
 KERNEL_PAL += simple_micro.c fonts.c
+KERNEL_TEST += simple.c fonts.c
 endif
 
 
