@@ -5,7 +5,7 @@
 #include <stdlib.h> // abs
 #include <string.h> // memset
 
-#define PALETTE_SECTION //__attribute__ ((section (".ccm")))
+#define PALETTE_SECTION CCM_MEMORY
 
 // --------------------------------------------------------------
 

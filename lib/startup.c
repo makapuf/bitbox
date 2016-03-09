@@ -35,7 +35,7 @@ void Reset_Handler()
 	// Zero fill the bss segment.
 	for(uint32_t *dest=_sbss;dest<_ebss;dest++) *dest=0;
 
-	#ifdef HAS_CMM
+	#ifdef CCM_MEMORY
 	// Zero fill the CCM segment also. this is used by kernels to check if they're initialized (bad)
 	for(uint32_t *dest=_sccm;dest<_eccm;dest++) *dest=0;
 	#endif

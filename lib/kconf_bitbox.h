@@ -3,7 +3,13 @@
  */
 #include <stdint.h>
 
-#define HAS_CMM
+#ifdef __MACH__
+// for a Mac OS build, they want attributes specified differently:
+#define CCM_MEMORY __attribute__ ((used, section ("__DATA, .ccm")))
+#else
+#define CCM_MEMORY __attribute__ ((section (".ccm")))
+#endif
+
 #define STM32F40_41xxx
 #define STACKSIZE 8192
 

@@ -26,7 +26,7 @@ typedef struct {
 
 } Blitter;
 
-Blitter blt __attribute__ ((section (".ccm")));
+Blitter blt CCM_MEMORY;
 
 static int blitter_initialized = 0;
 
