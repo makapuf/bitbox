@@ -134,14 +134,8 @@ else
   $(SDL_TGT): C_OPTS += -Og
 endif
 
-ifdef SDL2
-  DEFINES += SDL2
-  $(SDL_TGT): C_OPTS += $(shell sdl2-config --cflags)
-  $(SDL_TGT): HOSTLIBS += $(shell sdl2-config --libs)
-else
-  $(SDL_TGT): C_OPTS += $(shell sdl-config --cflags)
-  $(SDL_TGT): HOSTLIBS += $(shell sdl-config --libs)
-endif
+$(SDL_TGT): C_OPTS += $(shell sdl2-config --cflags)
+$(SDL_TGT): HOSTLIBS += $(shell sdl2-config --libs)
 
 KERNEL_SDL+=emulator.c
 KERNEL_TEST+=tester.c
