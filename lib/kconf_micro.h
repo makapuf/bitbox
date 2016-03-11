@@ -5,6 +5,7 @@
 
 #define STM32F40_41xxx
 #define STACKSIZE 4096
+#define CCM_MEMORY
 
 // usb
 #ifndef NO_USB
