@@ -23,7 +23,6 @@
    TODO
 
  handle SLOW + PAUSE + FULLSCREEN (alt-enter) as keyboard handles
- handle properly gamepads, second gamepad,
  handle mouse,
  keyboard (treat keyboard gamepads as config for quick saves)
  handling other events (plugged, ...)
@@ -60,7 +59,7 @@ static uint32_t next_time;
 // options
 int slow; // parameter : run slower ?
 int fullscreen; // shall run fullscreen
-int quiet;
+int quiet=1; // quiet by default now
 int scale=1; // scale display by this in pixels
 
 // Video
@@ -632,12 +631,16 @@ int main ( int argc, char** argv )
     for (int i=1;i<argc;i++) {
         if (!strcmp(argv[i],"--fullscreen"))
             fullscreen = 1;
-        if (!strcmp(argv[i],"--slow"))
+        else if (!strcmp(argv[i],"--slow"))
             slow = 1;
-        if (!strcmp(argv[i],"--quiet"))
-            quiet = 1;
-        if (!strcmp(argv[i],"--scale2x"))
+        else if (!strcmp(argv[i],"--verbose"))
+            quiet = 0;
+        else if (!strcmp(argv[i],"--scale2x"))
             scale = 2;
+        else {
+            instructions();
+            exit(0);
+        }
     }
 
     // display current options
@@ -646,7 +649,6 @@ int main ( int argc, char** argv )
         instructions();
         printf(" - Starting\n");
     }
-
 
     gamepad_buttons[0] = 0; // all up
     gamepad_buttons[1] = 0;
