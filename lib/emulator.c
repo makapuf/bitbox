@@ -54,14 +54,16 @@ int screen_height;
 #define LINE_BUFFER 1024
 
 #define USER_BUTTON_KEY SDLK_F12
-int slow; // parameter : run slower ?
 
 static uint32_t next_time;
 
-// Video
+// options
+int slow; // parameter : run slower ?
 int fullscreen; // shall run fullscreen
 int quiet;
+int scale=1; // scale display by this in pixels
 
+// Video
 SDL_Surface* screen;
 uint16_t mybuffer1[LINE_BUFFER];
 uint16_t mybuffer2[LINE_BUFFER];
@@ -204,9 +206,11 @@ void set_mode(int width, int height)
         die(-1,0);
     }
     SDL_WM_SetCaption(WM_TITLE_LED_OFF, "game");
+
+    if (!quiet)
+        printf("%d bpp, flags:%x pitch %d\n", screen->format->BitsPerPixel, screen->flags, screen->pitch/2);
+
 }
-
-
 
 static void joy_init()
 // by David Lau
@@ -259,10 +263,8 @@ int init(void)
 
     next_time = SDL_GetTicks();
 
-    printf("screen is now %dx%d\n",screen_width,screen_height);
-    #ifdef MICROKERNEL
-    printf("Using 8Bpp interface (micro)");
-    #endif
+    if (!quiet)
+        printf("Screen is now %dx%d with a scale of %d\n",screen_width,screen_height,scale);
 
     return 0;
 }
@@ -270,6 +272,12 @@ int init(void)
 
 void instructions ()
 {
+    printf("Invoke game with options : \n");
+    printf("  --fullscreen to run fullscreen\n");
+    printf("  --scale2x to scale display 2x\n");
+    printf("  --slow to run game very slowly (for debug)\n");
+    printf("  --quiet to avoid showing helpscreen\n");
+    printf("\n");
     printf("Use Joystick, Mouse or keyboard.");
     printf("Bitbox user Button is emulated by the F12 key.\n");
     printf("       -------\n");
@@ -281,21 +289,6 @@ void instructions ()
 }
 
 
-const char * gamepad_names[] = {
-    "gamepad_A",
-    "gamepad_B",
-    "gamepad_X",
-    "gamepad_Y",
-    "gamepad_L",
-    "gamepad_R",
-    "gamepad_select",
-    "gamepad_start",
-
-    "gamepad_up",
-    "gamepad_down",
-    "gamepad_left",
-    "gamepad_right",
-};
 
 // reverse mapping to USB BootP
 
@@ -591,31 +584,32 @@ int button_state() {
 
 // user LED
 void set_led(int x) {
-    printf("Setting LED to %d\n",x);
+    if (!quiet)
+        printf("Setting LED to %d\n",x);
     SDL_WM_SetCaption(x?WM_TITLE_LED_ON:WM_TITLE_LED_OFF, "game");
 }
 
 int main ( int argc, char** argv )
 {
 
-    fullscreen = (argc>1 && !strcmp(argv[1],"--fullscreen"));
-    if (fullscreen)
-        printf("Running fullscreen.\n");
-    else
-        printf("Invoke with --fullscreen argument to run fullscreen.\n");
+    for (int i=1;i<argc;i++) {
+        if (!strcmp(argv[i],"--fullscreen"))
+            fullscreen = 1;
+        if (!strcmp(argv[i],"--slow"))
+            slow = 1;
+        if (!strcmp(argv[i],"--quiet"))
+            quiet = 1;
+        if (!strcmp(argv[i],"--scale2x"))
+            scale = 2;
+    }
 
-    slow = (argc>1 && !strcmp(argv[1],"--slow"));
-    if (slow)
-        printf("Running slow.\n");
-    else
-        printf("Invoke with --slow argument to run slower (fullscreen not supported).\n");
-
-    quiet = (argc>1 && !strcmp(argv[1],"--quiet"));
-
+    // display current options
     if (!quiet) {
+        printf("Options : %s %s scale : %d\n",fullscreen?"fullscreen":"windowed",slow?"slow":"normal speed",scale);
         instructions();
         printf(" - Starting\n");
     }
+
 
     gamepad_buttons[0] = 0; // all up
     gamepad_buttons[1] = 0;
