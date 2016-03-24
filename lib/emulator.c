@@ -124,11 +124,16 @@ static inline uint16_t pixelconv(uint16_t pixel)
     return (pixel & (uint16_t)(~0x1f))<<1 | (pixel & 0x1f);
 }
 
+// 0RRRRRGGGGGBBBBB to RGB032 rrrrr000 ggggg000 bbbbb000 00000000
+static inline uint32_t pixelconv32(uint16_t pixel)
+{
+    return ((pixel & (0x1f<<10))<<9 | (pixel & (0x1f<<5))<<6 | (pixel & 0x1f)<<3);
+}
 
 static void __attribute__ ((optimize("-O3"))) refresh_screen(SDL_Surface *scr)
 // uses global line + vga_odd
 {
-    uint16_t *dst = (uint16_t*)scr->pixels;
+    uint32_t *dst = (uint32_t*)scr->pixels;
 
     draw_buffer = mybuffer1;
     graph_frame();
@@ -142,14 +147,46 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen(SDL_Surface *scr)
 
         // copy to screen at this position (cheating)
         uint16_t *src = (uint16_t*) draw_buffer;
-
         for (int i=0;i<screen_width;i++)
-            *dst++= pixelconv(*src++);
+            *dst++= pixelconv32(*src++);
 
         // swap lines buffers to simulate double line buffering
         draw_buffer = (draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
     }
 }
+
+static void __attribute__ ((optimize("-O3"))) refresh_screen2x (SDL_Surface *scr)
+// uses global line + vga_odd, scale two times
+{
+
+    uint64_t * restrict dst = (uint64_t*)scr->pixels; // will render 2 pixels at a time horizontally
+
+    draw_buffer = mybuffer1; // currently 16bit data
+    graph_frame();
+
+    for (vga_line=0;vga_line<screen_height;vga_line++) {
+        vga_odd=0;
+        graph_line(); // using line, updating draw_buffer ...
+        #ifdef VGA_SKIPLINE
+        vga_odd=1; graph_line(); //  a second time for SKIPLINE modes
+        #endif
+
+        // copy to screen at this position
+        uint16_t *restrict src = (uint16_t*) draw_buffer;
+
+        for (int i=0;i<screen_width;i++, dst++) {
+            uint64_t pix = pixelconv32(*src++)*0x100000001ULL;
+            *dst = pix; // blit line
+            *(dst+scr->pitch/sizeof(uint64_t))=pix; // also next line
+        }
+
+        // swap lines buffers to simulate double line buffering
+        draw_buffer = ( draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
+
+        dst += scr->pitch/sizeof(uint64_t); // we already drew the line after, skip it
+    }
+}
+
 
 #ifndef NO_AUDIO
 static void mixaudio(void * userdata, Uint8 * stream, int len)
@@ -199,7 +236,7 @@ void set_mode(int width, int height)
 {
     screen_width = width;
     screen_height = height;
-    screen = SDL_SetVideoMode(width,height, 16, SDL_HWSURFACE|SDL_DOUBLEBUF|(fullscreen?SDL_FULLSCREEN:0));
+    screen = SDL_SetVideoMode(width*scale,height*scale, 32, SDL_HWSURFACE|SDL_DOUBLEBUF|(fullscreen?SDL_FULLSCREEN:0));
     if ( !screen )
     {
         printf("%s\n",SDL_GetError());
@@ -633,7 +670,10 @@ int main ( int argc, char** argv )
         // update time
         vga_frame++;
 
-        refresh_screen(screen);
+        if (scale==1)
+            refresh_screen(screen);
+        else
+            refresh_screen2x(screen);
 
         SDL_Delay(time_left());
         next_time += slow ? TICK_INTERVAL*10:TICK_INTERVAL;
