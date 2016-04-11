@@ -261,6 +261,10 @@ void game_init() {
 	window(2,HEAD_Y,78,HEAD_Y+2);
 	print_at(5,HEAD_Y+1, " BITBOX bootloader \x01 Hi ! Here are the current files");
 
+	icon_x = 400;
+	icon_y= VGA_V_PIXELS / 2 - 80;
+	default_icon();
+
     // init FatFS
 	memset(&fs32, 0, sizeof(FATFS));
 	FRESULT r = f_mount(&fs32,"",1); // mount now
@@ -269,11 +273,6 @@ void game_init() {
 		die(MOUNT,r);
 	}
 
-	memset(icon_data, 0x55, sizeof(icon_data));
-	icon_x = 400;
-	icon_y= VGA_V_PIXELS / 2 - 80;
-
-	default_icon();
 
 	list_roms();
 	if (!nb_files)
