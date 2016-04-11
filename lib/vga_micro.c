@@ -43,8 +43,8 @@ volatile int vga_odd; // only defined in "skipline" modes
 #endif
 
 // align to 1kb since we're using DMA bursts
-static uint8_t LineBuffer1[VGA_H_PIXELS+16] __attribute__((aligned (1024)));
-static uint8_t LineBuffer2[VGA_H_PIXELS+16] __attribute__((aligned (1024)));
+static uint8_t LineBuffer1[VGA_H_PIXELS+16];// __attribute__((aligned (1024)));
+static uint8_t LineBuffer2[VGA_H_PIXELS+16];// __attribute__((aligned (1024)));
 
 static uint8_t *display_buffer; // will be sent to display
 uint8_t *draw_buffer; // will be drawn (bg already drawn)
