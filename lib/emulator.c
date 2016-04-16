@@ -346,11 +346,12 @@ uint8_t key_trans[256] = { // scan_code -> USB BootP code
     [0x71]=0x50, // left
     [0x72]=0x4F, // right
     [0x41]=0x2C, // space
+    [0x09]=0x29, // ESC -- needs to define DISABLE_ESC_EXIT in makefile to avoid escaping emulator !
     [0x17]=0x2B, // TAB
-    [0x10]=42, // backspace
     [0x16]=42, // backspace on mine... (lowagner)
     [0x77]=76, // delete
     [0x76]=73, // insert
+    [0x7f]=0x48, // pause
 
     [0x0a]=30,31,32,33,34,35,36,37,38,39,45,46, // 1234567890-=
     [0x18]=20,26, 8,21,23,28,  24,  12,  18,  19,  // qwertyuiop
@@ -358,7 +359,7 @@ uint8_t key_trans[256] = { // scan_code -> USB BootP code
     [0x26]= 4,22, 7, 9,10,11,13,14,15,16, // asdfghjklm
     [0x30]=52,53, // ' and `
     [0x33]=49,  //  backslash
-    [0x34]=29,27, 6,25, 5,17,16,54,55,56, // zxcvbnm,./
+    [0x34]=29,27, 6,25, 5,17,54,55,56, // zxcvbnm,./
 
     [0x6e]=74, // home
     [0x73]=77, // end

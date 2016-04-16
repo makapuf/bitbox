@@ -8,9 +8,9 @@
 
 volatile enum device_enum device_type[2]; // currently plugged device
 
-/* Circular FIFO. 
+/* Circular FIFO.
 
-- ignores content if try to insert on a full queue 
+- ignores content if try to insert on a full queue
 - returns "empty event"=0 if get from empty
 
  ---------xxxxxxx--------
@@ -19,15 +19,15 @@ volatile enum device_enum device_type[2]; // currently plugged device
 
 */
 
-#define QUEUE_START (&evt_queue[0])          
-#define QUEUE_END (&evt_queue[EVT_QUEUE_SIZE])          
+#define QUEUE_START (&evt_queue[0])
+#define QUEUE_END (&evt_queue[EVT_QUEUE_SIZE])
 
 
 //- event queue implementation ---------------------------------------------------------------------------------------------------------
 
 
 static struct event evt_queue[EVT_QUEUE_SIZE];
-static struct event *evt_in=QUEUE_START, *evt_out=QUEUE_START; 
+static struct event *evt_in=QUEUE_START, *evt_out=QUEUE_START;
 // queue is empty if in=out; full if just before end (keep at least one empty)
 // in : next to write, out = next place to write
 
@@ -36,15 +36,15 @@ static inline int event_full()
 	return (evt_in+1==evt_out || (evt_in==QUEUE_END && evt_out==QUEUE_START));
 }
 
-static inline int event_empty() 
+static inline int event_empty()
 {
-	return evt_in==evt_out; 
+	return evt_in==evt_out;
 }
 
 void event_push(struct event e)
 {
 	// full ? don't push
-	if (event_full()) return; 
+	if (event_full()) return;
 	*evt_in++ = e;
 	// end of line ? rewind
 	if (evt_in==&evt_queue[EVT_QUEUE_SIZE]) {
@@ -70,9 +70,9 @@ void event_clear()
 }
 
 /* This emulates the gamepad with a keyboard.
- * fetches all keyboard events, 
+ * fetches all keyboard events,
  * discarding all others (not optimal)
- * mapping: 
+ * mapping:
 
     Space : Select,   2C
     Enter : Start,    28
@@ -81,27 +81,27 @@ void event_clear()
     F : B button, 09
     E : X button, 08
     R : Y button, 15
-    Left/Right CTRL (L/R shoulders) 
+    Left/Right CTRL (L/R shoulders)
  */
 
 void kbd_emulate_gamepad (void)
 {
 	// kbd codes in order of gamepad buttons
-	static const uint8_t kbd_gamepad[] = {0x07, 0x09, 0x08, 0x15, 0xE0, 0xE4, 0x2c, 0x28, 0x52, 0x51, 0x50, 0x4f }; 
-	// 
+	static const uint8_t kbd_gamepad[] = {0x07, 0x09, 0x08, 0x15, 0xE0, 0xE4, 0x2c, 0x28, 0x52, 0x51, 0x50, 0x4f };
+	//
 	struct event e;
 	do {
 		e=event_get();
-		for (int i=0;i<12;i++) 
+		for (int i=0;i<12;i++)
 		{
-			if (kbd_gamepad[i]==e.kbd.key) 
+			if (kbd_gamepad[i]==e.kbd.key)
 			switch (e.type)
 			{
 				case evt_keyboard_press  :
 					gamepad_buttons[0] |= (1<<i);
 				break;
-			
-				case evt_keyboard_release : 
+
+				case evt_keyboard_release :
 					gamepad_buttons[0] &= ~(1<<i);
 				break;
 			}
@@ -141,13 +141,13 @@ static const char keyb_fr[3][83] = { // normal, shift, ctrl - TODO : add right_a
     {
         ERR,ERR,ERR,ERR,'q','b','c','d','e','f','g','h','i','j','k','l',',','n',
         'o','p','a','r','s','t','u','v','z','x','y','w','&',0xe9,'\"','\'','(','-',
-        0xe8,'_',0xe7,0xe0,'\n',0x1B,'\b','\t',' ',')','=','^','$','\\','#','m',0xF9,'*',
+        0xe8,'_',0xe7,0xe0,'\n',0x1B,'\b','\t',' ',')','=','^','$','\\','#','m',0xF9,'~',
         ';',':','!',
         [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP
     },{
         ERR,ERR,ERR,ERR,'Q','B','C','D','E','F','G','H','I','J','K','L','?','N',
         'O','P','A','R','S','T','U','V','Z','X','Y','W','1','2','3','4','5','6',
-        '7','8','9','0','\n',0x1B,'\b','\t',' ',0xB0,'+',0xa8,0xa3,'\\','#','M','%',0xB5,
+        '7','8','9','0','\n',0x1B,'\b','\t',' ',0xB0,'+',0xa8,0xa3,'*','#','M','%',0xB5,
         '.','/',0xA7,
         [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP,
     },{
@@ -157,19 +157,19 @@ static const char keyb_fr[3][83] = { // normal, shift, ctrl - TODO : add right_a
          13,'.','/',
         [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP,
     }
-}; 
+};
 
 // FIXME Put config in flash ?
 #ifdef KEYB_FR
-static const char (*keymap)[83]=keyb_fr;  
+static const char (*keymap)[83]=keyb_fr;
 #else
-static const char (*keymap)[83]=keyb_en; 
-#endif 
+static const char (*keymap)[83]=keyb_en;
+#endif
 
 // not public, not static either as it can be used by other funcs
-char kbd_map(uint8_t mod, uint8_t key) 
+char kbd_map(uint8_t mod, uint8_t key)
 {
-    if (key>82) 
+    if (key>82)
         return ERR;
     if (mod & (LShift|RShift))
         return keymap[1][key];
