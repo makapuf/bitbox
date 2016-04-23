@@ -147,7 +147,7 @@ KERNEL_PAL+=board.c startup.c bitbox_main.c
 # video related
 ifndef NO_VGA
   KERNEL_MICRO += vga_micro.c
-  KERNEL_BITBOX += new_vga.c micro_palette.c
+  KERNEL_BITBOX += vga_bitbox.c micro_palette.c
   KERNEL_PAL += vga_pal.c micro_palette.c
   KERNEL_SDL += micro_palette.c
 else
