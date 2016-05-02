@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """outputs a tileset file, a tilemap file binaries from a tmx file
 
     tileset file has the name of the input tmx tileset (only one).tset
@@ -63,10 +64,6 @@ import xml.etree.ElementTree as ET
 import array, os.path, argparse
 from collections import defaultdict
 import sprite_encode2, sprite_encode8
-
-# XXX
-#sys.argv += ('-amxs','alterego/maps.tmx')
-if len(sys.argv)==1 : sys.argv += ('-mxs','tmap.tmx')
 
 
 parser = argparse.ArgumentParser(description='Process TMX files to tset/tmap/.h files')

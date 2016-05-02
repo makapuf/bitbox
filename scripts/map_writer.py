@@ -1,3 +1,4 @@
+#!/usr/bin/python
 'map builder : builds a map from a tilesize, a tileset and a pixmap'
 
 from PIL import Image
@@ -9,6 +10,9 @@ parser.add_argument('tilesize', type=int,help='size of each tile in pixels')
 parser.add_argument('file', help='input file name(png)')
 parser.add_argument('tset', help='tileset file name(png)')
 parser.add_argument('file_out',help='output file(.tmx)')
+
+parser.add_argument('--hflip', help='can Horizontally flip tiles', action='store_true')
+parser.add_argument('--vflip', help='can vertically flip tiles', action='store_true')
 args = parser.parse_args()
 
 TS=args.tilesize
@@ -23,28 +27,30 @@ if w%TS : print "beware, width not a multiple of tilesize"
 if h%TS : print "beware, height not a multiple of tilesize"
 
 tileset = {} # binary string : ID
-for tile_y in range(h/TS) : 
-    for tile_x in range(w/TS) : 
+for tile_y in range(h/TS) :
+    for tile_x in range(w/TS) :
         im = src.crop((tile_x*TS,tile_y*TS,(tile_x+1)*TS,(tile_y+1)*TS))
-        tile_id = tile_x + tile_y * (w/TS) + 1 
+        tile_id = tile_x + tile_y * (w/TS) + 1
 
         tileset[ tuple(im.getdata()) ] = tile_id
-        tileset[ tuple(im.transpose(Image.FLIP_LEFT_RIGHT).getdata()) ] = tile_id | FLIPPED_HORIZONTALLY
-        tileset[ tuple(im.transpose(Image.FLIP_TOP_BOTTOM).getdata()) ] = tile_id | FLIPPED_VERTICALLY
+        if args.hflip :
+            tileset[ tuple(im.transpose(Image.FLIP_LEFT_RIGHT).getdata()) ] = tile_id | FLIPPED_HORIZONTALLY
+        if args.vflip :
+            tileset[ tuple(im.transpose(Image.FLIP_TOP_BOTTOM).getdata()) ] = tile_id | FLIPPED_VERTICALLY
 
 # create tilemap
 img = Image.open(args.file).convert('RGB')
 w,h = img.size
 tilemap = []
-for tile_y in range(h/TS) : 
-    for tile_x in range(w/TS) : 
+for tile_y in range(h/TS) :
+    for tile_x in range(w/TS) :
         im = img.crop((tile_x*TS,tile_y*TS,(tile_x+1)*TS,(tile_y+1)*TS))
         tile_id = tileset.get(tuple(im.getdata()),0)
 
         tilemap.append( tile_id )
 
 # generate TMX
-with open(args.file_out,'w') as of : 
+with open(args.file_out,'w') as of :
     of.write('<map version="1.0" orientation="orthogonal" width="%d" height="%d" tilewidth="%d" tileheight="%d">\n'%\
         (w/TS,h/TS,TS,TS))
     of.write ('<tileset firstgid="1" name="tilemap" tilewidth="%d" tileheight="%d" spacing="0" margin="0" >\n'%(TS, TS))
