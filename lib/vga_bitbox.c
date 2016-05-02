@@ -41,6 +41,8 @@ mode as defined in kconf.h values
 #define SYNC_END (VGA_H_SYNC*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
 #define BACKPORCH_END ((VGA_H_SYNC+VGA_H_BACKPORCH)*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
 
+// simulates MICRO interface through palette expansion
+extern const uint16_t palette_flash[256]; // microX palette in bitbox pixels
 
 #ifdef PROFILE
 // from http://forums.arm.com/index.php?/topic/13949-cycle-count-in-cortex-m3/
@@ -239,7 +241,6 @@ void vga_setup()
 	//InstallInterruptHandler(DMA2_Stream5_IRQn,DMACompleteHandler);
 	NVIC_EnableIRQ(DMA2_Stream5_IRQn);
 	NVIC_SetPriority(DMA2_Stream5_IRQn,0);
-
 }
 
 
@@ -276,8 +277,6 @@ static void prepare_pixel_DMA()
 }
 
 
-// simulates MICRO interface through palette expansion
-extern const uint16_t palette_flash[256]; // microX palette in bitbox pixels
 extern void graph_line8( void );
 void __attribute__((weak)) graph_line ( void )
 {
@@ -286,11 +285,15 @@ void __attribute__((weak)) graph_line ( void )
 	if (vga_odd)
 	#endif
 	{
-		uint8_t  * restrict drawbuf8=(uint8_t *) draw_buffer;
 		// expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
-		// XXX unroll loop, read 4 by 4 pixels src, write 2 pixels out by two ...
-		for (int i=VGA_H_PIXELS-1;i>=0;i--)
-			draw_buffer[i] = palette_flash[drawbuf8[i]];
+		// cost is ~ 5 cycles per pixel. not accelerated by putting palette in CCMRAM
+		const uint32_t * restrict src = (uint32_t*)&draw_buffer[VGA_H_PIXELS/2-4];
+		uint32_t * restrict dst=(uint32_t*)&draw_buffer[VGA_H_PIXELS-4];
+		for (int i=0;i<VGA_H_PIXELS/4;i++) {
+			uint32_t pix=*src--; // read 4 src pixels
+			*dst-- = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
+			*dst-- = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
+		}
 	}
 }
 
