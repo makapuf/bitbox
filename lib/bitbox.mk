@@ -37,11 +37,11 @@
 HOST = $(shell uname)
 
 # just the names of the targets in a generic way
-BITBOX_TGT:=$(NAME).elf
-MICRO_TGT:=$(NAME)_micro.elf
-SDL_TGT:=$(NAME)_emu
-TEST_TGT:=$(NAME)_test
-PAL_TGT:=$(NAME)_pal.elf
+BITBOX_TGT:= $(NAME).elf
+MICRO_TGT := $(NAME)_micro.elf
+SDL_TGT   := $(NAME)_emu
+TEST_TGT  := $(NAME)_test
+PAL_TGT   := $(NAME)_pal.elf
 
 # default : build bitbox + sdl binaries
 all: $(SDL_TGT) $(BITBOX_TGT:%.elf=%.bin) $(EXTRA_FILES)
@@ -133,23 +133,23 @@ ifeq ($(HOST), Darwin)
 else
   $(SDL_TGT): C_OPTS += -Og
 endif
-$(SDL_TGT): C_OPTS += $(shell sdl-config --cflags)
+$(SDL_TGT): C_OPTS   += $(shell sdl-config --cflags)
 $(SDL_TGT): HOSTLIBS += $(shell sdl-config --libs)
 
-KERNEL_SDL+=emulator.c
-KERNEL_TEST+=tester.c
-KERNEL_MICRO+=board_micro.c startup.c bitbox_main.c
+KERNEL_SDL   +=emulator.c
+KERNEL_TEST  +=tester.c
+KERNEL_MICRO +=board_micro.c startup.c bitbox_main.c
 KERNEL_BITBOX+=board.c startup.c bitbox_main.c
-KERNEL_PAL+=board.c startup.c bitbox_main.c
+KERNEL_PAL   +=board.c startup.c bitbox_main.c
 
 # -- Optional AND target specific
 
 # video related
 ifndef NO_VGA
-  KERNEL_MICRO += vga_micro.c
+  KERNEL_MICRO  += vga_micro.c
   KERNEL_BITBOX += vga_bitbox.c micro_palette.c
-  KERNEL_PAL += vga_pal.c micro_palette.c
-  KERNEL_SDL += micro_palette.c
+  KERNEL_PAL    += vga_pal.c micro_palette.c
+  KERNEL_SDL    += micro_palette.c
 else
   DEFINES += NO_VGA
 endif
@@ -160,8 +160,8 @@ SDCARD_FILES += stm32f4xx_sdio.c stm32f4xx_gpio.c stm32f4xx_dma.c misc.c
 ifdef USE_SDCARD
 DEFINES += USE_SDCARD USE_STDPERIPH_DRIVER
 KERNEL_BITBOX += $(SDCARD_FILES)
-KERNEL_MICRO += $(SDCARD_FILES)
-KERNEL_PAL += $(SDCARD_FILES)
+KERNEL_MICRO  += $(SDCARD_FILES)
+KERNEL_PAL    += $(SDCARD_FILES)
 endif
 
 # USB defines
@@ -174,16 +174,16 @@ USB_FILES := usb_bsp.c usb_core.c usb_hcd.c usb_hcd_int.c \
 	usbh_hid_core.c usbh_hid_keybd.c usbh_hid_mouse.c usbh_hid_gamepad.c \
 	usbh_hid_parse.c misc.c
 KERNEL_BITBOX += $(USB_FILES)
-KERNEL_MICRO += $(USB_FILES)
-KERNEL_PAL += $(USB_FILES)
+KERNEL_MICRO  += $(USB_FILES)
+KERNEL_PAL    += $(USB_FILES)
 endif
 
 ifdef NO_AUDIO
 DEFINES+=NO_AUDIO
 else
 KERNEL_BITBOX += audio_bitbox.c
-KERNEL_MICRO += audio_micro.c
-KERNEL_PAL += audio_bitbox.c
+KERNEL_MICRO  += audio_micro.c
+KERNEL_PAL    += audio_bitbox.c
 endif
 
 # - simple modes
@@ -191,10 +191,10 @@ endif
 ifdef VGA_SIMPLE_MODE
 DEFINES += VGA_SIMPLE_MODE=$(VGA_SIMPLE_MODE)
 KERNEL_BITBOX += simple.c fonts.c
-KERNEL_SDL += simple.c fonts.c
-KERNEL_MICRO += simple_micro.c fonts.c
-KERNEL_PAL += simple_micro.c fonts.c
-KERNEL_TEST += simple.c fonts.c
+KERNEL_SDL    += simple.c fonts.c
+KERNEL_MICRO  += simple_micro.c fonts.c
+KERNEL_PAL    += simple_micro.c fonts.c
+KERNEL_TEST   += simple.c fonts.c
 endif
 
 
