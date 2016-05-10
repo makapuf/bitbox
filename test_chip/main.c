@@ -9,6 +9,6 @@ void game_init() {
 
 // ouch, that was hard !
 
-void game_frame() {}
+void game_frame() {set_led(chip_song_playing());}
 void graph_frame() {}
 void graph_line() {}

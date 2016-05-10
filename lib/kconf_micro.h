@@ -12,10 +12,6 @@
 #define USE_USB_OTG_FS
 #endif
 
-/*#define HSYNC_TIMER TIM3
-#define HSYNC_INTERRUPT TIM3_IRQHandler
-#define VIDEO_DAC_GPIO GPIOA
-*/
 
 #if defined (NO_VGA)
 
@@ -71,3 +67,10 @@
 #define APB2_PRE RCC_CFGR_PPRE2_DIV1
 
 #define VGA_VFREQ (VGA_FPS*2*(VGA_V_PIXELS+VGA_V_BACKPORCH+VGA_V_SYNC+VGA_V_FRONTPORCH))
+
+
+#ifndef NO_AUDIO
+#define BITBOX_SAMPLERATE VGA_VFREQ // one sample per line
+#define BITBOX_SNDBUF_LEN ((VGA_VFREQ/VGA_FPS)+1) // let buffer == 1 screen
+#define BITBOX_SAMPLE_BITDEPTH 8 // 8bit output
+#endif

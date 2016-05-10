@@ -8,8 +8,6 @@
 #include "kconf_micro.h"
 #include <string.h> // memset
 
-// does not include microx.h since all definitions change (const access, volatile ...)
-
 /*
  *  Hardware setup :
 
@@ -40,6 +38,11 @@ volatile int vga_frame;
 
 #ifdef VGA_SKIPLINE
 volatile int vga_odd; // only defined in "skipline" modes
+#endif
+
+#ifndef NO_AUDIO
+void audio_line( void );
+void audio_frame( void );
 #endif
 
 // align to 1kb since we're using DMA bursts
@@ -90,7 +93,7 @@ void vga_setup()
     GPIOA->OSPEEDR |= 0b1111111111111111; // SPEED=50MHz
     GPIOA->PUPDR   |= 0b1010101010101010; // 10 = Pull Down
 
-    // PB1 : HSync (TIM2 CH3) - 31kHz
+    // PB1  : HSync (TIM3 CH4) - 31kHz
     // PB15 : VSync - 60Hz
     GPIOB->MODER  |= GPIO_MODER_MODER15_0 * 0b01 | GPIO_MODER_MODER1_0 * 0b10 ; // PB15: OUT PB1:ALT
     GPIOB->AFR[0] |= 2<<4; // PB1 alt func nb 2 (datasheet p45)
@@ -271,6 +274,10 @@ void  __attribute__ ((used)) TIM3_IRQHandler(void) // attribute used neded if ca
             if (vga_line== VGA_V_PIXELS) {
                 vga_frame++; // new frame sync now.
                 graph_frame();
+            } else if (vga_line==VGA_V_PIXELS+1) {
+                #ifndef NO_AUDIO
+                audio_frame();
+                #endif
             } else if (vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) {
                 GPIOB->BSRRH |= GPIO_BSRR_BS_15; // lower VSync line
             } else if(vga_line==VGA_V_PIXELS+1+VGA_V_FRONTPORCH+VGA_V_SYNC) {
@@ -284,6 +291,12 @@ void  __attribute__ ((used)) TIM3_IRQHandler(void) // attribute used neded if ca
         }
 
     }
+
+    // audio generation each vga line
+    #ifndef NO_AUDIO
+    audio_line();
+    #endif
+
 }
 
 // DMA Stream 5 : pixel DMA interrupt, DMA complete

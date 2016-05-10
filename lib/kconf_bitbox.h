@@ -185,3 +185,10 @@
 #else
 #define VGA_VFREQ (VGA_FPS*  (VGA_V_PIXELS+VGA_V_BACKPORCH+VGA_V_SYNC+VGA_V_FRONTPORCH))
 #endif
+
+
+#ifndef NO_AUDIO
+#define BITBOX_SAMPLERATE 32000 // hsync in fact
+#define BITBOX_SNDBUF_LEN 512 // 16ms latency (double buffering is used)
+#define BITBOX_SAMPLE_BITDEPTH 8 // 8bit output
+#endif

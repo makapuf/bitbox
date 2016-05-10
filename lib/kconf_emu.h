@@ -34,3 +34,8 @@
 
 #endif
 
+#ifndef NO_AUDIO
+#define BITBOX_SAMPLERATE 32000
+#define BITBOX_SNDBUF_LEN 512 // 16ms latency (double buffering is used)
+#define BITBOX_SAMPLE_BITDEPTH 8 // 8bit output
+#endif

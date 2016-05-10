@@ -11,14 +11,7 @@ void game_init(void); // user provided
 void game_frame(void); // user provided
 
 // --- Audio ----------------------------------------------------------------------------
-#ifndef BITBOX_SAMPLERATE
-#define BITBOX_SAMPLERATE 32000
-#endif
-#ifndef BITBOX_SNDBUF_LEN
-#define BITBOX_SNDBUF_LEN 512 // 16ms latency (double buffering is used)
-#endif
-#define BITBOX_SAMPLE_BITDEPTH 8 // 8bit output
-
+// also see audio defines in kconf.h
 void audio_init();
 // user provided : fill a buffer with 8bit L/R sound data
 void game_snd_buffer(uint16_t *buffer, int len);
