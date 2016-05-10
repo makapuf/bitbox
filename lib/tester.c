@@ -1,15 +1,15 @@
 #include <stdlib.h>
 /*
-This module aims at testing games. 
+This module aims at testing games.
 
-It builds a standalone emulator, which run headless 
- and does not require SDL or produce any output, 
+It builds a standalone emulator, which run headless
+ and does not require SDL or produce any output,
  but will stress the game for a moment and exercise , on a pc
  - game_frame, game_line, game_init
  - graph_frame, graph_line
  - game_snd_buffer
 
-and provide bitbox API stubs 
+and provide bitbox API stubs
 
 */
 
@@ -50,21 +50,24 @@ int screen_height;
 #define TICK_INTERVAL 1000/60
 #define LINE_BUFFER 1024
 
-#define EMU_FRAMES 10*60*60 // 1 minute 
- 
+#define EMU_FRAMES 10*60*60 // 1 minute
+
+#ifndef NO_AUDIO
 uint16_t audio[BITBOX_SNDBUF_LEN];
+#endif
+
 uint16_t mybuffer1[LINE_BUFFER];
 uint16_t mybuffer2[LINE_BUFFER];
 uint16_t *draw_buffer = mybuffer1; // volatile ?
-volatile uint16_t gamepad_buttons[2]; 
-uint32_t vga_line; 
+volatile uint16_t gamepad_buttons[2];
+uint32_t vga_line;
 volatile uint32_t vga_frame;
 volatile int vga_odd;
 
 volatile int data_mouse_x, data_mouse_y;
 volatile uint8_t data_mouse_buttons;
 
-int user_button=0; 
+int user_button=0;
 
 // sound
 // uint16_t audio_buffer[BITBOX_SNDBUF_LEN]; // stereo, 31khz 1frame
@@ -89,7 +92,7 @@ static void refresh_screen()
         graph_line(); // using line, updating draw_buffer ...
         #ifdef VGA_SKIPLINE
         vga_odd=1; graph_line(); //  a second time for SKIPLINE modes
-        #endif 
+        #endif
 
         // swap lines buffers to simulate double line buffering
         draw_buffer = (draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
@@ -130,14 +133,14 @@ FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode)
     if (mode & FA_OPEN_ALWAYS) {
         if (!access(path, F_OK)) // 0 if OK
             mode_host = "r+";
-        else 
+        else
             mode_host = "w+";
 
     } else switch (mode) {
-        // Not a very good approximation, should rewrite to handle properly 
+        // Not a very good approximation, should rewrite to handle properly
         case FA_READ | FA_OPEN_EXISTING : mode_host="r"; break;
         case FA_READ | FA_WRITE | FA_OPEN_EXISTING : mode_host="r+"; break;
-        case FA_WRITE | FA_OPEN_EXISTING : mode_host="r+"; break; // faked 
+        case FA_WRITE | FA_OPEN_EXISTING : mode_host="r+"; break; // faked
 
         case FA_WRITE | FA_CREATE_NEW : mode_host="wx"; break;
         case FA_READ | FA_WRITE | FA_CREATE_NEW : mode_host="wx+"; break;
@@ -145,10 +148,10 @@ FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode)
         case FA_READ | FA_WRITE | FA_CREATE_ALWAYS : mode_host="w+"; break;
         case FA_WRITE | FA_CREATE_ALWAYS : mode_host="w"; break;
 
-        default : 
+        default :
             return FR_DISK_ERR;
     }
-    
+
     fp->fs = (FATFS*) fopen ((const char*)path,mode_host); // now ignores mode.
     return fp->fs ? FR_OK : FR_DISK_ERR; // XXX duh.
 }
@@ -158,19 +161,19 @@ FRESULT f_close (FIL* fp)
     int res = fclose( (FILE*) fp->fs);
     fp->fs=NULL;
     return res?FR_DISK_ERR:FR_OK; // FIXME handle reasons ?
-}               
+}
 
 FRESULT f_read (FIL* fp, void* buff, UINT btr, UINT* br)
 {
     *br = fread ( buff, 1,btr, (FILE *)fp->fs);
     return FR_OK; // XXX handle ferror
-}          
+}
 
 FRESULT f_write (FIL* fp, const void* buff, UINT btr, UINT* br)
 {
     *br = fwrite ( buff,1, btr, (FILE *)fp->fs);
     return FR_OK; // XXX handle ferror
-}          
+}
 
 
 FRESULT f_lseek (FIL* fp, DWORD ofs)
@@ -182,8 +185,8 @@ FRESULT f_lseek (FIL* fp, DWORD ofs)
 /* Change current directory */
 FRESULT f_chdir (const char* path)
 {
-    int res = chdir(path); 
-    return res ? FR_DISK_ERR : FR_OK; 
+    int res = chdir(path);
+    return res ? FR_DISK_ERR : FR_OK;
 }
 
 
@@ -201,7 +204,7 @@ FRESULT f_opendir ( DIR* dp, const TCHAR* path )
 }
 
 
-FRESULT f_readdir ( DIR* dp, FILINFO* fno ) 
+FRESULT f_readdir ( DIR* dp, FILINFO* fno )
 {
     struct dirent *de = readdir((NIX_DIR *)dp->fs); // updates ?
     if (de) {
@@ -245,7 +248,7 @@ int main ( int argc, char** argv )
 
     gamepad_buttons[0] = 0; // all up
     gamepad_buttons[1] = 0;
-    
+
     game_init();
 
     printf("  Game init done. \n");
@@ -260,8 +263,10 @@ int main ( int argc, char** argv )
         // update time
         vga_frame++;
 
-        // one sound buffer per frame 
-        game_snd_buffer(audio,BITBOX_SNDBUF_LEN); 
+        #ifndef NO_AUDIO
+        // one sound buffer per frame
+        game_snd_buffer(audio,BITBOX_SNDBUF_LEN);
+        #endif
 
         refresh_screen();
     } // end main loop
