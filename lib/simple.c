@@ -259,7 +259,7 @@ void graph_line() {
 		uint32_t w = *src++;
 
 		for (int j=0;j<32;j+=(32/BPP)) {// 4 couples of pixels - drawn 2 times
-			*dst++ = palette[w>>j & 7] | palette[w>>(j+4)&7]<<16;
+			*dst++ = palette[w>>j & 15] | palette[w>>(j+4)&15]<<16;
 		}
 	}
 }
