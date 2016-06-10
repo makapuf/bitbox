@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python2
 from itertools import groupby 
 import sys, struct, os
 

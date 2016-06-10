@@ -14,15 +14,15 @@ include $(BITBOX)/lib/bitbox.mk
 main.c:bg.h
 
 bg.tset bg.tmap bg.h: bg.tmx bg.png 
-	python ../scripts/tmx.py bg.tmx > bg.h
+	python2 ../scripts/tmx.py bg.tmx > bg.h
 
 ball.spr : ball/????.png
 	#python ../scripts/sprite_encode2.py $@ $? -m p4
-	python ../scripts/couples_encode.py $@ $^ 
+	python2 ../scripts/couples_encode.py $@ $^ 
 
 ball_small.spr : ball_small/????.png
 	#python ../scripts/sprite_encode2.py $@ $? -m p4
-	python ../scripts/couples_encode.py $@ $^ 
+	python2 ../scripts/couples_encode.py $@ $^ 
 
 
 clean::

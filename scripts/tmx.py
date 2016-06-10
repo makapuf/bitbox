@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 """outputs a tileset file, a tilemap file binaries from a tmx file
 
     tileset file has the name of the input tmx tileset (only one).tset

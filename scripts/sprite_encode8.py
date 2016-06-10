@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python2
 from itertools import groupby
 import sys, struct, os
 from sprite_encode2 import add_record
@@ -8,8 +8,8 @@ from PIL import Image # using the PIL library, maybe you'll need to install it. 
 
 DEBUG = False
 TRANSP=None
-MAXSKIP = 7
-MAXBLIT = 15
+MAXSKIP = 15
+MAXBLIT = 7
 
 def reduce(c) :
     'R8G8B8A8 to R3G2B2L1'

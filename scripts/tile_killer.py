@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 ''' make tiles unique in tilemap
 outputs out.png with removed duplicate tiles.
 '''

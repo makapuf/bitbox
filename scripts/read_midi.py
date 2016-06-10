@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 import struct, sys
 from cStringIO import StringIO
 

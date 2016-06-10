@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python2
 from itertools import groupby
 import sys, struct, os
 
@@ -19,14 +19,21 @@ modes = {
     'palette':1,
     'line16':2,
     'palette_couple':3,
+    'palette_couple8':4,
+
     'u16':1001,
     'p4':1002,
     'p8':1003,
-    'c8':1004,
     'rle':1005,
 
     # 8-bits records
     'u8':1006,
+    
+    # couples refs
+    'c8':1004,
+    'pbc':1007,
+
+
 
     'end':32767,
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 'map builder : builds a map from a tilesize, a tileset and a pixmap'
 
 from PIL import Image

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 'An utility to convert chip tracker .song files to C structs'
 
 s='''
