@@ -59,6 +59,7 @@ uint8_t *draw_buffer; // will be drawn (bg already drawn)
 // default implmentations of graph_line and graph_frame
 void __attribute__((weak)) graph_frame(void) {}
 void __attribute__((weak)) graph_line(void)  {}
+void graph_line8(void);
 
 static inline void output_black(void)
 {
@@ -247,7 +248,7 @@ void  __attribute__ ((used)) TIM3_IRQHandler(void) // attribute used neded if ca
         line_time = DWT->CYCCNT; // reset the perf counter
         #endif
 
-        graph_line(); // Game graph callback !
+        graph_line8(); // Game graph callback !
         draw_buffer[0]=0;
 
         #ifdef PROFILE
@@ -287,7 +288,7 @@ void  __attribute__ ((used)) TIM3_IRQHandler(void) // attribute used neded if ca
 
         if(vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+VGA_V_SYNC+VGA_V_BACKPORCH+1) {
             vga_line=0;
-            graph_line();  // first line next frame!
+            graph_line8();  // first line next frame!
         }
 
     }
