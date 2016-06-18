@@ -14,18 +14,18 @@
 
     2 - 1BPP 800x600
     3 - 2BPP 640x400
-    4 - 4BPP 400x300
-    5 - 8BPP 320x200
+    4 - 4BPP 400x300 - avail on micro
+    5 - 8BPP 320x200 - avail on micro
 
     6 - 16BPP 200x150 - TODO
 
     [ 32k modes ]
 
     7 - 2BPP 400x300 2bpp - TODO
-    8 - 4BPP 320x200
+    8 - 4BPP 320x200 - avail on micro
 
-    13 - color textmode 50x37 ( based on 400x300 mode with 8x8 chars )
-    14 - b&w textmode 40x30 (320x240 with 6x8 chars) - TODO
+    13 - color textmode 50x37 ( based on 400x300 mode with 8x8 chars ) - avail on micro
+    14 - color textmode 40x30 (320x240 with 6x8 chars) - TODO
 
 */
 
@@ -89,10 +89,10 @@
 
 #elif VGA_SIMPLE_MODE==13
 #define SCREEN_W 50
-#define SCREEN_H 37
-
+#define SCREEN_H 38
+#define COLOR_TEXT
 #else
-#warning UNKNOWN Simple MODE  ! use 0-8 or 10-12
+#warning UNKNOWN Simple MODE  ! use 0-8 or 10-13
 #endif
 
 // Utilities ------------------------------------------------
@@ -117,7 +117,13 @@ extern char vram[SCREEN_H][SCREEN_W];
 
 #ifdef COLOR_TEXT  // color attributes
 extern char vram_attr[SCREEN_H][SCREEN_W];
-extern uint32_t palette[256];
+
+#ifdef BOARD_MICRO
+extern uint16_t palette[];
+#else
+extern uint32_t palette[];
+#endif
+
 extern uint8_t text_color;
 #endif
 

@@ -10,46 +10,41 @@
 // --------------------------------------------------------------
 
 #if VGA_SIMPLE_MODE==13 // text mode 50x37, font 8x8, base 400
-
 extern const uint8_t font88_data[256][8];
-uint8_t font[256][8];
-// palette attribute
-uint16_t palette[1]={181}; // white, light grey
+uint8_t font88_data_cached[256][8] CCM_MEMORY;
 
 char vram[SCREEN_H][SCREEN_W];
+char vram_attr[SCREEN_H][SCREEN_W];
+uint16_t palette[256]; // BG<<8 | FG couples 
 
 void graph_frame() {}
-void graph_line() {
-	// first or second half
-	int start_x = vga_odd ? 200 : 0;
+void graph_line8() 
+{
+	uint16_t lut_data[4]; // cache couples for faster draws
 
-	uint32_t *dst = (uint32_t*) &draw_buffer[start_x/2]; // /2 cause draw_buffer is u16
-	uint8_t  *src = (uint8_t*) &vram[vga_line/8][start_x/8];
+	uint32_t *dst = (uint32_t*)draw_buffer;
+	if (vga_odd) 
+		dst += VGA_H_PIXELS/8;
+	uint8_t prev_attr = 0xff; // what if it's just that ?
+	
+	for (int i=0;i<SCREEN_W/2;i++) { // column char
+		// draw a character on this line
+		uint8_t p = font88_data_cached[(uint8_t) vram[vga_line / 8][vga_odd ? i+SCREEN_W/2:i]][vga_line%8];
+		uint8_t attr = vram_attr[vga_line/8][vga_odd ? i+SCREEN_W/2 : i];
+		if (attr != prev_attr) {
+			uint16_t c = palette[attr];
 
-	for (int i=0;i<SCREEN_W/2;i++) {  // draw half-screen
-		uint32_t a;
-		uint8_t c = font[src[i]][vga_line%8]; // 8 bit font data (to 32 loads ?)
+			lut_data[0] = (c&0xff)*0x101; // AA
+			lut_data[1] = c; // AB
+			lut_data[2] = (c<<8 | c>>8); // BA
+			lut_data[3] = (c>>8)*0x101; // BB
 
-		uint32_t c1=((palette[0]>>0)&0xff)*0x01010101;
-		uint32_t c2=((palette[0]>>8)&0xff)*0x01010101;
+			prev_attr = attr;
+		}
 
-		// draw a character on this line - 8 pixels = 2 words
-
-		// XXX replace with SEL + MSR
-
-		// select 4 bytes from c1 or c2 according to high bits of word
-		a  = c&128 ? c1&0x000000ff : c2&0x000000ff;
-		a |= c&64  ? c1&0x0000ff00 : c2&0x0000ff00;
-		a |= c&32  ? c1&0x00ff0000 : c2&0x00ff0000;
-		a |= c&16 ? c1&0xff000000 : c2&0xff000000;
-		*dst++ = a;
-
-		// select 4 bytes from c1 or c2 according to high bits of word
-		a  = c&8 ? c1&0x000000ff : c2&0x000000ff;
-		a |= c&4 ? c1&0x0000ff00 : c2&0x0000ff00;
-		a |= c&2 ? c1&0x00ff0000 : c2&0x00ff0000;
-		a |= c&1 ? c1&0xff000000 : c2&0xff000000;
-		*dst++ = a;
+		// draw a character on this line
+		*dst++ = lut_data[(p>>6) & 0x3] | lut_data[(p>>4) & 0x3]<<16;
+		*dst++ = lut_data[(p>>2) & 0x3] | lut_data[(p>>0) & 0x3]<<16;
 	}
 }
 
@@ -67,7 +62,7 @@ uint8_t initial_palette[]  = {
 };
 
 void graph_frame() {}
-void graph_line() {
+void graph_line8() {
 	if (vga_odd) return;
 	uint32_t *dst=(uint32_t*)draw_buffer;
 	uint32_t *src=&vram[(vga_line)*SCREEN_W/(32/BPP)];
@@ -99,7 +94,7 @@ void graph_line() {
 uint32_t vram[SCREEN_W*SCREEN_H*BPP/32]; // easy, no palette
 
 void graph_frame() {}
-void graph_line() {
+void graph_line8() {
 	if (vga_odd) return;
 	// letterbox
 	if (vga_line/2==110)
@@ -125,7 +120,7 @@ uint8_t initial_palette[]  = {
 };
 
 void graph_frame() {}
-void graph_line() {
+void graph_line8() {
 	if (vga_odd) return;
 	// letterbox
 	if (vga_line/2==110) memset(draw_buffer, 0, SCREEN_W*2); // at 220 & 221 to empty both line buffers
@@ -205,22 +200,11 @@ uint8_t text_color; // current attribute value of the drawn text
 
 void clear()
 {
-   memset(vram, 0, sizeof(vram));
-   #if VGA_SIMPLE_MODE==0
-   memcpy(font16_data_cached, font16_data, sizeof(font16_data_cached));
-   #elif VGA_SIMPLE_MODE==1
-   memcpy(font8_data_cached, font8_data, sizeof(font8_data_cached));
-   #elif VGA_SIMPLE_MODE==10
-   memcpy(font16_data_cached, font16_data, sizeof(font16_data_cached));
-   memset(vram_attr, 0, sizeof(vram_attr));
-   #elif VGA_SIMPLE_MODE==11
-   memcpy(font8_data_cached, font8_data, sizeof(font8_data_cached));
-   memset(vram_attr, 0, sizeof(vram_attr));
-   #elif VGA_SIMPLE_MODE==12
+   memset(vram, ' ', sizeof(vram));
+   #if VGA_SIMPLE_MODE==13
    memcpy(font88_data_cached, font88_data, sizeof(font88_data_cached));
    memset(vram_attr, 0, sizeof(vram_attr));
-   #elif VGA_SIMPLE_MODE==13
-   memcpy(font,font88_data, sizeof(font));
+   palette[0]=0x00DE;
    #endif
 }
 
