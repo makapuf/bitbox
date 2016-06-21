@@ -17,7 +17,7 @@
             - TIM4 gated by TIM3 on CH2 (p352 refman)
       - HSYNC on PB1 ( TIM3 CH4 )
       - VSYNC on PB15 ( GPIO OUT )
-      -
+      
 
  */
 
@@ -36,9 +36,7 @@ uint32_t line_time,max_line_time, max_line; // maximum time of line
 int vga_line;
 volatile int vga_frame;
 
-#ifdef VGA_SKIPLINE
 volatile int vga_odd; // only defined in "skipline" modes
-#endif
 
 #ifndef NO_AUDIO
 void audio_line( void );
@@ -221,19 +219,13 @@ void  __attribute__ ((used)) TIM3_IRQHandler(void) // attribute used neded if ca
 
     TIM3->SR=0; // clear status
 
-    // double-line modes
-    #ifdef VGA_SKIPLINE
+    // only double-line modes on micro
     vga_line+=vga_odd;
     vga_odd=1-vga_odd;
-    #else
-    vga_line++;
-    #endif
 
     // starting from line #1, line #0 already in drawbuffer
     if (vga_line < VGA_V_PIXELS) {
-        #ifdef VGA_SKIPLINE
         if (!vga_odd)
-        #endif
         // swap display & draw buffers, effectively draws line-1. does not swap on odd lines if not needed
         {
             uint8_t *t;
@@ -268,9 +260,7 @@ void  __attribute__ ((used)) TIM3_IRQHandler(void) // attribute used neded if ca
         #endif
 
     }  else {
-        #ifdef VGA_SKIPLINE
         if (!vga_odd)  // only once
-        #endif
         {
             if (vga_line== VGA_V_PIXELS) {
                 vga_frame++; // new frame sync now.
