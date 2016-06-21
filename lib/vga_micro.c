@@ -234,7 +234,8 @@ void  __attribute__ ((used)) TIM3_IRQHandler(void) // attribute used neded if ca
             draw_buffer = t;
         }
 
-        prepare_pixel_DMA(); // will be triggered after
+        if (vga_line>0) // This doesn't happen only when we just set up vga_line=0 and now vga_odd=1
+            prepare_pixel_DMA(); // will be triggered after
 
         #ifdef PROFILE
         line_time = DWT->CYCCNT; // reset the perf counter
