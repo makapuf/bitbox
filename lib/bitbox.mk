@@ -236,7 +236,7 @@ $(BUILD_DIR)/bitbox/%.o: %.c
 $(BUILD_DIR)/micro/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
-$(BUILD_DIR)/sdl/%.o: %.c
+$(BUILD_DIR)/sdl/%.o: %.c 
 	@mkdir -p $(dir $@)
 	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 $(BUILD_DIR)/test/%.o: %.c
@@ -250,6 +250,12 @@ $(BUILD_DIR)/pal/%.o: %.c
 %.bin: %.elf
 	arm-none-eabi-objcopy -O binary $^ $@
 	chmod -x $@
+
+# --- Autodependecies (headers...)
+-include $(BUILD_DIR)/sdl/*.d
+-include $(BUILD_DIR)/test/*.d
+-include $(BUILD_DIR)/bitbox/*.d
+-include $(BUILD_DIR)/micro/*.d
 
 # --- Targets
 
