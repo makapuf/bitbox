@@ -98,7 +98,7 @@ uint32_t time_left(void)
         return next_time - now;
 }
 
-
+#ifndef NO_VGA
 extern uint16_t palette_flash[256];
 
 void __attribute__ ((weak, optimize("-O3"))) graph_line(void)
@@ -185,6 +185,7 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen2x (SDL_Surface *scr
         dst += scr->pitch/sizeof(uint64_t); // we already drew the line after, skip it
     }
 }
+#endif
 
 
 #ifndef NO_AUDIO
@@ -672,11 +673,13 @@ int main ( int argc, char** argv )
 
         // update time
         vga_frame++;
-
+        
+        #ifndef NO_VGA
         if (scale==1)
             refresh_screen(screen);
         else
             refresh_screen2x(screen);
+        #endif
 
         SDL_Delay(time_left());
         next_time += slow ? TICK_INTERVAL*10:TICK_INTERVAL;
