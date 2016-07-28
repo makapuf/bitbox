@@ -1,19 +1,17 @@
+# use distro trusty
+sudo: required
+dist: trusty
+
 language: c 
 before_script:
   ## Install mainline ARM toolchain.  gcc-arm-none-eabi is available
-  ## in Ubuntu >= 14.04, but this external PPA is needed for 12.04.
+  ## in Ubuntu >= 14.04, just use it 
   ## (from kontiki)
-  ## also install a newer version of gcc
   - sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get -qq update
-  - sudo apt-get -qq install gcc-arm-none-eabi gcc-4.8 libsdl1.2-dev libstdc++-4.8-dev python-imaging
+  - sudo apt-get -qq install gcc-arm-none-eabi libsdl1.2-dev python-imaging
 
-
-  ## now setup 4.8 as real gcc alternative (could use update-alternative, but eh)
-  - sudo rm /usr/bin/gcc /usr/bin/g++
-  - sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
-  - sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
 
   # check it worked
   - arm-none-eabi-gcc --version 
