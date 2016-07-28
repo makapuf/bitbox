@@ -11,6 +11,8 @@ before_script:
   # check it worked
   - arm-none-eabi-gcc --version 
   - gcc --version
+  - python -c "import PIL"
+  
 script:
   - "make && make alltest"
 
