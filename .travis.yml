@@ -4,11 +4,6 @@ dist: trusty
 
 language: c 
 before_script:
-  ## Install mainline ARM toolchain.  gcc-arm-none-eabi is available
-  ## in Ubuntu >= 14.04, just use it 
-  ## (from kontiki)
-  - sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get -qq update
   - sudo apt-get -qq install gcc-arm-none-eabi libsdl1.2-dev python-imaging
 
