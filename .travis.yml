@@ -7,11 +7,10 @@ before_script:
   - sudo apt-get -qq update
   - sudo apt-get -qq install gcc-arm-none-eabi libsdl1.2-dev python-pil
 
-
   # check it worked
   - arm-none-eabi-gcc --version 
   - gcc --version
-  - python -c "from PIL import Image"
+  - python -c "import Image"
   
 script:
   - "make && make alltest"
