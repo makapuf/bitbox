@@ -2,6 +2,8 @@
 
 #include <SDL/SDL.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -98,7 +100,7 @@ uint32_t time_left(void)
         return next_time - now;
 }
 
-
+#ifndef NO_VGA
 extern uint16_t palette_flash[256];
 
 void __attribute__ ((weak, optimize("-O3"))) graph_line(void)
@@ -185,6 +187,7 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen2x (SDL_Surface *scr
         dst += scr->pitch/sizeof(uint64_t); // we already drew the line after, skip it
     }
 }
+#endif
 
 
 #ifndef NO_AUDIO
@@ -584,6 +587,12 @@ FRESULT f_opendir ( DIR* dp, const TCHAR* path )
     }
 }
 
+int is_regular_file (const char *path) {
+    struct stat path_stat;
+    if (stat(path, &path_stat))
+        return 0;
+    return S_ISREG(path_stat.st_mode);
+}
 
 FRESULT f_readdir ( DIR* dp, FILINFO* fno )
 {
@@ -593,6 +602,10 @@ FRESULT f_readdir ( DIR* dp, FILINFO* fno )
     if (de) {
         for (int i=0;i<13;i++)
             fno->fname[i]=de->d_name[i];
+        if (is_regular_file(de->d_name))
+            fno->fattrib = 0;
+        else
+            fno->fattrib = AM_DIR;
         return FR_OK;
     } else {
         if (errno) {
@@ -674,11 +687,13 @@ int main ( int argc, char** argv )
 
         // update time
         vga_frame++;
-
+        
+        #ifndef NO_VGA
         if (scale==1)
             refresh_screen(screen);
         else
             refresh_screen2x(screen);
+        #endif
 
         SDL_Delay(time_left());
         next_time += slow ? TICK_INTERVAL*10:TICK_INTERVAL;
