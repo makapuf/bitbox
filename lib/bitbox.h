@@ -132,8 +132,8 @@ enum gamepad_buttons_enum {
     gamepad_right=1<<11,
 
 	mousebut_left=gamepad_A,
-	mousebut_right=gamepad_B,
-	mousebut_middle=gamepad_X
+	mousebut_right=gamepad_X,
+	mousebut_middle=gamepad_B
 };
 
 #define GAMEPAD_PRESSED(id , key) (gamepad_buttons[id] & (gamepad_##key))
