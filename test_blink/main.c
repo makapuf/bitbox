@@ -1,5 +1,9 @@
 #include "bitbox.h"
 
+int i;
+
 int main() {
-	die(1,1);
+	while(1) {
+		set_led(button_state() || (i++ & 1<<20));
+	}
 }
