@@ -353,7 +353,7 @@ void graph_line() {
 	uint32_t *dst = (uint32_t*) draw_buffer;
 	uint8_t prev_attr = 0xff; // what if it's just that ?
 
-	for (int i=0;i<SCREEN_W/2;i++) { // column char
+	for (int i=0;i<SCREEN_W;i++) { // column char
 		// draw a character on this line
 		uint8_t p = font88_data_cached[(uint8_t) vram[vga_line / 8][i]][vga_line%8];
 		uint8_t attr = vram_attr[vga_line/8][i];
