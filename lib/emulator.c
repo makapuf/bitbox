@@ -301,23 +301,25 @@ int init(void)
 
     if (!quiet)
         printf("Screen is now %dx%d with a scale of %d\n",screen_width,screen_height,scale);
-
+    
+    SDL_ShowCursor(SDL_DISABLE);
+    
     return 0;
 }
 
 
 void instructions ()
 {
-    printf("Invoke game with options : \n");
+    printf("Invoke game with those options : \n");
     printf("  --fullscreen to run fullscreen\n");
     printf("  --scale2x to scale display 2x\n");
     printf("  --slow to run game very slowly (for debug)\n");
-    printf("  --quiet to avoid showing helpscreen\n");
+    printf("  --verbose show helpscreen and various messages\n");
     printf("\n");
     printf("Use Joystick, Mouse or keyboard.");
     printf("Bitbox user Button is emulated by the F12 key.\n");
     printf("       -------\n");
-    printf("Keyboard for some games emulate Gamepad with the following keys \n");
+    printf("Some games emulate Gamepad with the following keyboard keys :\n");
     printf("    Space (Select),   Enter (Start),   Arrows (D-pad)\n");
     printf("    D (A button),     F (B button),    E (X button), R (Y button),\n");
     printf("    Left/Right CTRL (L/R shoulders),   ESC (quit)\n");
