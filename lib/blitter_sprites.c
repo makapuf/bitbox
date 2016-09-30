@@ -46,12 +46,16 @@ File storage of data : as record-based data. allows for RAM or flash usage.
  */
 #include <stddef.h>
 
+#define TRANSP8 239
+
 // this is internal for loading data
 enum sprite_recordID {
     sprite_recordID__header=0,
     sprite_recordID__palette=1,
     sprite_recordID__line16=2,
     sprite_recordID__palette_couple=3,
+    sprite_recordID__palette_couple8=4,
+
     sprite_recordID__u16=1001,
     sprite_recordID__p4=1002,
     sprite_recordID__p8=1003,
@@ -59,6 +63,7 @@ enum sprite_recordID {
     sprite_recordID__rle=1005,
     // 8bit
     sprite_recordID__u8=1006,
+    sprite_recordID__pbc=1007,
 
     sprite_recordID__end=32767,
 
@@ -66,16 +71,19 @@ enum sprite_recordID {
 
 #ifdef VGA_8BIT
 static void sprite_frame8(object *o, int start_line);
+static void sprite_pbc_frame(object *o, int start_line);
+static void sprite_u8_line(object *o);
+static void sprite_pbc_line(object *o);
 #else
 static void sprite_frame(object *o, int start_line);
-#endif
-
 static void sprite_u16_line(object *o);
 static void sprite_p4_line(object *o);
 static void sprite_c8_line(object *o);
 static void sprite_rle_line(object *o);
-static void sprite_u8_line(object *o);
 static void sprite_p8_line(object *o) {}
+#endif
+
+
 
 #define EOL(x) (x&1)
 #define LEN(x) ((x>>1) & 0x7f)
@@ -91,9 +99,7 @@ object * sprite_new(const void *p, int x, int y, int z)
 
     uint32_t t=-1, sz;
 
-    #ifdef VGA_8BIT
-    o->frame = sprite_frame8;
-    #else
+    #ifndef VGA_8BIT
     o->frame = sprite_frame;
     #endif
 
@@ -108,6 +114,16 @@ object * sprite_new(const void *p, int x, int y, int z)
                 o->h = *sprite_data++;
                 break;
 
+            case sprite_recordID__end :
+                break;
+
+            case sprite_recordID__line16 :
+                o->b = (uintptr_t)sprite_data;
+                sprite_data += (sz+3)/4; // skip, don't read
+                break;
+
+            #ifndef VGA_8BIT
+
             case sprite_recordID__palette :
                 o->a = (uintptr_t)sprite_data;
                 sprite_data += (sz+3)/4; // skip, don't read
@@ -116,15 +132,7 @@ object * sprite_new(const void *p, int x, int y, int z)
             case sprite_recordID__palette_couple :
                 o->a = (uintptr_t)sprite_data;
                 sprite_data += (sz+3)/4; // skip, don't read
-                break;
-
-            case sprite_recordID__end :
-                break;
-
-            case sprite_recordID__line16 :
-                o->b = (uintptr_t)sprite_data;
-                sprite_data += (sz+3)/4; // skip, don't read
-                break;
+                break;            
 
             case sprite_recordID__p8 :
                 o->line = sprite_p8_line;
@@ -160,18 +168,36 @@ object * sprite_new(const void *p, int x, int y, int z)
                 o->d=0;
                 sprite_data += (sz+3)/4; // skip, don't read
                 break;
+            
+            #else // ----------------------------------------
 
-            case sprite_recordID__u8 :
-                // check u8 ?
-                o->line = sprite_u8_line;
-                o->data = sprite_data;
-                o->d=0;
+            case sprite_recordID__palette_couple8 :
+                o->a = (uintptr_t)sprite_data;
                 sprite_data += (sz+3)/4; // skip, don't read
                 break;
 
+            case sprite_recordID__pbc: 
+                o->line = sprite_pbc_line;
+                o->frame= sprite_pbc_frame;
+
+                o->data = sprite_data;
+                o->d = 0;
+                sprite_data += (sz+3)/4;
+                break;
+
+            case sprite_recordID__u8 :
+                o->line = sprite_u8_line;
+                o->frame = sprite_frame8;
+                o->data = sprite_data;
+                o->d=0;
+                sprite_data += (sz+3)/4; 
+                break;
+
+            #endif 
 
             default :
-                return 0; // error : unknown record !
+                message("Unknown record loading sprite : %d\n",t);
+                die (7,7); // error : unknown record !
                 break;
         }
     }
@@ -211,6 +237,7 @@ static void sprite_frame (object *o, int start_line)
     }
 }
 #else
+
 static void sprite_frame8 (object *o, int start_line)
 {
     // start line is how much we need to crop to handle out of screen data
@@ -234,7 +261,94 @@ static void sprite_frame8 (object *o, int start_line)
         o->c += *p>>1 & 0x7; // data
     }
 }
+
+// beware: no clipping !
+// XXX publish a clipped and unclipped version
+static void sprite_pbc_line (object *o) {
+    o->x &= ~1;
+
+    int8_t *  restrict src=o->data;
+    uint16_t * restrict dst=(uint16_t*)(draw_buffer+o->x); // u16 for vga8
+    uint16_t * restrict couple_palette = (uint16_t *)o->c;
+
+    while (dst <(uint16_t*) draw_buffer+o->x/2+o->w/2) {
+        int8_t n=*src++;
+        if (n<0) {
+            if (*src) { // XXX handle semitransp couples
+                for (int i=0;i<-n;i++) { 
+                    *dst++ = couple_palette[*src];
+                }
+            } else {
+                dst-=n; // n is negative
+            }
+            src++;
+        } else {
+            for (int i=0;i<n;i++) {
+                *dst++ = couple_palette[*src++];
+            }
+        }
+    }
+}
+
 #endif
+
+static void sprite_pbc_frame(object *o, int start_line)
+{
+    // start line is how much we need to crop to handle out of screen data
+    // also handles skipped lines
+    // blits: 8 then data or couple ref. 
+
+    start_line += o->fr*o->h;
+    o->c = (intptr_t)o->data; // rewind
+
+    o->c += ((uint16_t*)o->b)[start_line/16]; // skip bytes
+    start_line %= 16; // remainder
+
+    // Skip first lines as needed
+    int couples=start_line*o->w/2; // couples
+    while (start_line) {
+        int8_t h = *(int8_t *)o->c++;
+        if (h>0) { // copy
+            o->c += h;
+            couples -= h;
+        } else { // fill or skip
+            o->c++;
+            couples += h;
+        }
+    }
+}
+
+#ifdef VGA_8BIT
+
+static void sprite_u8_line (object *o)
+{
+    uint8_t *draw8 = (uint8_t*) draw_buffer; // draw buffer as bytes
+
+    int x=o->x;
+    uint8_t *p; // see blit as bytes. p is always the start of the blit
+    do {
+        p = (uint8_t *)o->c; // (shortcut) start/current position of the blit
+        // header : nb skip:4, nb blit: 3, eol:1
+
+        x += (*p)>>4; // skip : advance x
+
+        // now, directly copy blit it
+        uint32_t data_len = *p>>1 & 0x7; // LEN but for 8bit
+
+        memcpy(&draw8[x], p+1, data_len);
+
+        // advance x
+        x += data_len;
+
+        // advances pointer to next blit
+        o->c += 1; // header
+        o->c += data_len;
+
+        // skip a line. gets to the next blit & check eol
+    } while (!(*p & 1)); // stop if it was an eol
+}
+
+#else
 
 static void sprite_u16_line (object *o)
 {
@@ -261,33 +375,6 @@ static void sprite_u16_line (object *o)
     } while (!(*p & 1)); // stop if it was an eol
 }
 
-static void sprite_u8_line (object *o)
-{
-    uint8_t *draw8 = (uint8_t*) draw_buffer; // draw buffer as bytes
-
-    int x=o->x;
-    uint8_t *p; // see blit as bytes. p is always the start of the blit
-    do {
-        p = (uint8_t *)o->c; // (shortcut) start/current position of the blit
-        // header : nb skip:4, nb blit: 3, eol:1
-
-        x += (*p)>>4; // skip : advance x
-
-        // now, directly copy blit it
-        uint32_t data_len = *p>>1 & 0x7; // LEN but for 8bit
-
-        memcpy(&draw8[x], p+1, data_len);
-
-        // advance x
-        x += data_len;
-
-        // advances pointer to next blit
-        o->c += 1; // data len
-        o->c += data_len;
-
-        // skip a line. gets to the next blit & check eol
-    } while (!(*p & 1)); // stop if it was an eol
-}
 
 static void sprite_rle_line (object *o)
 {
@@ -484,5 +571,5 @@ static void sprite_c8_line (object *o)
     } while (!(EOL(*p))); // stop if it was an eol
 
 }
-
+#endif 
 
