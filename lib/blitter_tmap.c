@@ -258,12 +258,16 @@ object *tilemap_new(const void *tileset, int w, int h, uint32_t header, const vo
         die(4,5);
     }
     if ((header&0xf) != TMAP_U8)
-        die(4,6); // unknown
+        die(4,6); // not implemented
 
     o->a = (uintptr_t)tileset-tilesize*tilesize; // to start at index 1 and not 0, offset now in bytes.
     o->line = tilemap_u8_line8;
 
     #else // 16-bit interface
+
+    if ((header & TSET_8bit)) {
+        die(4,7);
+    }
 
     o->a = (uintptr_t)tileset-2*tilesize*tilesize; // to start at index 1 and not 0, offset now in bytes.
     switch (header & 0xf) {
