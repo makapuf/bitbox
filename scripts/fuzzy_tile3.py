@@ -1,17 +1,11 @@
 #!/usr/bin/python
 "Encode as 16x16 palette, lossy, using RLE or not for map, 16 colors per tile"
 
-'''TODO : faster encode, better line interface, stats on error
-'''
+'''TODO : better command line interface, stats on max/avg error, auto find given size, transparency ?'''
 
-
-from math import sqrt
-from itertools import groupby
-import sys
+import sys, argparse
 from PIL import Image # using the PIL library, maybe you'll need to install it. python should come with t.
 
-LAMBDA = 5000  # max average deviation per pixel,
-BLOCKSIZE = 16
 TRANSP = (0,0,0)
 
 # HIGHER quality : find centroids of squares, THEN reduce (...)
@@ -22,7 +16,7 @@ def output_tileset() :
     for i,t in enumerate(tileset) :
         imgblock.putdata(t)
         tileset_image.paste(imgblock,(i%tiles_per_row*BLOCKSIZE,i/tiles_per_row*BLOCKSIZE))
-    tileset_image.save(name+'_tileset.png')
+    tileset_image.save(basename+'_tileset.png')
 
 
 yuvs = {} # memo
@@ -52,33 +46,45 @@ def distance(block1,block2, maxdist) :
         if err>maxdist : break
     return err
 
-def stats():
-    print ' -',len(tileset),'/',len(tilemap), len(tileset)*100 // len(tilemap),'%'
 
-for name in sys.argv[1:] : # for each input file
-    print " *** ",name
+parser = argparse.ArgumentParser(description='make tiles unique in a tileset.')
+parser.add_argument('--tilesize', type=int,help='size of each tile in pixels',default=16)
+parser.add_argument('--error', type=int,help='error to tolerate',default=1000)
+parser.add_argument('files', nargs='+',help='input file names (png)')
+
+args = parser.parse_args()
+
+BLOCKSIZE = args.tilesize
+
+
+for name in args.files : # for each input file
+    basename = name[:-4]
+    outfilename = basename+'_decoded.png'
+    print " *** ",name,
 
     tileset = [tuple([TRANSP])*BLOCKSIZE*BLOCKSIZE] # only one empty tile
     tilemap = []
 
-    src = Image.open(name+'.png').convert('RGB') # XXX ALPHA
+    src = Image.open(name).convert('RGB') # XXX ALPHA
     dst = src.copy()
 
     encoded_blocks = []
-    print '// blocks  , lambda :%.1f, blocksize: %d '%(LAMBDA, BLOCKSIZE)
 
     for dim in 0,1 :
         if src.size[dim]%BLOCKSIZE!=0 :
             print 'file %s : %s size not a multiple of %d '%(name,'xy'[dim],BLOCKSIZE)
             continue
 
-    for y in range(src.size[1]//BLOCKSIZE) :
-        for x in range(src.size[0]//BLOCKSIZE) :
+    tw = src.size[0]//BLOCKSIZE
+    th = src.size[1]//BLOCKSIZE
+
+    for y in range(th) :
+        for x in range(tw) :
             imgblock = src.crop((x*BLOCKSIZE,y*BLOCKSIZE,(x+1)*BLOCKSIZE,(y+1)*BLOCKSIZE))
             block = imgblock.getdata()
 
             # find closest tile and get error
-            min_err = LAMBDA ; min_idx = 0
+            min_err = args.error ; min_idx = 0
             for idx in range(len(tileset)) :
                 err = distance(tileset[idx],block, min_err)
                 if err<min_err :
@@ -86,7 +92,7 @@ for name in sys.argv[1:] : # for each input file
                     min_idx = idx
                 if err==0.0 : break
 
-            if min_err >= LAMBDA :
+            if min_err >= args.error :
                 min_idx=len(tileset)
                 tileset.append(block)
             else :
@@ -95,42 +101,9 @@ for name in sys.argv[1:] : # for each input file
                 # mark with 3 small pixels it's a reused tile ?
             tilemap.append(min_idx)
 
-        if y%4==0 :
-            stats()
-
-            dst.save(name+'decoded.png')
-            output_tileset() # optional ?
+    dst.save(basename+'_decoded.png')
+    output_tileset() # optional ?
 
     encoded_size = BLOCKSIZE*BLOCKSIZE*len(tileset)
-    stats()
-    print 'encoded size:',encoded_size, 'reduc : %.1f'%(src.size[0]*src.size[1]*8./encoded_size)
 
-
-    # faire une option : generate png or use it (to create TMX) - permet rearrangement, prend le plus proche
-
-    # generate TMX
-    with open(name+'.tmx','w') as of :
-        assert len(tilemap)==(src.size[0]/BLOCKSIZE)*(src.size[1]/BLOCKSIZE)
-        of.write('<map version="1.0" orientation="orthogonal" width="%d" height="%d" tilewidth="%d" tileheight="%d">\n'%\
-            (
-                src.size[0]/BLOCKSIZE,
-                src.size[1]/BLOCKSIZE,
-                BLOCKSIZE,
-                BLOCKSIZE
-            ))
-        of.write ('<tileset firstgid="1" name="tilemap" tilewidth="%d" tileheight="%d" spacing="0" margin="0" >\n'%(
-            BLOCKSIZE, BLOCKSIZE
-            ))
-        of.write ('    <image source="%s_tileset.png"/>\n'%name)
-        of.write ('</tileset>\n')
-        of.write ('<layer name="layer" width="%d" height="%d" >'%(src.size[0]/BLOCKSIZE,src.size[1]/BLOCKSIZE))
-        of.write('<data encoding="csv">')
-        of.write(",".join("%d"%(i+1) for i in tilemap))
-        of.write('</data>\n')
-        of.write ('</layer>\n')
-
-
-        of.write('</map>')
-
-
-
+    print ' -',len(tileset),'/',len(tilemap),'encoded size:',encoded_size, 'reduc : %.1f'%(src.size[0]*src.size[1]/encoded_size)
