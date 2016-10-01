@@ -122,37 +122,45 @@ void activelist_add(object *o)
 
 
 
-void graph_frame()
+void graph_vsync()
 {
     if (!blitter_initialized)
         return; // ensure initiliaztion is done
 
+    if (vga_odd) 
+        return; 
+
     object *o;
 
-    // transfer y to real y ry
-    for (int i=0;i<blt.nb_objects;i++)
-    {
-        o=blt.objects[i];
-        if (o->y==INT16_MAX || o->y+(int)o->h>=0)
-            o->ry = o->y;
-        else
-            o->ry = VGA_V_PIXELS+1;
-            // if hidden above screen, hide below screen (thus activation algorithms will never run)
-    }
+    switch (vga_line) {
+        case VGA_V_PIXELS+2 : 
+            // transfer y to real y ry    
+            for (int i=0;i<blt.nb_objects;i++) {
+                o=blt.objects[i];
+                if (o->y==INT16_MAX || o->y+(int)o->h>=0)
+                    o->ry = o->y;
+                else
+                    o->ry = VGA_V_PIXELS+1;
+                    // if hidden above screen, hide below screen (thus activation algorithms will never run)
+            }
+            break;
+        case VGA_V_PIXELS+3 : 
+            // ensure objectlist is sorted by y
+            blitter_sort_objects_y();
+            break;
+        case VGA_V_PIXELS+4 : 
+            // reset activelist, next to blit
+            blt.activelist_head = (object*)0;
+            blt.next_to_activate = 0;
 
-    // ensure objectlist is sorted by y
-    blitter_sort_objects_y();
-
-    // reset activelist, next to blit
-    blt.activelist_head = (object*)0;
-    blt.next_to_activate = 0;
-
-    // rewind all objects. nb objects is up to date (no holes in objlist, since we just sorted them)
-    for (int i=0;i<blt.nb_objects;i++)
-    {
-        o=blt.objects[i];
-        if (o->frame)
-            o->frame(o,o->ry<0?-o->ry:0); // first line is -y if negative
+            // rewind all objects. nb objects is up to date (no holes in objlist, since we just sorted them)
+            for (int i=0;i<blt.nb_objects;i++)
+            {
+                o=blt.objects[i];
+                if (o->frame)
+                    o->frame(o,o->ry<0?-o->ry:0); // first line is -y if negative
+            }
+            break;
     }
 }
 
@@ -172,10 +180,7 @@ void graph_line()
     // persist between calls so that one line can continue blitting next frame.
     static object *o;
 
-    #ifdef VGA_SKIPLINE
     if (!vga_odd) { // only on even lines
-    #endif
-
     // drop past objects from active list.
     object *prev=NULL;
     for (object *o=blt.activelist_head;o;o=o->activelist_next)
@@ -215,7 +220,6 @@ void graph_line()
         #endif
     }
 
-    #ifdef VGA_SKIPLINE
     } else {
         // continue with o
         for (;o;o=o->activelist_next)
@@ -224,7 +228,6 @@ void graph_line()
                 o->line(o);
         }
     }
-    #endif
 
 }
 
@@ -267,8 +270,6 @@ void fast_fill(uint16_t x1, uint16_t x2, uint16_t c)
 
 // --- misc implementations & tests
 
-void dummy_frame(object *o,int first_line) {}
-
 void color_blit(object *o)
 {
     const int16_t x1 = o->x<0?0:o->x;
@@ -293,10 +294,9 @@ object *rect_new(int16_t x, int16_t y, int16_t w, int16_t h,int16_t z, uint16_t 
 
     o->a = (int)color;
 
-    o->frame=dummy_frame;
+    o->frame=0;
     o->line=color_blit;
     return o;
 }
-
-// degrade vertical (==rect ? a/b : plus joli, ~ gratuit)
+// make a gradient ? 
 

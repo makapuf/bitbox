@@ -5,6 +5,7 @@
 
 #include "bitbox.h"
 
+// defaults to 8x8
 #ifndef FONT_W
 #define FONT_W 8
 #define FONT_H 8

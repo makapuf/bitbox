@@ -3,7 +3,7 @@
 
 #include "bitbox.h" // gamepad
 
-#include "lib/simple.h"
+#include "lib/textmode.h"
 #include "lib/sampler.h"
 
 const char *instrs[8] = {
@@ -45,9 +45,9 @@ void game_init() {
     
     // instructions
     clear(); // necessary 
-    window(3,1,76,10);
+    window(0,3,1,76,10);
     for (int i=0;i<8;i++)
-        print_at(5, 2+i, instrs[i]);
+        print_at(5, 2+i, 0,instrs[i]);
     
     play_track (
         track_piano_len,

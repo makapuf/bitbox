@@ -54,8 +54,8 @@ uint32_t line_time; // maximum time of line
 
 #define MIN(x,y) ((x)<(y)?x:y)
 
-extern void graph_line(void);
-extern void graph_frame(void);
+void graph_line(void);
+void graph_frame(void);
 
 // public interface
 uint32_t vga_line;
@@ -63,32 +63,33 @@ volatile uint32_t vga_frame;
 
 #ifdef VGA_SKIPLINE
 volatile int vga_odd; // only in skipline modes
+#else 
+#define vga_odd 0
 #endif
 
-// aligned on a 1kb boundary , see http://blog.frankvh.com/2011/08/18/stm32f2xx-dma-controllers/
+/*
+DMA Buffers must be aligned on a 1kb boundary , see refman p.173 : 
 
-uint16_t LineBuffer1[1024] __attribute__((aligned (1024))); // __attribute__ ((section (".sram")))
+The burst configuration has to be selected in order to respect the AHB protocol, where
+bursts must not cross the 1 KB address boundary because the minimum address space that
+can be allocated to a single slave is 1 KB. This means that the 1 KB address boundary
+should not be crossed by a burst block transfer, otherwise an AHB error would be generated,
+that is not reported by the DMA registers.
+
+*/
+
+
+uint16_t LineBuffer1[1024] __attribute__((aligned (1024))); // not in CCM : DMA !
 uint16_t LineBuffer2[1024] __attribute__((aligned (1024)));
 
 uint16_t *display_buffer = LineBuffer1; // will be sent to display
 uint16_t *draw_buffer = LineBuffer2; // will be drawn (bg already drawn)
-
+uint8_t *draw_buffer8[1024]; // used only in 8bit mode. no access from DMA, no alignment/
 
 static inline void vga_output_black()
 {
     GPIOE->BSRRH |= GPIO_BSRR_BS_0*0x7fff; // Set signal to black: reset all
 }
-
-static inline void vga_raise_vsync()
-{
-	GPIOA->BSRRL |= GPIO_BSRR_BS_0; // raise VSync line
-}
-
-static inline void vga_lower_vsync()
-{
-	GPIOA->BSRRH |= GPIO_BSRR_BS_0; // raise VSync line
-}
-
 
 
 void vga_setup()
@@ -281,21 +282,21 @@ extern void graph_line8( void );
 void __attribute__((weak)) graph_line ( void )
 {
 	graph_line8();
-	#ifdef VGA_SKIPLINE
-	if (vga_odd)
-	#endif
-	{
-		// expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
+	if (vga_odd) {
+		// expand buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
 		// cost is ~ 5 cycles per pixel. not accelerated by putting palette in CCMRAM
-		const uint32_t * restrict src = (uint32_t*)&draw_buffer[VGA_H_PIXELS/2-4];
-		uint32_t * restrict dst=(uint32_t*)&draw_buffer[VGA_H_PIXELS-4];
+		const uint32_t * restrict src = (uint32_t*)draw_buffer8;
+		uint32_t * restrict dst=(uint32_t*)draw_buffer;
+
 		for (int i=0;i<VGA_H_PIXELS/4;i++) {
-			uint32_t pix=*src--; // read 4 src pixels
-			*dst-- = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
-			*dst-- = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
+			uint32_t pix=*src++; // read 4 src pixels
+			*dst++ = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
+			*dst++ = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
 		}
 	}
 }
+
+void __attribute__((weak)) graph_vsync() {} // default empty
 
 void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
 {
@@ -349,25 +350,23 @@ void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
         draw_buffer[line_time+1]=0;
         #endif
 
-	}  else
-		#ifdef VGA_SKIPLINE
-		if (!vga_odd)
-		#endif
+	}  else {
+		graph_vsync(); // always call, odd or not
 
-	{
+		if (!vga_odd) {
+			if (vga_line == VGA_V_PIXELS) {
+				vga_frame++; // new frame sync starts just at vsync.
+			}
 
-		if (vga_line== VGA_V_PIXELS) {
-			vga_frame++; // new frame sync now.
-			graph_frame();
-		}
+			if (vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) {
+					GPIOA->BSRRH |= GPIO_BSRR_BS_0; // raise VSync line
+			} else if(vga_line==VGA_V_PIXELS+1+VGA_V_FRONTPORCH+VGA_V_SYNC)	{
+					GPIOA->BSRRL |= GPIO_BSRR_BS_0; // raise VSync line
 
-		if (vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) {
-			vga_lower_vsync();
-		} else if(vga_line==VGA_V_PIXELS+1+VGA_V_FRONTPORCH+VGA_V_SYNC)	{
-			vga_raise_vsync();
-		} else if(vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+VGA_V_SYNC+VGA_V_BACKPORCH) {
-			vga_line=0; // we're on vga_odd=0, next time will be a vga_odd=1 and vga_line=0
-            graph_line();  // first line next frame!
+			} else if(vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+VGA_V_SYNC+VGA_V_BACKPORCH) {
+				vga_line=0; // we're on vga_odd=0, next time will be a vga_odd=1 and vga_line=0
+	            graph_line();  // first line next frame!
+			}
 		}
 	}
 }

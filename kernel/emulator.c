@@ -19,6 +19,8 @@
 
 #include "fatfs/ff.h"
 
+#define VSYNC_LINES 16 // simulates 16 lines of vsync
+
 #define WM_TITLE_LED_ON  "Bitbox emulator (*)"
 #define WM_TITLE_LED_OFF "Bitbox emulator"
 /*
@@ -106,6 +108,8 @@ uint32_t time_left(void)
 #ifndef NO_VGA
 extern uint16_t palette_flash[256];
 
+void __attribute__((weak)) graph_vsync() {} // default empty
+
 void __attribute__ ((weak, optimize("-O3"))) graph_line(void)
 {
     graph_line8();
@@ -141,7 +145,6 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen(SDL_Surface *scr)
     uint32_t *dst = (uint32_t*)scr->pixels;
 
     draw_buffer = mybuffer1;
-    graph_frame();
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
         #ifdef VGA_SKIPLINE
@@ -159,6 +162,9 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen(SDL_Surface *scr)
         // swap lines buffers to simulate double line buffering
         draw_buffer = (draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
     }
+
+    for (;vga_line<screen_height+VSYNC_LINES;vga_line++)
+        graph_vsync();
 }
 
 static void __attribute__ ((optimize("-O3"))) refresh_screen2x (SDL_Surface *scr)
@@ -168,7 +174,6 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen2x (SDL_Surface *scr
     uint64_t * restrict dst = (uint64_t*)scr->pixels; // will render 2 pixels at a time horizontally
 
     draw_buffer = mybuffer1; // currently 16bit data
-    graph_frame();
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
         #ifdef VGA_SKIPLINE
@@ -193,6 +198,17 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen2x (SDL_Surface *scr
         draw_buffer = ( draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
 
         dst += scr->pitch/sizeof(uint64_t); // we already drew the line after, skip it
+    }
+    for (;vga_line<screen_height+VSYNC_LINES;vga_line++) {
+        #ifdef VGA_SKIPLINE
+        vga_odd=0;
+        graph_vsync(); // using line, updating draw_buffer ...
+        vga_odd=1; 
+        graph_vsync(); //  a second time for SKIPLINE modes
+        #else 
+        graph_vsync(); //  a second time for SKIPLINE modes
+        #endif
+        
     }
 }
 #endif

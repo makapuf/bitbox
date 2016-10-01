@@ -26,7 +26,7 @@ void game_frame()
     }
 } 
 
-void graph_frame(){}
+
 void graph_line()
 // called from VGA kernel
 {	

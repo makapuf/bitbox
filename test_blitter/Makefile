@@ -2,8 +2,7 @@
 NAME = test_engine
 
 GAME_C_FILES = main.c lib/blitter.c lib/blitter_tmap.c lib/blitter_sprites.c
-#GAME_C_OPTS = -DVGAMODE_400
-#GAME_C_OPTS = -DVGAMODE_640_OVERCLOCK
+#DEFINES += VGAMODE_400
 GAME_BINARY_FILES = ball.spr bg.tset bg.tmap ball_small.spr
 
 USE_ENGINE = 1
@@ -17,12 +16,10 @@ bg.tset bg.tmap bg.h: bg.tmx bg.png
 	python2 ../scripts/tmx.py bg.tmx > bg.h
 
 ball.spr : ball/????.png
-	#python ../scripts/sprite_encode2.py $@ $? -m p4
-	python2 ../scripts/couples_encode.py $@ $^ 
+	python2 ../scripts/couples_encode.py $@ $(sort $^)
 
 ball_small.spr : ball_small/????.png
-	#python ../scripts/sprite_encode2.py $@ $? -m p4
-	python2 ../scripts/couples_encode.py $@ $^ 
+	python2 ../scripts/couples_encode.py $@ $(sort $^)
 
 
 clean::

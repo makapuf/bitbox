@@ -1,9 +1,9 @@
-# 80x25 text
-VGA_SIMPLE_MODE=0 
-
 NAME = test_sampler
 
-GAME_C_FILES = test_sampler.c song.c lib/sampler.c lib/simple.c 
+# 80x25 text
+DEFINES += VGAMODE_640 FONT_W=8 FONT_H=16 
+
+GAME_C_FILES = test_sampler.c song.c lib/sampler.c lib/textmode.c 
 GAME_BINARY_FILES = $(wildcard snd/*.raw)
 
 # bitbox_simple.mk, will include files by default

@@ -125,7 +125,6 @@ void game_frame()
 }
 
 // my own graphical engine
-void graph_frame() {}
 void graph_line8()
 {
 	uint8_t *pixels = (uint8_t*) draw_buffer;

@@ -1,11 +1,10 @@
 /* Test for USB devices and input events
  * Copyright 2014, Adrien Destugues <pulkomandy@pulkomandy.tk>
- * Textmode code stolen from 2nd stage bootloader.
  */
 
 #include <string.h>
 #include "bitbox.h"
-#include "lib/simple.h"
+#include "lib/textmode.h"
 
 // graphical gamepad position 
 #define PAD_X 2
@@ -16,20 +15,20 @@ int cx, cy;
 void game_init() {
 	clear(); 
 	
-	window(2,1,45,4);
-	print_at(14,2, " \xf9\xfa\xfb USB TEST ");
-	print_at(5,3, " \x01 Hi ! Plug some usb device...");
-	print_at(2, 6, "Mouse: X=   Y=   lmr");
+	window(0,2,1,45,4);
+	print_at(14,2,0, " \xf9\xfa\xfb USB TEST ");
+	print_at(5,3,0,  " \x01 Hi ! Plug some usb device...");
+	print_at(2, 6, 0,"Mouse: X=   Y=   lmr");
 
-	print_at(PAD_X+2,PAD_Y-1, "Gamepad:");
+	print_at(PAD_X+2,PAD_Y-1,0, "Gamepad:");
 	// "graphical" gamepad
-	window(PAD_X, PAD_Y, PAD_X+17, PAD_Y+5);
-	print_at(PAD_X+2 ,PAD_Y,"[ ]");
-	print_at(PAD_X+15,PAD_Y,"[ ]");
+	window(0,PAD_X, PAD_Y, PAD_X+17, PAD_Y+5);
+	print_at(PAD_X+2 ,PAD_Y,0,"[ ]");
+	print_at(PAD_X+15,PAD_Y,0,"[ ]");
 
 	// analog values
-	window(27, 6, 27+17, 6+9);
-	print_at(28,5,"Analog pad:   x");
+	window(0,27, 6, 27+17, 6+9);
+	print_at(28,5,0,"Analog pad:   x");
 
 	cx = cy = 0;
 }
@@ -44,14 +43,14 @@ void display_first_event(void)
 		switch(e.type)
 		{
 			case evt_keyboard_press : 
-				print_at(1,KB_Y,"KB pressed      ");
+				print_at(1,KB_Y,0,"KB pressed      ");
 				vram[KB_Y][14]=HEX_Digits[(e.kbd.key>>4) & 0xF];
 				vram[KB_Y][15]=HEX_Digits[e.kbd.key&0xf];
 				vram[KB_Y][17]=e.kbd.sym;
 				break;
 
 			case evt_keyboard_release : 
-				print_at(1,KB_Y,"KB released     ");
+				print_at(1,KB_Y,0,"KB released     ");
 				vram[KB_Y][14]=HEX_Digits[(e.kbd.key>>4) & 0xF];
 				vram[KB_Y][15]=HEX_Digits[e.kbd.key&0xf];
 				vram[KB_Y][17]=e.kbd.sym;
@@ -60,13 +59,13 @@ void display_first_event(void)
 			case evt_device_change:
 				// It seems the disconnect event is not sent currently...
 				if (e.device.type == device_unconnected)
-					print_at(1, 15, "dev. disconnect");
+					print_at(1, 15,0, "dev. disconnect");
 				else if (e.device.type == device_keyboard)
-					print_at(1, 15, "Keyboard found!");
+					print_at(1, 15,0, "Keyboard found!");
 				else if (e.device.type == device_mouse)
-					print_at(1, 15, "Mouse found!");
+					print_at(1, 15,0, "Mouse found!");
 				else if (e.device.type == device_gamepad)
-					print_at(1, 15, "Gamepad found!");
+					print_at(1, 15,0, "Gamepad found!");
 				break;
 
 			case evt_mouse_move:
@@ -98,14 +97,14 @@ void display_first_event(void)
 				break;
 
 			case evt_user:
-				print_at(50, 10, "user event");
+				print_at(50, 10,0, "user event");
 				break;
 
 			case no_event:
 				break;
 
 			default:
-				print_at(50, 10, "UNHANDLED");
+				print_at(50, 10,0, "UNHANDLED");
 		}
 		e=event_get();
 	}

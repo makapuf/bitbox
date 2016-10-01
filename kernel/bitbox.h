@@ -34,11 +34,11 @@ extern volatile int vga_odd;
 
 extern void graph_line(void); // user provided graphical for 16 bit kernel function
 extern void graph_line8(void); // user provided graphical for 8 bit kernel function
+extern void graph_vsync(void); // user provided, called during vsync lines
 
-extern void graph_frame(void); // user provided graphical blitting algorithms
-
-// 0x0rrrrrgggggbbbbb pixels or 0xrrrggbbl according to the mode used.
-extern uint16_t *draw_buffer; // drawing next line
+// 0x0rrrrrgggggbbbbb pixels or 0xrrrggbbl 
+extern uint16_t *draw_buffer;  // drawing next line
+extern uint8_t *draw_buffer8; // drawing next line in 8bpp mode
 
 // also check kconf.h for video modes.
 

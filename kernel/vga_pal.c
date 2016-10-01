@@ -344,9 +344,10 @@ void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
         #endif
 
 	}  else {
+		graph_vsync();
+
 		if (vga_line== VGA_V_PIXELS) {
 			vga_frame++; // new frame sync now. 
-			graph_frame(); 
 		}
 
 		if (vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) {
@@ -359,6 +360,9 @@ void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
 		}
 	}
 }
+
+void __attribute__((weak)) graph_vsync() {} // default empty
+
 
 void __attribute__ ((used)) DMA2_Stream5_IRQHandler() // DMA handler
 {

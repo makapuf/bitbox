@@ -1,8 +1,8 @@
 NO_SDCARD=1
-VGA_SIMPLE_MODE=13 # textmode
+DEFINES += VGAMODE_400 KEYB_FR
 
 NAME = testusb
-GAME_C_FILES = $(NAME).c lib/simple.c
-#GAME_C_OPTS = -DKEYB_FR
+GAME_C_FILES = $(NAME).c lib/textmode.c
+
 include $(BITBOX)/kernel/bitbox.mk
 

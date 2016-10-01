@@ -261,11 +261,12 @@ void  __attribute__ ((used)) TIM3_IRQHandler(void) // attribute used neded if ca
         #endif
 
     }  else {
+        graph_vsync(); // always call, odd or not
+
         if (!vga_odd)  // only once
         {
             if (vga_line== VGA_V_PIXELS) {
                 vga_frame++; // new frame sync now.
-                graph_frame();
             } else if (vga_line==VGA_V_PIXELS+1) {
                 #ifndef NO_AUDIO
                 audio_frame();
@@ -290,6 +291,8 @@ void  __attribute__ ((used)) TIM3_IRQHandler(void) // attribute used neded if ca
     #endif
 
 }
+
+void __attribute__((weak)) graph_vsync() {} // default empty
 
 // DMA Stream 5 : pixel DMA interrupt, DMA complete
 void __attribute__ ((used)) DMA2_Stream5_IRQHandler(void)

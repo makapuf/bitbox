@@ -25,14 +25,15 @@ uint32_t palette[64][4]; // cache of BG<<16 | FG couples - AA,AB,BA,BB
 inline void set_palette(uint8_t pen,uint16_t col, uint16_t bg )
 {
 	uint32_t *lut=&palette[pen&63][0];
-	lut[0] = col<<16|col;
-	lut[1] =  bg<<16|col;
-	lut[2] = col<<16|bg;
-	lut[3] =  bg<<16|bg; 
+	lut[3] = col<<16|col;
+	lut[2] =  bg<<16|col;
+	lut[1] = col<<16|bg;
+	lut[0] =  bg<<16|bg; 
 }
 
-void graph_frame() {
-	if (!font_cached) {
+void graph_vsync() {
+	// load font data to RAM cache
+	if (!font_cached && vga_line==VGA_V_PIXELS+3) {
 		font_cached=1;
  	    memcpy(font_data_cached, FONTDATA, sizeof(font_data_cached));
 	}
