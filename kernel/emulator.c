@@ -163,8 +163,16 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen(SDL_Surface *scr)
         draw_buffer = (draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
     }
 
-    for (;vga_line<screen_height+VSYNC_LINES;vga_line++)
-        graph_vsync();
+    for (;vga_line<screen_height+VSYNC_LINES;vga_line++) {
+        #ifdef VGA_SKIPLINE
+        vga_odd=0;
+        graph_vsync(); // using line, updating draw_buffer ...
+        vga_odd=1; 
+        graph_vsync(); //  a second time for SKIPLINE modes
+        #else 
+        graph_vsync(); //  a second time for SKIPLINE modes
+        #endif
+    }
 }
 
 static void __attribute__ ((optimize("-O3"))) refresh_screen2x (SDL_Surface *scr)
@@ -208,7 +216,6 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen2x (SDL_Surface *scr
         #else 
         graph_vsync(); //  a second time for SKIPLINE modes
         #endif
-        
     }
 }
 #endif
