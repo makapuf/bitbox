@@ -6,7 +6,7 @@ VGA_SIMPLE_MODE=13
 
 NAME = stext
 
-GAME_C_FILES = test_simple_txt.c
+GAME_C_FILES = test_simple_txt.c lib/simple.c
 
 # bitbox_simple.mk, will include files by default
-include $(BITBOX)/lib/bitbox.mk
+include $(BITBOX)/kernel/bitbox.mk

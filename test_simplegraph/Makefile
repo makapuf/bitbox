@@ -8,8 +8,8 @@ NO_USB=1
 VGA_SIMPLE_MODE=5
 
 NAME = test_simplegraph
-GAME_C_FILES = $(NAME).c
+GAME_C_FILES = $(NAME).c lib/simple.c
 
 # see this file for options
-include $(BITBOX)/lib/bitbox.mk
+include $(BITBOX)/kernel/bitbox.mk
 

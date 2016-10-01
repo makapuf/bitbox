@@ -1,6 +1,6 @@
 #include <math.h>
 #include <bitbox.h>
-#include <blitter.h>
+#include "lib/blitter.h"
 
 #include "bg.h"
 

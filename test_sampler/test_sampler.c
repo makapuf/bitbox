@@ -1,9 +1,10 @@
 // test simple by default
 #include <string.h>
 
-#include "simple.h"
-#include "sampler.h"
 #include "bitbox.h" // gamepad
+
+#include "lib/simple.h"
+#include "lib/sampler.h"
 
 const char *instrs[8] = {
   "This is a demonstration of Bitbox simple sampler with sound in flash ",

@@ -1,6 +1,6 @@
 // test simple by default
 #include <string.h>
-#include "simple.h"
+#include "lib/simple.h"
 
 const char *lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ut malesuada tellus. Curabitur commodo eleifend suscipit. Nunc sit amet mauris ut purus lobortis luctus. Pellentesque sit amet dolor quam. Sed venenatis laoreet tortor. Curabitur volutpat molestie ligula, vel consequat dolor elementum ut. Nullam vel neque eu ex molestie sagittis eu at mauris.\n"
   "In nec porta est. Sed bibendum aliquet orci. Maecenas elit ligula, imperdiet venenatis sollicitudin eu, sollicitudin et eros. Duis suscipit erat lacus, vel dignissim mi suscipit sed. Nunc congue enim quam, finibus gravida dui tempus nec. Nam sed facilisis diam. Nunc euismod justo orci, sed blandit augue mollis vitae. Vivamus vel tincidunt mi. Aliquam non diam at risus convallis mattis. Proin ac molestie nisi. Integer vehicula magna eget porta gravida. Aliquam rutrum elementum ipsum ac pellentesque. Nulla in rhoncus diam. Suspendisse et interdum elit.\n"

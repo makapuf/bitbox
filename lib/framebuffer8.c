@@ -7,6 +7,8 @@
 
 #define PALETTE_SECTION CCM_MEMORY
 
+#include "fonts.h"
+
 // --------------------------------------------------------------
 
 #if VGA_SIMPLE_MODE==13 // text mode 50x37, font 8x8, base 400

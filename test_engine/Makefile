@@ -1,7 +1,7 @@
 #testkernel makefile
 NAME = test_engine
 
-GAME_C_FILES = main.c 
+GAME_C_FILES = main.c lib/blitter.c lib/blitter_tmap.c lib/blitter_sprites.c
 #GAME_C_OPTS = -DVGAMODE_400
 #GAME_C_OPTS = -DVGAMODE_640_OVERCLOCK
 GAME_BINARY_FILES = ball.spr bg.tset bg.tmap ball_small.spr
@@ -10,7 +10,7 @@ USE_ENGINE = 1
 NO_USB=1
 
 
-include $(BITBOX)/lib/bitbox.mk
+include $(BITBOX)/kernel/bitbox.mk
 main.c:bg.h
 
 bg.tset bg.tmap bg.h: bg.tmx bg.png 

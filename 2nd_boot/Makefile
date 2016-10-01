@@ -1,5 +1,5 @@
 NAME = 2nd_boot
-GAME_C_FILES = $(NAME).c font.c bg.c  
+GAME_C_FILES = $(NAME).c font.c bg.c 
 GAME_BINARY_FILES = bitbox.pbm
 DEFINES = VGAMODE_640 PAL_MODE=672
 USE_SDCARD = 1
@@ -12,7 +12,7 @@ KERNEL_PAL = flashit.c
 # BUT obviously cannot program flash anymore
 LINKER_RAM=1
 
-include $(BITBOX)/lib/bitbox.mk
+include $(BITBOX)/kernel/bitbox.mk
 $(NAME).c: build/binaries.h
 
 #.INTERMEDIATE: font.c

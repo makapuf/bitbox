@@ -200,6 +200,6 @@ def parse_track(midifile):
 if __name__=='__main__' :
     filename = sys.argv[1] 
     file = open(filename,'rb')
-    print '#include "sampler.h"'
+    print '#include "lib/sampler.h"'
     print "// file ", filename
     print '// format %d,ntracks %d,resolution %d, %d events'%read_midi_simple(file)

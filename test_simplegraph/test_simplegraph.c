@@ -1,5 +1,5 @@
 #include <stdlib.h> // rand
-#include "simple.h"
+#include "lib/simple.h"
 
 void game_init()
 {

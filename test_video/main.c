@@ -8,7 +8,7 @@
 #include <string.h>
 #include "fatfs/ff.h"
 
-#include "blitter.h"
+#include "lib/blitter.h"
 #ifndef EMULATOR
     #include "stm32f4xx.h"
 #endif

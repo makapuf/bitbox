@@ -3,7 +3,8 @@
 from PIL import Image
 import sys
 
-def font(filename, size_x, size_y) : 
+def font(size_x, size_y) : 
+	filename = 'font%dx%d'%(size_x,size_y)
 	print "/* *** File : %s *** */ "%filename
 	print "const uint8_t %s_data[256][%d] = {"%(filename,size_y)
 	src = Image.open(filename+'.png')
@@ -15,7 +16,8 @@ def font(filename, size_x, size_y) :
 	        print "{",", ".join(bytes),"}, //",y*16+x,repr(chr(y*16+x))
 	print "};"
 
+print "// file generated from script",sys.argv[0]
 print "#include <stdint.h>"
-font('font16',8,16)
-font('font8',6,8)
-font('font88',8,8)
+font(8,16)
+font(6,8)
+font(8,8)

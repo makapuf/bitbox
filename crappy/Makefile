@@ -9,4 +9,4 @@ DEFINES = VGAMODE_400 PROFILE
 
 NAME = crappy
 GAME_C_FILES = crappy.c 
-include $(BITBOX)/lib/bitbox.mk
+include $(BITBOX)/kernel/bitbox.mk

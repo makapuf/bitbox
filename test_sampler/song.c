@@ -1,4 +1,4 @@
-#include "sampler.h"
+#include "lib/sampler.h"
 // file  satie_gnossienne1.mid
 // 2 tracks, 256 ticks/beat (PPQ)
 // Time signature : 4/4

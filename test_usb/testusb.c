@@ -5,7 +5,7 @@
 
 #include <string.h>
 #include "bitbox.h"
-#include "simple.h"
+#include "lib/simple.h"
 
 // graphical gamepad position 
 #define PAD_X 2

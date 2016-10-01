@@ -1,12 +1,9 @@
 # simple makefile
 NO_USB=1
 
-# See lib/simple.c for modes
-VGA_SIMPLE_MODE=13
+DEFINES += VGAMODE_800 FONT_W=6 FONT_H=8
 
 NAME = stext
+GAME_C_FILES = main.c lib/textmode.c
 
-GAME_C_FILES = test_simple_txt_color.c 
-
-# bitbox_simple.mk, will include files by default
-include $(BITBOX)/lib/bitbox.mk
+include $(BITBOX)/kernel/bitbox.mk

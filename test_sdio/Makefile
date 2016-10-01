@@ -5,7 +5,7 @@ EXTRA_FILES = image.raw
 USE_SDCARD=1
 NO_USB=1
 
-include $(BITBOX)/lib/bitbox.mk
+include $(BITBOX)/kernel/bitbox.mk
 image.raw : hardcore.png
 	mkdir -p "build/img"
 	python encode_image.py hardcore.png
