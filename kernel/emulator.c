@@ -72,8 +72,11 @@ uint16_t *draw_buffer = mybuffer1; // volatile ?
 volatile uint16_t gamepad_buttons[2];
 uint32_t vga_line;
 volatile uint32_t vga_frame;
+#ifdef VGA_SKIPLINE
 volatile int vga_odd;
+#endif
 
+// IO
 volatile int data_mouse_x, data_mouse_y;
 volatile uint8_t data_mouse_buttons;
 
@@ -107,7 +110,8 @@ void __attribute__ ((weak, optimize("-O3"))) graph_line(void)
 {
     graph_line8();
     // expand line from u8 to u16 bitbox
-    if (vga_odd) {
+    if (vga_odd) 
+    {
         uint8_t  * restrict drawbuf8=(uint8_t *) draw_buffer;
         // expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
         // XXX unroll loop, read 4 by 4 pixels src, write 2 pixels out by two ...
@@ -140,10 +144,11 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen(SDL_Surface *scr)
     graph_frame();
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
-        vga_odd=0;
-        graph_line(); // using line, updating draw_buffer ...
         #ifdef VGA_SKIPLINE
+        vga_odd=0; graph_line(); // using line, updating draw_buffer ...
         vga_odd=1; graph_line(); //  a second time for SKIPLINE modes
+        #else
+        graph_line(); // using line, updating draw_buffer ...
         #endif
 
         // copy to screen at this position (cheating)
@@ -166,10 +171,13 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen2x (SDL_Surface *scr
     graph_frame();
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
+        #ifdef VGA_SKIPLINE
         vga_odd=0;
         graph_line(); // using line, updating draw_buffer ...
-        #ifdef VGA_SKIPLINE
-        vga_odd=1; graph_line(); //  a second time for SKIPLINE modes
+        vga_odd=1; 
+        graph_line(); //  a second time for SKIPLINE modes
+        #else 
+        graph_line(); //  a second time for SKIPLINE modes
         #endif
 
         // copy to screen at this position

@@ -6,8 +6,10 @@
 #include <string.h> // memset
 
 
-uint32_t vram[SCREEN_W*SCREEN_H*BPP/32];
-uint16_t palette[1<<BPP];
+uint32_t vram[VGA_H_PIXELS*VGA_V_PIXELS*FRAMEBUFFER_BPP/32];
+uint16_t palette[1<<FRAMEBUFFER_BPP];
+
+#define PPW (32/FRAMEBUFFER_BPP) // pixels per word
 
 // --------------------------------------------------------------
 
@@ -15,7 +17,7 @@ uint16_t palette[1<<BPP];
 
 const uint16_t initial_palette[] = {0, RGB(0xAA, 0xAA, 0xAA)};
 
-uint32_t cp[1<<(BPP*2)]; // couples palette
+uint32_t cp[1<<(FRAMEBUFFER_BPP*2)]; // couples palette
 
 void graph_frame()
 {
@@ -49,7 +51,7 @@ const uint16_t initial_palette[] = {
 	RGB(0xff, 0xff, 0xff)
 };
 
-uint32_t cp[1<<(BPP*2)]; // 4*4=16
+uint32_t cp[1<<(FRAMEBUFFER_BPP*2)]; // 4*4=16
 
 void graph_frame()
 {
@@ -63,13 +65,9 @@ void graph_line() {
 	if (vga_odd) return;
 	// resolution is 640x480, but make letterbox style with 640x400:
 	// only draw from y=40 to y=440 (with SCREEN_H=400)
-	if (vga_line/2==0 || vga_line/2 == 220) memset(draw_buffer, 0, SCREEN_W*2);
-	if (vga_line<40 || vga_line >= 440) return;
-
-
 	uint32_t *dst=(uint32_t*)draw_buffer;
-	uint32_t *src=&vram[(vga_line-40)*640/16];
-	for (int i=0;i<640/16;i++) {
+	uint32_t *src=&vram[vga_line*VGA_H_PIXELS/(16)];
+	for (int i=0;i<VGA_H_PIXELS/16;i++) {
 		// read 1 word = 16 pixels
 		uint32_t w = *src++;
 		// we need to write two pixels at a time into *dst,
@@ -94,13 +92,13 @@ void graph_frame() {}
 void graph_line() {
 	if (vga_odd) return;
 	uint32_t *dst=(uint32_t*)draw_buffer;
-	uint32_t *src=&vram[(vga_line)*SCREEN_W/(32/BPP)];
+	uint32_t *src=&vram[(vga_line)*VGA_H_PIXELS/PPW];
 
-	for (int i=0;i<SCREEN_W/(32/BPP);i++) {
+	for (int i=0;i<VGA_H_PIXELS/PPW;i++) {
 		// read 1 word = 8 pixels
 		uint32_t w = *src++;
 
-		for (int j=0;j<32;j+=(32/BPP)) {// 4 couples of pixels - drawn 2 times
+		for (int j=0;j<32;j+=PPW) {// 4 couples of pixels - drawn 2 times
 			*dst++ = palette[w>>j & 7] | palette[w>>(j+4)&7]<<16;
 		}
 	}
@@ -108,10 +106,9 @@ void graph_line() {
 
 // --------------------------------------------------------------
 
-#elif FRAMEBUFFER_BPP==8 // 400x300 is 120k !
+#elif FRAMEBUFFER_BPP==8 // 400x300 is 120k in that mode ! 640x480 is not feasible
 
-uint32_t vram[SCREEN_W*SCREEN_H*BPP/32] ;
-uint16_t palette[1<<BPP]  PALETTE_SECTION;
+
 const uint16_t initial_palette[] = { // 256 colors standard VGA palette
 	// XXX replace with micro palette
 	0x0000, 0x0015, 0x02a0, 0x02b5, 0x5400, 0x5415, 0x5540, 0x56b5,
@@ -122,13 +119,15 @@ void graph_frame() {}
 void graph_line() {
 	if (vga_odd) return;
 	// letterbox
+	/*
 	if (vga_line/2==110) memset(draw_buffer, 0, SCREEN_W*2); // at 220 & 221
 	if (vga_line<20 || vga_line >= 220) return;
+	*/
 
 	uint32_t *dst=(uint32_t*)draw_buffer;
-	uint32_t *src=&vram[(vga_line-20)*320/4];
+	uint32_t *src=&vram[vga_line*VGA_H_PIXELS/PPW];
 
-	for (int i=0;i<320/4;i++) {
+	for (int i=0;i<VGA_H_PIXELS/PPW;i++) {
 		// read 1 word = 4 pixels ie 2 couples
 		uint32_t w = *src++;
 		*dst++ = palette[(w>>8)  & 0xff]<<16 | palette[(w>> 0)&0xff];
@@ -150,9 +149,9 @@ void clear()
 
 void draw_pixel(int x,int y,int c)
 {
-	int pixel=x+y*SCREEN_W; // number of the pixel
-	vram[pixel/(32/BPP)] &= ~ (((1<<BPP)-1)<<(BPP*(pixel%(32/BPP)))); // mask
-	vram[pixel/(32/BPP)] |= c<<(BPP*(pixel%(32/BPP))); // value
+	int pixel=x+y*VGA_H_PIXELS; // number of the pixel
+	vram[pixel/PPW] &= ~ (((1<<FRAMEBUFFER_BPP)-1)<<(FRAMEBUFFER_BPP*(pixel%PPW))); // mask
+	vram[pixel/PPW] |= c<<(FRAMEBUFFER_BPP*(pixel%PPW)); // value
 	// if e.g. BPP == 2 (640x400 mode)
 	// you fit 32/BPP = 16 pixels in one 32bit integer
 }

@@ -24,7 +24,13 @@ void game_snd_buffer(uint16_t *buffer, int len);
 
 extern uint32_t vga_line; // should be const
 extern volatile uint32_t vga_frame;
-extern volatile int vga_odd; // in a physical line (on screen) but not a buffer refresh line (only used in 240-height modes)
+
+// in a physical line (on screen) but not a buffer refresh line (only used in half-height modes)
+#ifdef VGA_SKIPLINE
+extern volatile int vga_odd; 
+#else
+#define vga_odd 0 // never
+#endif
 
 extern void graph_line(void); // user provided graphical for 16 bit kernel function
 extern void graph_line8(void); // user provided graphical for 8 bit kernel function
