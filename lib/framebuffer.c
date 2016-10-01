@@ -171,3 +171,4 @@ void draw_line(int x0, int y0, int x1, int y1, int c) {
   }
 }
 
+// draw text at 8x8 ?

@@ -20,8 +20,6 @@
 #		  NO_AUDIO      - no sound support (exported as C define)
 #         USE_SDCARD,   - when you want to use or compile SDcard or fatfs related functions in the game (export to C)
 #
-#   Simple mode related :
-#        VGA_SIMPLE_MODE=0 .. 12 (see simple.h for modes)
 
 # More arcane options :
 #     USE_SD_SENSE  - enabling this will disable being used on rev2 !
@@ -164,13 +162,6 @@ KERNEL_BITBOX += audio_bitbox.c
 KERNEL_MICRO  += audio_micro.c
 KERNEL_PAL    += audio_bitbox.c
 endif
-
-# - simple modes
-# vga kernel mode itself is defined in kconf.h
-ifdef VGA_SIMPLE_MODE
-DEFINES += VGA_SIMPLE_MODE=$(VGA_SIMPLE_MODE)
-endif
-
 
 # --- binaries as direct object linking + binaries.h from all data in /data directory (if present)
 

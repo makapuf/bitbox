@@ -3,24 +3,6 @@
  *
  * to override this file in your project, just include a modified kconf.h in your main compile dir.
  */
-#include <stdint.h>
-
-
-// Modes implied by simple Modes
-
-#ifdef VGA_SIMPLE_MODE
-#if VGA_SIMPLE_MODE == 1 || VGA_SIMPLE_MODE==2
-  #define VGAMODE_800
-#elif VGA_SIMPLE_MODE==11
-  #define VGAMODE_800_OVERCLOCK
-#elif VGA_SIMPLE_MODE==4 || VGA_SIMPLE_MODE==13
-  #define VGAMODE_400
-#elif VGA_SIMPLE_MODE==5 || VGA_SIMPLE_MODE==8
-  #define VGAMODE_320
-#else
-  #define VGAMODE_640
-#endif
-#endif
 
 // --------------------------------------
 

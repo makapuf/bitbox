@@ -2,6 +2,8 @@
  * define FRAMEBUFFER_BPP=1,2,4(default),8 to define the framebuffer depth
  */ 
 
+#include <stdint.h>
+
 // TODO define window for black borders
 
 #ifndef FRAMEBUFFER_BPP
