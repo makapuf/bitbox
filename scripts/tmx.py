@@ -58,7 +58,7 @@ typename = {'B':'uint8_t', 'b':'int8_t','H':'uint16_t'}
 codes = {'B':'TMAP_U8', 'H':'TMAP_U16' }#0,'b':1,'H':2,'h':3}
 tilesizes = {16:'TSET_16',32:'TSET_32', 8:'TSET_8'}
 
-import Image # using the PIL library, maybe you'll need to install it. python should come with t.
+from PIL import Image # using the PIL library, maybe you'll need to install it. python should come with t.
 import sys, argparse
 import xml.etree.ElementTree as ET
 import array, os.path, argparse

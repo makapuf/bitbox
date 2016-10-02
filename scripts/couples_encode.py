@@ -11,7 +11,7 @@ import sys,struct
 from itertools import chain, groupby
 from sprite_encode2 import add_record
 
-import Image # using the PIL library, maybe you'll need to install it. python should come with t.
+from PIL import Image # using the PIL library, maybe you'll need to install it. python should come with t.
 ALPHA_T=127
 
 # XXX better dist ! passer en YUV ? couples : de/favoriser coupure au couple
