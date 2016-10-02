@@ -8,6 +8,7 @@ before_script:
   - sudo apt-get -qq install gcc-arm-none-eabi libsdl1.2-dev 
 
   - pip install Pillow
+  - ls /usr/lib/python2.7/dist-packages/PIL/
   # check it worked  
   - arm-none-eabi-gcc --version 
   - gcc --version
