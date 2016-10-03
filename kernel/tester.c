@@ -6,7 +6,7 @@ It builds a standalone emulator, which run headless
  and does not require SDL or produce any output,
  but will stress the game for a moment and exercise , on a pc
  - game_frame, game_line, game_init
- - graph_frame, graph_line
+ - graph_vsync, graph_line
  - game_snd_buffer
 
 and provide bitbox API stubs
@@ -86,7 +86,6 @@ static void refresh_screen()
 {
 
     draw_buffer = mybuffer1;
-    graph_frame();
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
         #ifdef VGA_SKIPLINE
@@ -271,7 +270,9 @@ int main ( int argc, char** argv )
 
         // update time
         vga_frame++;
-
+     
+        // update game
+        game_frame();
         #ifndef NO_AUDIO
         // one sound buffer per frame
         game_snd_buffer(audio,BITBOX_SNDBUF_LEN);
