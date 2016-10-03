@@ -53,7 +53,7 @@ int screen_height;
 
 #define EMU_FRAMES 10*60*60 // 1 minute
 
-#ifndef NO_AUDIO
+#ifdef NO_AUDIO
 uint16_t audio[BITBOX_SNDBUF_LEN];
 #endif
 
