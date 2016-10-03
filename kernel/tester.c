@@ -103,10 +103,7 @@ static void refresh_screen()
 // default empty implementation
 __attribute__((weak)) void game_snd_buffer(uint16_t *buffer, int len)  {}
 
-__attribute__((weak)) void graph_line( void )  {
-    // just call graph_line8
-    graph_line8();
-}
+__attribute__((weak)) void graph_vsync( void )  {}
 
 
 static void handle_gamepad()

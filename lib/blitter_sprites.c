@@ -212,7 +212,6 @@ object * sprite_new(const void *p, int x, int y, int z)
 }
 
 #if VGA_BPP==16
-#warning oucou
 static void sprite_frame (object *o, int start_line)
 {
     // start line is how much we need to crop to handle out of screen data

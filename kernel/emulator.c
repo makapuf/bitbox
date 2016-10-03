@@ -11,7 +11,9 @@
  #include <errno.h>
 
 // emulated interfaces
+#define draw_buffer __draw_buffer // prevents defining draw buffers to pixel t 
 #include "bitbox.h"
+#undef draw_buffer
 
 #define DIR NIX_DIR // prevents name clashes with datfs DIR
 #include <dirent.h>
@@ -71,7 +73,6 @@ SDL_Surface* screen;
 uint16_t mybuffer1[LINE_BUFFER];
 uint16_t mybuffer2[LINE_BUFFER];
 uint16_t *draw_buffer = mybuffer1; // volatile ?
-uint8_t draw_buffer8 [LINE_BUFFER];
 
 volatile uint16_t gamepad_buttons[2];
 uint32_t vga_line;
@@ -112,18 +113,21 @@ extern uint16_t palette_flash[256];
 
 void __attribute__((weak)) graph_vsync() {} // default empty
 
+
 void expand_buffer ( void )
 {
-    if (vga_odd) {
-        // expand buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
+    #ifdef VGA_SKIPLINE
+    if (vga_odd)
+    #endif
+    {
+        // expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
         // cost is ~ 5 cycles per pixel. not accelerated by putting palette in CCMRAM
-        const uint32_t * restrict src = (uint32_t*)draw_buffer8;
-        uint32_t * restrict dst=(uint32_t*)draw_buffer;
-
+        const uint32_t * restrict src = (uint32_t*)&draw_buffer[VGA_H_PIXELS/2-4];
+        uint32_t * restrict dst=(uint32_t*)&draw_buffer[VGA_H_PIXELS-4];
         for (int i=0;i<VGA_H_PIXELS/4;i++) {
-            uint32_t pix=*src++; // read 4 src pixels
-            *dst++ = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
-            *dst++ = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
+            uint32_t pix=*src--; // read 4 src pixels
+            *dst-- = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
+            *dst-- = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
         }
     }
 }
