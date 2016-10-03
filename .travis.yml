@@ -10,7 +10,7 @@ before_script:
   # check it worked
   - arm-none-eabi-gcc --version 
   - gcc --version
-  - python -c "import Image"
+  - python -c "from PIL import Image"
   
 script:
   - "make && make alltest"
