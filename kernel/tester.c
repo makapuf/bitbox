@@ -63,7 +63,10 @@ uint16_t *draw_buffer = mybuffer1; // volatile ?
 volatile uint16_t gamepad_buttons[2];
 uint32_t vga_line;
 volatile uint32_t vga_frame;
+
+#ifndef VGA_SKIPLINE
 volatile int vga_odd;
+#endif
 
 volatile int data_mouse_x, data_mouse_y;
 volatile uint8_t data_mouse_buttons;
