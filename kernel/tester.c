@@ -269,9 +269,6 @@ int main ( int argc, char** argv )
     for (int i=0;i<EMU_FRAMES;i++) {
         handle_gamepad();
 
-        // update game
-        game_frame();
-
         // update time
         vga_frame++;
 
