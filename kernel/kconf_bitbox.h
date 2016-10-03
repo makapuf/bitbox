@@ -3,6 +3,13 @@
  */
 #include <stdint.h>
 
+#ifndef VGA_MODE
+#define VGA_MODE 640
+#endif 
+#ifndef VGA_BPP
+#define VGA_BPP 16
+#endif 
+
 #ifdef __MACH__
 // for a Mac OS build, they want attributes specified differently:
 #define CCM_MEMORY __attribute__ ((used, section ("__DATA, .ccm")))
@@ -25,14 +32,16 @@
 #define APB2_PRE RCC_CFGR_PPRE1_DIV4 // PCLK1 = HCLK / 4
 #define APB1_DIV 2
 
-#if defined (NO_VGA)
+
+// Video Mode
+#if (VGA_MODE==NONE)
 
 #define PLL_M 8
 #define PLL_N 336
 #define PLL_P 2
 #define PLL_Q 7
 
-#elif defined(VGAMODE_640_OVERCLOCK)
+#elif VGA_MODE==OVERCLOCK_640
 
 // 640 480 VESA on 192 MHz SYSCLK
 
@@ -56,7 +65,7 @@
 #define PLL_P 2
 #define PLL_Q 8
 
-#elif defined(VGAMODE_800)
+#elif VGA_MODE==800
 
 // 800 600 non VESA on lightly O/C core (180MHz) - ~ 30kHz, 56fps
 
@@ -81,7 +90,7 @@
 #define PLL_P 4
 #define PLL_Q 15
 
-#elif defined(VGAMODE_800_OVERCLOCK)
+#elif VGA_MODE==OVERCLOCK_800
 
 // 800 600 non VESA O/C core (192Hz) - ~ 34kHz, 56fps
 #define VGA_H_PIXELS 800
@@ -105,7 +114,7 @@
 #define PLL_Q 8
 
 
-#elif defined(VGAMODE_400)
+#elif VGA_MODE==400
 // 400x300 based on 800x600 + skipline / non VESA on lightly O/C core (180MHz) - ~ 30kHz, 56fps
 
 #define VGA_SKIPLINE
@@ -131,7 +140,7 @@
 #define PLL_P 4
 #define PLL_Q 15
 
-#elif defined(VGAMODE_320)
+#elif VGA_MODE==320
 
 // 320 240 non completely VESA on non O/C core (168MHz) - 30kHz, 60fps
 #define VGA_SKIPLINE
@@ -155,7 +164,7 @@
 #define PLL_P 2
 #define PLL_Q 7
 
-#else // default one, use 640 480 non completely VESA on non O/C core (168MHz) - 30kHz, 60fps
+#elif VGA_MODE==640 // 640x480 default one, use 640 480 non completely VESA on non O/C core (168MHz) - 30kHz, 60fps
 
 #define VGA_H_PIXELS 640
 #define VGA_V_PIXELS 480
@@ -176,6 +185,10 @@
 #define PLL_N 336
 #define PLL_P 2
 #define PLL_Q 7
+
+#else
+
+#error Unknown VGA_MODE !
 
 #endif
 

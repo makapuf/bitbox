@@ -53,7 +53,7 @@ void Reset_Handler()
 	audio_init();
 	#endif
 
-	#ifndef NO_VGA
+	#if VGA_MODE!=NONE
 	// be careful to initialize everything before (line callbacks ..)
 	vga_setup();
 	#endif

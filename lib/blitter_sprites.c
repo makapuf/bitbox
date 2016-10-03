@@ -69,7 +69,7 @@ enum sprite_recordID {
 
 };
 
-#ifdef VGA_8BIT
+#if VGA_BPP==8
 static void sprite_frame8(object *o, int start_line);
 static void sprite_pbc_frame(object *o, int start_line);
 static void sprite_u8_line(object *o);
@@ -99,7 +99,7 @@ object * sprite_new(const void *p, int x, int y, int z)
 
     uint32_t t=-1, sz;
 
-    #ifndef VGA_8BIT
+    #if VGA_BPP!=8
     o->frame = sprite_frame;
     #endif
 
@@ -122,7 +122,7 @@ object * sprite_new(const void *p, int x, int y, int z)
                 sprite_data += (sz+3)/4; // skip, don't read
                 break;
 
-            #ifndef VGA_8BIT
+            #if VGA_BPP!=8
 
             case sprite_recordID__palette :
                 o->a = (uintptr_t)sprite_data;
@@ -211,7 +211,8 @@ object * sprite_new(const void *p, int x, int y, int z)
     return o;
 }
 
-#ifndef VGA_8BIT
+#if VGA_BPP==16
+#warning oucou
 static void sprite_frame (object *o, int start_line)
 {
     // start line is how much we need to crop to handle out of screen data
@@ -318,12 +319,10 @@ static void sprite_pbc_frame(object *o, int start_line)
     }
 }
 
-#ifdef VGA_8BIT
+#if VGA_BPP==8
 
 static void sprite_u8_line (object *o)
 {
-    uint8_t *draw8 = (uint8_t*) draw_buffer; // draw buffer as bytes
-
     int x=o->x;
     uint8_t *p; // see blit as bytes. p is always the start of the blit
     do {
@@ -335,7 +334,7 @@ static void sprite_u8_line (object *o)
         // now, directly copy blit it
         uint32_t data_len = *p>>1 & 0x7; // LEN but for 8bit
 
-        memcpy(&draw8[x], p+1, data_len);
+        memcpy(&draw_buffer[x], p+1, data_len);
 
         // advance x
         x += data_len;

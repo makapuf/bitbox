@@ -4,7 +4,7 @@
 #include <bitbox.h>
 /* Blitter : tilemap engine for bitbox.
 
-	To use it with a 8-bit interface, please define VGA_8BIT
+	To use it with a 8-bit interface, please define VGA_BPP=8
 
 */
 

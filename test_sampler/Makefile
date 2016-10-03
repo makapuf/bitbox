@@ -1,7 +1,7 @@
 NAME = test_sampler
 
 # 80x25 text
-DEFINES += VGAMODE_640 FONT_W=8 FONT_H=16 
+DEFINES += VGAMODE=640x480 FONT_W=8 FONT_H=16 
 
 GAME_C_FILES = test_sampler.c song.c lib/sampler.c lib/textmode.c 
 GAME_BINARY_FILES = $(wildcard snd/*.raw)

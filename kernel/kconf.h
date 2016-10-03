@@ -5,6 +5,7 @@
  */
 
 // --------------------------------------
+#pragma once
 
 #ifdef BOARD_MICRO
 #include "kconf_micro.h"
@@ -14,6 +15,8 @@
 #include "kconf_emu.h"
 #elif defined(BOARD_PAL)
 #include "kconf_pal.h"
+#else 
+#error no know board
 #endif
 
 // --------------------------------------

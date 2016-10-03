@@ -252,7 +252,7 @@ object *tilemap_new(const void *tileset, int w, int h, uint32_t header, const vo
     o->z = 100; // a little behind sprites by default
 
 
-    #ifdef VGA_8BIT // 8-bit interface
+    #if VGA_BPP==8 // 8-bit interface
 
     if (!(header & TSET_8bit)) {
         die(4,5);

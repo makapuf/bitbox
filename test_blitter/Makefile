@@ -1,8 +1,8 @@
 #testkernel makefile
-NAME = test_engine
+NAME = test_blitter
 
 GAME_C_FILES = main.c lib/blitter.c lib/blitter_tmap.c lib/blitter_sprites.c
-#DEFINES += VGAMODE_400
+DEFINES = VGA_MODE=640
 GAME_BINARY_FILES = ball.spr bg.tset bg.tmap ball_small.spr
 
 USE_ENGINE = 1

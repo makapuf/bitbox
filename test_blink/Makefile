@@ -1,7 +1,7 @@
 NAME=blink
 GAME_C_FILES=main.c 
 
-NO_VGA=1
+VGA_MODE=NONE
 NO_AUDIO=1
 NO_USB=1
 

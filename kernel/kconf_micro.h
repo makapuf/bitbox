@@ -3,6 +3,15 @@
  */
 #include <stdint.h>
 
+#ifndef VGA_MODE
+#define VGA_MODE 320
+#endif 
+
+#ifndef VGA_BPP
+#define VGA_BPP 8
+#endif 
+
+
 #define STM32F40_41xxx
 #define STACKSIZE 4096
 #define CCM_MEMORY
@@ -12,10 +21,13 @@
 #define USE_USB_OTG_FS
 #endif
 
+#if VGA_BPP != 8
+#error VGA_BPP must be equal to 8 for bitbox micro targets !
+#endif
 
-#if defined (NO_VGA)
+#if defined (VGA_MODE==NONE)
 
-#elif defined(VGAMODE_400)
+#elif defined(VGA_MODE==400)
 // 400x300 based on 800x600 + skipline
 
 #define VGA_H_PIXELS 400

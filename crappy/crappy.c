@@ -16,20 +16,20 @@ int but_state, but_last;
 
 
 // const data
-#define YELLOW RGB8(255,255,40)
-#define WHITE RGB8(255,255,255)
+#define YELLOW RGB(255,255,40)
+#define WHITE RGB(255,255,255)
 
 // All vertical values are *16
 const int JUMP_SPEED = 64;
 const int gravity=2;
-const uint8_t BGCOLOR = RGB8(100,100,255);
+const uint8_t BGCOLOR = RGB(100,100,255);
 const int hspeed = 3; // pixels per frame
 
 const int col_width=64;
 const int col_height=100;
 
 const uint8_t score_color = YELLOW;
-const uint8_t highscore_color = RGB8(150,150,0);
+const uint8_t highscore_color = RGB(150,150,0);
 const int score_y = 4;
 const int score_h = 4;
 
@@ -54,7 +54,7 @@ static inline int randheight()
 }
 
 static inline uint8_t randcolor() {
-	return randint (0,RGB8(255,255,255));
+	return randint (0,RGB(255,255,255));
 }
 
 void new_game()
@@ -125,34 +125,26 @@ void game_frame()
 }
 
 // my own graphical engine
-void graph_line8()
+void graph_line()
 {
-	uint8_t *pixels = (uint8_t*) draw_buffer;
-
 	// only draw something on even lines if we use a half-mode
-	#ifdef VGA_SKIPLINE
 	if (vga_odd) return;
-	#endif 
 	
 	// draw background as plain color => degrade ? 
 	{
 		uint8_t c=(vga_line*100/VGA_V_PIXELS);
-		uint8_t p=RGB8(80+c,80+c,255);
-		if (sizeof(uint8_t)==1)
-			memset(pixels,p,VGA_H_PIXELS);
-		else
-			for (int i=0;i<VGA_H_PIXELS;i++) 
-				pixels[i] = p;
+		uint8_t p=RGB(80+c,80+c,255);
+		memset(draw_buffer,p,VGA_H_PIXELS);
 	}
 
 	// draw columns as color bars
 	if (vga_line<h1 || vga_line>h1+col_height)
-		memset(&pixels[x<0?0:x],c1,(x>0?col_width:col_width+x)*sizeof(uint8_t)); // ne pas depasser buffer a gauche
+		memset(&draw_buffer[x<0?0:x],c1,(x>0?col_width:col_width+x)*sizeof(uint8_t)); // ne pas depasser buffer a gauche
 	if (vga_line<h2 || vga_line>h2+col_height)
-		memset(&pixels[x+VGA_H_PIXELS/2],c2,col_width*sizeof(uint8_t)); // peut depasser a droite, les buffers sont plus grands
+		memset(&draw_buffer[x+VGA_H_PIXELS/2],c2,col_width*sizeof(uint8_t)); // peut depasser a droite, les buffers sont plus grands
 
 	// blit bird 4 color sprite
-	uint8_t *dest = &pixels[(VGA_H_PIXELS-oiseau_w)/2]; 
+	uint8_t *dest = &draw_buffer[(VGA_H_PIXELS-oiseau_w)/2]; 
 	if (vga_line>=(y/16) && vga_line<(y/16)+oiseau_h) {
 		for (int i=0;i<8;i++) // bird line is 8 bytes of 4 pixels each
 		{
@@ -169,10 +161,10 @@ void graph_line8()
 	// draw score
 	if (vga_line>score_y && vga_line<=score_y+score_h)
 		for (int i=0;i<score;i++)
-			pixels[32+2*i] = score_color;
+			draw_buffer[32+2*i] = score_color;
 	else if (vga_line>score_y+score_h+1 && vga_line<=score_y+2*score_h+1) 
 	// draw highscore
 		for (int i=0;i<highscore;i++)
-			pixels[32+2*i] = highscore_color;
+			draw_buffer[32+2*i] = highscore_color;
 
 }

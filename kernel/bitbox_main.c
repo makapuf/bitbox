@@ -8,7 +8,7 @@ __attribute__((weak)) int main(void)
 		game_frame();
 
 		// wait next frame.
-		#ifndef NO_VGA
+		#if VGA_MODE!=NONE
 		int oframe=vga_frame;
 		while (oframe==vga_frame);
 		#endif

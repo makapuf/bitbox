@@ -54,8 +54,9 @@ uint32_t line_time; // maximum time of line
 
 #define MIN(x,y) ((x)<(y)?x:y)
 
+void __attribute__((weak)) graph_vsync() {} // default empty
 void graph_line(void);
-void graph_frame(void);
+
 
 // public interface
 uint32_t vga_line;
@@ -84,7 +85,6 @@ uint16_t LineBuffer2[1024] __attribute__((aligned (1024)));
 
 uint16_t *display_buffer = LineBuffer1; // will be sent to display
 uint16_t *draw_buffer = LineBuffer2; // will be drawn (bg already drawn)
-uint8_t *draw_buffer8[1024]; // used only in 8bit mode. no access from DMA, no alignment/
 
 static inline void vga_output_black()
 {
@@ -278,25 +278,24 @@ static void prepare_pixel_DMA()
 }
 
 
-extern void graph_line8( void );
-void __attribute__((weak)) graph_line ( void )
+void expand_drawbuffer ( void )
 {
-	graph_line8();
-	if (vga_odd) {
-		// expand buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
+	#ifdef VGA_SKIPLINE
+	if (vga_odd)
+	#endif
+	{
+		// expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
 		// cost is ~ 5 cycles per pixel. not accelerated by putting palette in CCMRAM
-		const uint32_t * restrict src = (uint32_t*)draw_buffer8;
-		uint32_t * restrict dst=(uint32_t*)draw_buffer;
-
+		const uint32_t * restrict src = (uint32_t*)&draw_buffer[VGA_H_PIXELS/2-4];
+		uint32_t * restrict dst=(uint32_t*)&draw_buffer[VGA_H_PIXELS-4];
 		for (int i=0;i<VGA_H_PIXELS/4;i++) {
-			uint32_t pix=*src++; // read 4 src pixels
-			*dst++ = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
-			*dst++ = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
+			uint32_t pix=*src--; // read 4 src pixels
+			*dst-- = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
+			*dst-- = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
 		}
 	}
 }
 
-void __attribute__((weak)) graph_vsync() {} // default empty
 
 void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
 {
@@ -333,6 +332,10 @@ void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
 		#endif
 
 		graph_line(); // Game callback !
+
+		#if VGA_BPP==8
+		expand_drawbuffer();
+		#endif 
 
         #ifdef PROFILE
         line_time = DWT->CYCCNT - line_time; // read the counter

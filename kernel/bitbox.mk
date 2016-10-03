@@ -9,11 +9,12 @@
 #   GAME_C_OPTS : C language options. Those will be used for the ARM game as well as the emulator.
 #	C DEFINES : defined in DEFINED Makefile Variable. (will be added as -Dxxx to GAME_C_OPTS, you can use either)
 #       PROFILE		- enable profiling (red line / pixels onscreen)
-#       VGA_MODExxx : define a vga mode.
-
-#		  they can be used to define specific kernel resolution.
-#   	  In particular, define one of VGAMODE_640, VGAMODE_800, VGAMODE_320 or VGA_640_OVERCLOCK
-#   	  to set up a resolution in the kernel (those will be used in kconf.h)
+#
+#       VGA_MODE=xxx : define a vga mode.
+#		  they can be used to define specific kernel resolution. Usable values are
+#         320x240, 384x271, 400x300, 640x480, 800x600 (see kconf.h) 
+#         See also PAL_MODE for specific 15kHz modes in kconf_pal.h
+#       VGA_BPP=8 or 16 (default) : use a 8bpp mode (for micro, emulated on kernel)
 #
 #   Specific Makefile flags :
 #         NO_USB,       - when you don't want to use USB input related function), also exported as C define
@@ -122,14 +123,10 @@ KERNEL_PAL   +=board.c startup.c bitbox_main.c
 # -- Optional AND target specific
 
 # video related
-ifndef NO_VGA
-  KERNEL_MICRO  += vga_micro.c
-  KERNEL_BITBOX += vga_bitbox.c micro_palette.c
-  KERNEL_PAL    += vga_pal.c micro_palette.c
-  KERNEL_SDL    += micro_palette.c
-else
-  DEFINES += NO_VGA
-endif
+KERNEL_MICRO  += vga_micro.c
+KERNEL_BITBOX += vga_bitbox.c micro_palette.c
+KERNEL_PAL    += vga_pal.c micro_palette.c
+KERNEL_SDL    += micro_palette.c
 
 # fatfs related files
 SDCARD_FILES := fatfs/stm32f4_lowlevel.c fatfs/stm32f4_discovery_sdio_sd.c fatfs/ff.c fatfs/diskio.c

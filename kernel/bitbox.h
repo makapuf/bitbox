@@ -18,9 +18,13 @@ void game_snd_buffer(uint16_t *buffer, int len);
 
 // --- VGA interface ----------------------------------------------------------------------
 // micro interface to the kernel (8bpp, mono sound). can be used on bitbox _board_ also.
-
-#define RGB8(r,g,b)  (((r)&0xe0) | ((g)&0xc0)>>3 | (((b)&0xe0)>>5))
-#define RGB(r,g,b)  ((((r)>>3)&0x1f)<<10 | (((g)>>3)&0x1f)<<5 | (((b)>>3)&0x1f))
+#if VGA_BPP==8
+	#define RGB(r,g,b)  (((r)&0xe0) | ((g)&0xc0)>>3 | (((b)&0xe0)>>5))
+	typedef uint8_t pixel_t;
+#else
+	#define RGB(r,g,b)  ((((r)>>3)&0x1f)<<10 | (((g)>>3)&0x1f)<<5 | (((b)>>3)&0x1f))
+	typedef uint16_t pixel_t;
+#endif 
 
 extern uint32_t vga_line; // should be const
 extern volatile uint32_t vga_frame;
@@ -32,13 +36,11 @@ extern volatile int vga_odd;
 #define vga_odd 0 // never
 #endif
 
-extern void graph_line(void); // user provided graphical for 16 bit kernel function
-extern void graph_line8(void); // user provided graphical for 8 bit kernel function
+extern void graph_line(void); // user provided graphical callback
 extern void graph_vsync(void); // user provided, called during vsync lines
 
 // 0x0rrrrrgggggbbbbb pixels or 0xrrrggbbl 
-extern uint16_t *draw_buffer;  // drawing next line
-extern uint8_t *draw_buffer8; // drawing next line in 8bpp mode
+extern pixel_t *draw_buffer;  // drawing next line, 8 or 16bpp
 
 // also check kconf.h for video modes.
 

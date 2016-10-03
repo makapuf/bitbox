@@ -15,21 +15,26 @@
 
 // If the game didn't specify anything, let's pick a default mode
 #ifndef PAL_MODE
-
   // Compatible VGA mode : 320x271 (should be 320x240)
-  #ifdef VGAMODE_320
+  #if VGA_MODE==320
     #define PAL_MODE 322
   #endif
 
   // PAL-optimized mode 384x271
-  #ifdef VGAMODE_384
+  #if VGA_MODE==384
     #define PAL_MODE 384
   #endif
 
+  // really nothing ? pick one default
   #ifndef PAL_MODE
     #define PAL_MODE 384
   #endif
 #endif
+
+#ifndef VGA_BPP
+#define VGA_BPP 16
+#endif 
+
 
 #define VGA_PIXELCLOCK (8064/PAL_MODE) // DMA clocks per pixel
 

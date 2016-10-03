@@ -167,12 +167,7 @@ void graph_vsync()
 
 
 
-#ifdef VGA_8BIT
-#warning USING 8 Bit interface
-void graph_line8()
-#else
 void graph_line()
-#endif
 {
     if (!blitter_initialized)
         return; // ensure initiliaztion is done
@@ -275,9 +270,8 @@ void color_blit(object *o)
     const int16_t x1 = o->x<0?0:o->x;
     const int16_t x2 = o->x+o->w>VGA_H_PIXELS ? VGA_H_PIXELS : o->x+o->w;
 
-    #ifdef VGA_8BIT
-    uint8_t *buffer8 = (uint8_t *)draw_buffer;
-    memset(&buffer8[x1],o->a,x2-x1);
+    #if VGA_BPP==8
+    memset(&draw_buffer[x1],o->a,x2-x1);
     #else
     fast_fill(x1,x2,o->a);
     #endif

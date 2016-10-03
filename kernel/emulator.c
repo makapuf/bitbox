@@ -71,6 +71,8 @@ SDL_Surface* screen;
 uint16_t mybuffer1[LINE_BUFFER];
 uint16_t mybuffer2[LINE_BUFFER];
 uint16_t *draw_buffer = mybuffer1; // volatile ?
+uint8_t draw_buffer8 [LINE_BUFFER];
+
 volatile uint16_t gamepad_buttons[2];
 uint32_t vga_line;
 volatile uint32_t vga_frame;
@@ -105,24 +107,27 @@ uint32_t time_left(void)
         return next_time - now;
 }
 
-#ifndef NO_VGA
+#if VGA_MODE != NONE
 extern uint16_t palette_flash[256];
 
 void __attribute__((weak)) graph_vsync() {} // default empty
 
-void __attribute__ ((weak, optimize("-O3"))) graph_line(void)
+void expand_buffer ( void )
 {
-    graph_line8();
-    // expand line from u8 to u16 bitbox
-    if (vga_odd) 
-    {
-        uint8_t  * restrict drawbuf8=(uint8_t *) draw_buffer;
-        // expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
-        // XXX unroll loop, read 4 by 4 pixels src, write 2 pixels out by two ...
-        for (int i=VGA_H_PIXELS-1;i>=0;i--)
-            draw_buffer[i] = palette_flash[drawbuf8[i]];
+    if (vga_odd) {
+        // expand buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
+        // cost is ~ 5 cycles per pixel. not accelerated by putting palette in CCMRAM
+        const uint32_t * restrict src = (uint32_t*)draw_buffer8;
+        uint32_t * restrict dst=(uint32_t*)draw_buffer;
+
+        for (int i=0;i<VGA_H_PIXELS/4;i++) {
+            uint32_t pix=*src++; // read 4 src pixels
+            *dst++ = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
+            *dst++ = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
+        }
     }
 }
+
 
 /* naive pixel conversion
 from 16bit bitbox pixel 0RRRRRGGGGGBBBBB
@@ -139,82 +144,69 @@ static inline uint32_t pixelconv32(uint16_t pixel)
     return ((pixel & (0x1f<<10))<<9 | (pixel & (0x1f<<5))<<6 | (pixel & 0x1f)<<3);
 }
 
-static void __attribute__ ((optimize("-O3"))) refresh_screen(SDL_Surface *scr)
-// uses global line + vga_odd
-{
-    uint32_t *dst = (uint32_t*)scr->pixels;
-
-    draw_buffer = mybuffer1;
-
-    for (vga_line=0;vga_line<screen_height;vga_line++) {
-        #ifdef VGA_SKIPLINE
-        vga_odd=0; graph_line(); // using line, updating draw_buffer ...
-        vga_odd=1; graph_line(); //  a second time for SKIPLINE modes
-        #else
-        graph_line(); // using line, updating draw_buffer ...
-        #endif
-
-        // copy to screen at this position (cheating)
-        uint16_t *src = (uint16_t*) draw_buffer;
-        for (int i=0;i<screen_width;i++)
-            *dst++= pixelconv32(*src++);
-
-        // swap lines buffers to simulate double line buffering
-        draw_buffer = (draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
-    }
-
-    for (;vga_line<screen_height+VSYNC_LINES;vga_line++) {
-        #ifdef VGA_SKIPLINE
-        vga_odd=0;
-        graph_vsync(); // using line, updating draw_buffer ...
-        vga_odd=1; 
-        graph_vsync(); //  a second time for SKIPLINE modes
-        #else 
-        graph_vsync(); //  a second time for SKIPLINE modes
-        #endif
-    }
-}
-
-static void __attribute__ ((optimize("-O3"))) refresh_screen2x (SDL_Surface *scr)
+static void __attribute__ ((optimize("-O3"))) refresh_screen (SDL_Surface *scr)
 // uses global line + vga_odd, scale two times
 {
 
-    uint64_t * restrict dst = (uint64_t*)scr->pixels; // will render 2 pixels at a time horizontally
+    uint32_t * restrict dst = (uint32_t*)scr->pixels; // will render 2 pixels at a time horizontally
 
     draw_buffer = mybuffer1; // currently 16bit data
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
         #ifdef VGA_SKIPLINE
-        vga_odd=0;
-        graph_line(); // using line, updating draw_buffer ...
-        vga_odd=1; 
-        graph_line(); //  a second time for SKIPLINE modes
+            vga_odd=0;
+            graph_line(); // using line, updating draw_buffer ...
+            #if VGA_BPP==8
+            expand_buffer();
+            #endif 
+            vga_odd=1; 
+            graph_line(); //  a second time for SKIPLINE modes
+            #if VGA_BPP==8
+            expand_buffer();
+            #endif 
         #else 
-        graph_line(); //  a second time for SKIPLINE modes
+            graph_line(); 
+            #if VGA_BPP==8
+            expand_buffer();
+            #endif 
         #endif
 
         // copy to screen at this position
         uint16_t *restrict src = (uint16_t*) draw_buffer;
+        switch (scale) {
+            case 1 : 
+                // copy to screen at this position (cheating)
+                for (int i=0;i<screen_width;i++)
+                    *dst++= pixelconv32(*src++);
+                break;
 
-        for (int i=0;i<screen_width;i++, dst++) {
-            uint64_t pix = pixelconv32(*src++)*0x100000001ULL;
-            *dst = pix; // blit line
-            *(dst+scr->pitch/sizeof(uint64_t))=pix; // also next line
-        }
+            case 2 : 
+                for (int i=0;i<screen_width;i++, dst+=2) {
+                    uint32_t pix = pixelconv32(*src++);
+                    *dst = pix; // blit line
+                    *(dst+1) = pix; // blit line
+                    
+                    *(dst+scr->pitch/sizeof(uint32_t))=pix; // also next line
+                    *(dst+scr->pitch/sizeof(uint32_t)+1)=pix; // also next line
+                    
+                }
+                dst += scr->pitch/sizeof(uint32_t); // we already drew the line after, skip it
+                break;
+        } 
+
 
         // swap lines buffers to simulate double line buffering
         draw_buffer = ( draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
 
-        dst += scr->pitch/sizeof(uint64_t); // we already drew the line after, skip it
     }
     for (;vga_line<screen_height+VSYNC_LINES;vga_line++) {
         #ifdef VGA_SKIPLINE
-        vga_odd=0;
-        graph_vsync(); // using line, updating draw_buffer ...
-        vga_odd=1; 
-        graph_vsync(); //  a second time for SKIPLINE modes
+            vga_odd=0;
+            graph_vsync(); // using line, updating draw_buffer ...
+            vga_odd=1; 
+            graph_vsync(); //  a second time for SKIPLINE modes
         #else 
-        graph_vsync(); //  a second time for SKIPLINE modes
+            graph_vsync(); // once
         #endif
     }
 }
@@ -719,11 +711,8 @@ int main ( int argc, char** argv )
         // update time
         vga_frame++;
         
-        #ifndef NO_VGA
-        if (scale==1)
-            refresh_screen(screen);
-        else
-            refresh_screen2x(screen);
+        #if VGA_MODE!=NONE
+        refresh_screen(screen);
         #endif
 
         SDL_Delay(time_left());

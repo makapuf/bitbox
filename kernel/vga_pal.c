@@ -72,7 +72,7 @@ uint32_t line_time; // maximum time of line
 #define MIN(x,y) ((x)<(y)?x:y) 
 
 extern void graph_line(void);
-extern void graph_frame(void);
+void __attribute__((weak)) graph_vsync() {} // default empty
 
 // public interface
 uint32_t vga_line;
@@ -293,15 +293,22 @@ static void prepare_pixel_DMA()
 
 // simulates MICRO interface through palette expansion
 extern const uint16_t palette_flash[256]; // microX palette in bitbox pixels
-extern void graph_line8( void );
-void __attribute__((weak)) graph_line ( void )
+void expand_drawbuffer ( void )
 {
-	graph_line8();
-	uint8_t  * restrict drawbuf8=(uint8_t *) draw_buffer;
-	// expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb 
-	// XXX unroll loop, read 4 by 4 pixels src, write 2 pixels out by two ... 
-	for (int i=VGA_H_PIXELS-1;i>=0;i--)
-		draw_buffer[i] = palette_flash[drawbuf8[i]]; 
+	#ifdef VGA_SKIPLINE
+	if (vga_odd)
+	#endif
+	{
+		// expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
+		// cost is ~ 5 cycles per pixel. not accelerated by putting palette in CCMRAM
+		const uint32_t * restrict src = (uint32_t*)&draw_buffer[VGA_H_PIXELS/2-4];
+		uint32_t * restrict dst=(uint32_t*)&draw_buffer[VGA_H_PIXELS-4];
+		for (int i=0;i<VGA_H_PIXELS/4;i++) {
+			uint32_t pix=*src--; // read 4 src pixels
+			*dst-- = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
+			*dst-- = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
+		}
+	}
 }
 
 void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
@@ -326,6 +333,10 @@ void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
 		#endif
 
 		graph_line(); // Game callback !
+		
+		#ifdef VGA_BPP==8
+		expand_drawbuffer();
+		#endif 
 
         #ifdef PROFILE
         line_time = DWT->CYCCNT - line_time; // read the counter 
@@ -361,7 +372,6 @@ void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
 	}
 }
 
-void __attribute__((weak)) graph_vsync() {} // default empty
 
 
 void __attribute__ ((used)) DMA2_Stream5_IRQHandler() // DMA handler
