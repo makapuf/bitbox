@@ -53,7 +53,7 @@ int screen_height;
 
 #define EMU_FRAMES 10*60*60 // 1 minute
 
-#ifdef NO_AUDIO
+#ifndef NO_AUDIO
 uint16_t audio[BITBOX_SNDBUF_LEN];
 #endif
 
@@ -64,7 +64,7 @@ volatile uint16_t gamepad_buttons[2];
 uint32_t vga_line;
 volatile uint32_t vga_frame;
 
-#ifndef VGA_SKIPLINE
+#ifdef VGA_SKIPLINE
 volatile int vga_odd;
 #endif
 
