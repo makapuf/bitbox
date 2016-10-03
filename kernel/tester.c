@@ -49,6 +49,7 @@ int screen_height;
 
 #define TICK_INTERVAL 1000/60
 #define LINE_BUFFER 1024
+#define VSYNC_LINES 10
 
 #define EMU_FRAMES 10*60*60 // 1 minute
 
@@ -88,14 +89,28 @@ static void refresh_screen()
     graph_frame();
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
+        #ifdef VGA_SKIPLINE
         vga_odd=0;
         graph_line(); // using line, updating draw_buffer ...
-        #ifdef VGA_SKIPLINE
-        vga_odd=1; graph_line(); //  a second time for SKIPLINE modes
+        vga_odd=1; 
+        graph_line(); //  a second time for SKIPLINE modes
+        #else 
+        graph_line(); //  a second time for SKIPLINE modes
         #endif
 
         // swap lines buffers to simulate double line buffering
         draw_buffer = (draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
+    }
+
+    for (;vga_line<screen_height+VSYNC_LINES;vga_line++) {
+        #ifdef VGA_SKIPLINE
+            vga_odd=0;
+            graph_vsync(); // using line, updating draw_buffer ...
+            vga_odd=1; 
+            graph_vsync(); //  a second time for SKIPLINE modes
+        #else 
+            graph_vsync(); // once
+        #endif
     }
 }
 
