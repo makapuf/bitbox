@@ -20,4 +20,4 @@ script:
 after_script:
 
 env:
-  - BITBOX=../
+  - BITBOX=/home/travis/build/makapuf/bitbox
