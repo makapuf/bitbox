@@ -94,7 +94,6 @@ int user_button=0;
 static const int gamepad_max_buttons = 12;
 static const int gamepad_max_pads = 2;
 
- // XXX FIXME handle them !
 volatile int8_t gamepad_x[2], gamepad_y[2]; // analog pad values
 
 uint32_t time_left(void)
@@ -408,6 +407,8 @@ uint8_t key_trans[256] = { // scan_code -> USB BootP code
     [0x6c]=230, // R alt
     [0x25]=0xe0, // L CTRL
     [0x69]=0xe4, // R CTRL
+    [0x85]=0xe0, // L cmd (mac)
+    [0x86]=0xe4, // R cmd (mac)
     [0x24]=0x28, // Enter
 
 };
