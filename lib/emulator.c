@@ -381,6 +381,8 @@ uint8_t key_trans[256] = { // scan_code -> USB BootP code
     [0x6c]=230, // R alt
     [0x25]=0xe0, // L CTRL
     [0x69]=0xe4, // R CTRL
+    [133]=0xe0, // L cmd (mac)
+    [134]=0xe4, // R cmd (mac)
     [0x24]=0x28, // Enter
 
 };
@@ -416,7 +418,6 @@ static bool handle_gamepad()
                 user_button=1;
 
             // now create the keyboard event
-
             key = key_trans[sdl_event.key.keysym.scancode];
             mod = sdl_event.key.keysym.mod;
             // printf("%x\n",sdl_event.key.keysym.scancode );
