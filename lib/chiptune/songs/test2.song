@@ -1,0 +1,924 @@
+musicchip tune
+version 1
+
+songline 00 00 00 00 00 81 00 00 00
+songline 01 00 00 00 00 80 00 67 00
+songline 02 00 00 00 00 82 00 68 00
+songline 03 01 00 00 00 00 00 00 00
+songline 04 01 00 00 00 00 00 00 00
+songline 05 01 00 10 00 03 00 00 00
+songline 06 01 00 10 00 00 00 00 00
+songline 07 01 00 10 00 00 00 30 00
+songline 08 01 00 10 00 00 00 31 00
+songline 09 01 00 10 00 00 00 32 00
+songline 0a 08 00 10 00 00 00 30 00
+songline 0b 01 00 10 00 00 00 30 00
+songline 0c 01 00 10 00 00 00 31 00
+songline 0d 01 00 10 00 00 00 32 00
+songline 0e 01 00 10 00 04 00 30 00
+songline 0f 01 00 10 00 20 00 30 00
+songline 10 01 00 10 00 21 00 31 00
+songline 11 01 00 10 00 22 00 32 00
+songline 12 01 00 10 00 23 00 30 00
+songline 13 01 00 10 00 24 00 30 00
+songline 14 01 00 10 00 25 00 31 00
+songline 15 01 00 10 00 28 00 34 00
+songline 16 08 00 10 00 23 00 30 00
+songline 17 02 00 60 00 40 00 50 00
+songline 18 02 00 61 00 41 00 51 00
+songline 19 02 00 62 00 42 00 52 00
+songline 1a 02 00 63 00 43 00 53 00
+songline 1b 02 00 62 ff 44 00 54 00
+songline 1c 02 00 64 00 45 00 55 00
+songline 1d 02 00 66 00 46 00 56 00
+songline 1e 08 00 65 00 03 00 04 00
+songline 1f 01 00 10 00 70 00 30 00
+songline 20 01 00 10 00 71 00 31 00
+songline 21 01 00 10 00 72 00 32 00
+songline 22 01 00 10 00 73 00 30 00
+songline 23 01 00 10 00 74 00 30 00
+songline 24 01 00 10 00 75 00 31 00
+songline 25 01 00 10 00 72 00 34 00
+songline 26 08 00 10 00 73 00 30 00
+songline 27 01 00 70 03 24 03 30 03
+songline 28 01 00 71 03 25 03 31 03
+songline 29 02 00 72 03 22 03 32 03
+songline 2a 01 00 73 03 23 03 30 03
+songline 2b 01 00 10 03 26 03 30 03
+songline 2c 01 00 10 03 26 03 31 03
+songline 2d 02 00 10 03 27 03 32 03
+songline 2e 08 00 10 03 27 03 30 03
+songline 2f 06 00 91 03 92 03 30 03
+songline 30 06 00 91 03 92 03 31 03
+songline 31 06 00 91 03 92 03 32 03
+songline 32 06 00 91 03 92 03 30 03
+songline 33 06 00 91 03 92 03 30 03
+songline 34 06 00 91 03 92 03 31 03
+songline 35 04 00 67 03 92 03 34 03
+songline 36 09 00 68 03 05 00 33 03
+
+trackline 01 00 0d 01 00 00 00 00
+trackline 01 06 0d 01 00 00 00 00
+trackline 01 08 19 02 00 00 00 00
+trackline 01 0a 0d 01 00 00 00 00
+trackline 01 0e 0d 01 76 80 00 00
+trackline 01 0f 00 00 76 80 00 00
+trackline 01 10 0d 01 00 00 00 00
+trackline 01 12 0d 01 00 00 00 00
+trackline 01 14 0d 01 00 00 00 00
+trackline 01 16 19 02 00 00 00 00
+trackline 01 1a 0d 01 00 00 00 00
+trackline 01 1c 0d 01 00 00 00 00
+trackline 01 1f 00 00 76 00 00 00
+trackline 02 00 0d 01 00 00 00 00
+trackline 02 02 0d 01 00 00 00 00
+trackline 02 08 19 02 00 00 00 00
+trackline 02 0e 0d 01 00 00 00 00
+trackline 02 14 0d 01 00 00 00 00
+trackline 02 18 19 02 00 00 00 00
+trackline 03 00 00 00 66 ff 00 00
+trackline 04 03 00 00 69 00 00 00
+trackline 04 04 31 01 00 00 00 00
+trackline 04 05 31 01 00 00 00 00
+trackline 04 06 31 01 00 00 00 00
+trackline 04 07 31 01 00 00 00 00
+trackline 04 08 31 01 00 00 00 00
+trackline 04 0a 31 01 00 00 00 00
+trackline 04 0e 31 01 00 00 00 00
+trackline 04 10 2c 01 00 00 00 00
+trackline 04 12 2c 01 00 00 00 00
+trackline 04 16 2c 01 00 00 00 00
+trackline 04 18 25 01 00 00 00 00
+trackline 04 1a 25 01 00 00 00 00
+trackline 04 1c 20 01 00 00 00 00
+trackline 04 1e 20 01 00 00 00 00
+trackline 05 00 25 07 00 00 00 00
+trackline 06 00 19 02 00 00 00 00
+trackline 06 01 00 00 76 50 00 00
+trackline 06 02 0d 01 00 00 00 00
+trackline 06 03 0d 01 00 00 00 00
+trackline 06 04 0d 01 00 00 00 00
+trackline 06 06 0d 01 00 00 00 00
+trackline 06 08 19 02 00 00 00 00
+trackline 06 09 00 00 76 00 00 00
+trackline 06 0a 19 02 76 50 00 00
+trackline 06 0b 00 00 76 00 00 00
+trackline 06 0c 0d 01 00 00 00 00
+trackline 06 0e 0d 01 00 00 00 00
+trackline 06 10 19 02 00 00 00 00
+trackline 06 11 00 00 76 50 00 00
+trackline 06 12 0d 01 00 00 00 00
+trackline 06 14 0d 01 00 00 00 00
+trackline 06 16 0d 01 00 00 00 00
+trackline 06 18 19 02 00 00 00 00
+trackline 06 19 00 00 76 50 00 00
+trackline 06 1a 0d 01 00 00 00 00
+trackline 06 1c 0d 01 00 00 00 00
+trackline 06 1d 0d 01 00 00 00 00
+trackline 06 1e 0d 01 00 00 00 00
+trackline 06 1f 0d 01 00 00 00 00
+trackline 07 00 0d 01 00 00 00 00
+trackline 07 03 00 00 69 00 00 00
+trackline 07 04 31 01 00 00 00 00
+trackline 07 05 31 01 00 00 00 00
+trackline 07 06 31 01 00 00 00 00
+trackline 07 07 31 01 00 00 00 00
+trackline 07 08 31 01 00 00 00 00
+trackline 07 0a 31 01 00 00 00 00
+trackline 07 0e 31 01 00 00 00 00
+trackline 07 10 2c 01 00 00 00 00
+trackline 07 12 2c 01 00 00 00 00
+trackline 07 16 2c 01 00 00 00 00
+trackline 07 18 25 01 00 00 00 00
+trackline 07 1a 25 01 00 00 00 00
+trackline 07 1c 20 01 00 00 00 00
+trackline 07 1e 20 01 00 00 00 00
+trackline 08 00 0d 01 00 00 00 00
+trackline 08 06 0d 01 00 00 00 00
+trackline 08 08 19 02 00 00 00 00
+trackline 08 09 00 00 76 00 00 00
+trackline 08 0a 0d 01 00 00 00 00
+trackline 08 0e 0d 01 76 80 00 00
+trackline 08 0f 0d 01 00 80 00 00
+trackline 08 10 19 02 00 00 00 00
+trackline 08 11 00 00 76 00 00 00
+trackline 08 12 0d 01 00 00 00 00
+trackline 08 14 0d 01 00 00 00 00
+trackline 08 16 0d 01 00 00 00 00
+trackline 08 18 19 02 00 00 00 00
+trackline 08 1a 0d 01 00 00 00 00
+trackline 08 1c 19 02 00 00 00 00
+trackline 08 1d 00 00 76 00 00 00
+trackline 08 1e 19 02 00 00 00 00
+trackline 08 1f 00 00 76 00 00 00
+trackline 09 00 0d 01 00 00 00 00
+trackline 10 00 34 04 69 00 00 00
+trackline 10 02 25 04 00 00 00 00
+trackline 10 04 34 04 00 00 00 00
+trackline 10 06 33 04 00 00 00 00
+trackline 10 08 25 04 00 00 00 00
+trackline 10 0a 31 04 00 00 00 00
+trackline 10 0c 36 04 00 00 00 00
+trackline 10 0e 33 04 00 00 00 00
+trackline 10 10 34 04 00 00 00 00
+trackline 10 12 25 04 00 00 00 00
+trackline 10 14 34 04 00 00 00 00
+trackline 10 16 33 04 00 00 00 00
+trackline 10 18 25 04 00 00 00 00
+trackline 10 1a 31 04 00 00 00 00
+trackline 10 1c 33 04 00 00 00 00
+trackline 10 1e 2f 04 00 00 00 00
+trackline 20 00 38 03 69 00 00 00
+trackline 20 03 00 00 76 c0 00 00
+trackline 20 08 31 03 00 00 00 00
+trackline 20 0b 00 00 76 c0 00 00
+trackline 20 10 38 03 00 00 00 00
+trackline 20 11 00 00 76 40 00 00
+trackline 20 12 00 00 76 00 00 00
+trackline 20 14 38 03 00 00 00 00
+trackline 20 15 00 00 76 00 00 00
+trackline 20 16 39 03 00 00 00 00
+trackline 20 19 00 00 76 00 00 00
+trackline 20 1a 36 03 00 00 00 00
+trackline 20 1b 00 00 76 00 00 00
+trackline 20 1c 3d 03 00 00 00 00
+trackline 20 1e 37 03 00 00 00 00
+trackline 21 00 38 03 00 00 00 00
+trackline 21 03 00 00 76 c0 00 00
+trackline 21 08 31 03 00 00 00 00
+trackline 21 0b 00 00 76 c0 00 00
+trackline 21 10 38 03 00 00 00 00
+trackline 21 12 36 03 00 00 00 00
+trackline 21 14 34 03 00 00 00 00
+trackline 21 15 00 00 76 00 00 00
+trackline 21 16 31 03 00 00 00 00
+trackline 21 19 00 00 76 00 00 00
+trackline 21 1a 34 03 00 00 00 00
+trackline 21 1b 00 00 76 00 00 00
+trackline 21 1c 38 03 00 00 00 00
+trackline 21 1d 39 03 00 00 00 00
+trackline 21 1e 3b 03 00 00 00 00
+trackline 21 1f 3d 03 00 00 00 00
+trackline 22 00 40 03 00 00 00 00
+trackline 22 04 40 03 00 00 00 00
+trackline 22 06 3d 03 00 00 00 00
+trackline 22 0a 39 03 00 00 00 00
+trackline 22 0c 42 03 00 00 00 00
+trackline 22 0e 40 03 00 00 00 00
+trackline 22 10 3f 03 00 00 00 00
+trackline 22 12 40 03 00 00 00 00
+trackline 22 14 42 03 00 00 00 00
+trackline 22 16 3b 03 00 00 00 00
+trackline 22 1a 38 03 00 00 00 00
+trackline 22 1c 33 03 00 00 00 00
+trackline 22 1e 36 03 00 00 00 00
+trackline 23 00 40 03 00 00 00 00
+trackline 23 02 3f 03 00 00 00 00
+trackline 23 04 00 00 76 00 00 00
+trackline 23 06 3d 03 00 00 00 00
+trackline 23 14 00 00 66 fe 00 00
+trackline 24 00 31 03 00 00 00 00
+trackline 24 01 00 00 76 00 00 00
+trackline 24 02 33 03 00 00 00 00
+trackline 24 03 00 00 76 c0 00 00
+trackline 24 06 34 03 00 00 00 00
+trackline 24 08 00 00 76 00 00 00
+trackline 24 0a 31 03 00 00 00 00
+trackline 24 0b 00 00 76 c0 00 00
+trackline 24 0c 36 03 00 00 00 00
+trackline 24 0d 00 00 76 00 00 00
+trackline 24 0e 31 03 00 00 00 00
+trackline 24 0f 00 00 76 00 00 00
+trackline 24 10 38 03 00 00 00 00
+trackline 24 11 36 03 00 40 00 00
+trackline 24 12 34 03 00 00 00 00
+trackline 24 14 38 03 00 00 00 00
+trackline 24 15 00 00 76 00 00 00
+trackline 24 16 36 03 00 00 00 00
+trackline 24 18 34 03 00 00 00 00
+trackline 24 19 00 00 76 00 00 00
+trackline 24 1a 33 03 00 00 00 00
+trackline 24 1b 00 00 76 00 00 00
+trackline 24 1c 31 03 00 00 00 00
+trackline 25 00 2c 03 00 00 00 00
+trackline 25 01 00 00 69 ff 00 00
+trackline 25 02 25 03 00 00 00 00
+trackline 25 04 31 03 00 00 00 00
+trackline 25 06 25 03 00 00 00 00
+trackline 25 08 2c 03 00 00 00 00
+trackline 25 0a 25 03 00 00 00 00
+trackline 25 0c 31 03 00 00 00 00
+trackline 25 0d 00 00 69 00 00 00
+trackline 25 0e 25 03 00 00 00 00
+trackline 25 10 34 03 00 00 00 00
+trackline 25 11 33 03 00 00 00 00
+trackline 25 12 31 03 00 00 00 00
+trackline 25 13 2c 03 00 00 00 00
+trackline 25 14 2a 03 00 00 00 00
+trackline 25 15 28 03 00 00 00 00
+trackline 25 16 25 03 00 00 00 00
+trackline 25 17 20 03 00 00 00 00
+trackline 25 18 1c 03 00 00 00 00
+trackline 25 19 1e 03 00 00 00 00
+trackline 25 1a 1f 03 00 00 00 00
+trackline 25 1b 20 03 00 00 00 00
+trackline 25 1c 25 03 00 00 00 00
+trackline 25 1d 2d 03 00 00 00 00
+trackline 25 1e 31 03 00 00 00 00
+trackline 25 1f 38 03 00 00 00 00
+trackline 26 00 25 03 00 00 00 00
+trackline 26 01 00 00 69 ff 00 00
+trackline 26 02 19 03 00 00 00 00
+trackline 26 04 19 03 00 00 00 00
+trackline 26 06 28 03 00 00 00 00
+trackline 26 08 19 03 00 00 00 00
+trackline 26 0a 25 03 00 00 00 00
+trackline 26 0c 2c 03 00 00 00 00
+trackline 26 0e 23 03 00 00 00 00
+trackline 26 10 25 03 00 00 00 00
+trackline 26 12 19 03 00 00 00 00
+trackline 26 14 19 03 00 00 00 00
+trackline 26 16 28 03 00 00 00 00
+trackline 26 18 2f 03 00 00 00 00
+trackline 26 1a 2c 03 00 00 00 00
+trackline 26 1b 00 00 69 00 00 00
+trackline 26 1c 25 03 00 00 00 00
+trackline 26 1d 27 03 00 00 00 00
+trackline 26 1e 28 03 00 00 00 00
+trackline 26 1f 2c 03 00 00 00 00
+trackline 27 00 2c 03 00 00 00 00
+trackline 27 01 00 00 69 ff 00 00
+trackline 27 02 31 03 00 00 00 00
+trackline 27 04 19 03 00 00 00 00
+trackline 27 06 2c 03 00 00 00 00
+trackline 27 08 25 03 00 00 00 00
+trackline 27 0a 19 03 00 00 00 00
+trackline 27 0c 2c 03 00 00 00 00
+trackline 27 0d 00 00 76 00 00 00
+trackline 27 0e 31 03 69 00 00 00
+trackline 27 0f 00 00 76 00 00 00
+trackline 27 10 19 03 00 00 00 00
+trackline 27 11 00 00 69 ff 00 00
+trackline 27 12 2c 03 00 00 00 00
+trackline 27 14 25 03 00 00 00 00
+trackline 27 16 19 03 00 00 00 00
+trackline 27 18 25 03 00 00 00 00
+trackline 27 1a 19 03 00 00 00 00
+trackline 27 1b 00 00 69 00 00 00
+trackline 27 1c 2c 03 00 00 00 00
+trackline 27 1d 00 00 76 00 00 00
+trackline 27 1e 2f 03 00 00 00 00
+trackline 27 1f 00 00 76 00 00 00
+trackline 28 00 34 03 00 00 00 00
+trackline 28 01 00 00 76 00 00 00
+trackline 28 02 36 03 00 00 00 00
+trackline 28 06 38 03 00 00 00 00
+trackline 28 07 00 00 76 80 00 00
+trackline 28 0a 34 03 00 00 00 00
+trackline 28 0c 3b 03 00 00 00 00
+trackline 28 0d 39 03 00 00 00 00
+trackline 28 0e 38 03 00 00 00 00
+trackline 28 10 3b 03 00 00 00 00
+trackline 28 12 3d 03 00 00 00 00
+trackline 28 14 3f 03 00 00 00 00
+trackline 28 15 00 00 76 00 00 00
+trackline 28 16 42 03 00 00 00 00
+trackline 28 1a 38 03 00 00 00 00
+trackline 28 1c 33 03 00 00 00 00
+trackline 28 1e 36 03 00 00 00 00
+trackline 30 00 0d 05 00 00 00 00
+trackline 30 02 01 05 00 00 00 00
+trackline 30 09 00 00 76 00 00 00
+trackline 30 0c 06 05 00 00 00 00
+trackline 30 0d 08 05 00 00 00 00
+trackline 30 0e 0b 05 00 00 00 00
+trackline 30 10 0d 05 00 00 00 00
+trackline 30 12 01 05 00 00 00 00
+trackline 30 14 01 05 00 00 00 00
+trackline 30 19 00 00 76 00 00 00
+trackline 31 04 0d 05 00 00 00 00
+trackline 31 07 00 00 76 80 00 00
+trackline 31 0a 0d 05 00 00 00 00
+trackline 31 0c 00 00 76 00 00 00
+trackline 31 0e 0d 05 00 00 00 00
+trackline 31 10 01 05 00 00 00 00
+trackline 32 00 09 05 00 00 00 00
+trackline 32 06 15 05 00 00 00 00
+trackline 32 08 00 00 76 00 00 00
+trackline 32 0a 10 05 00 00 00 00
+trackline 32 0c 09 05 00 00 00 00
+trackline 32 0e 06 05 00 00 00 00
+trackline 32 10 0b 05 00 00 00 00
+trackline 32 12 0b 05 00 00 00 00
+trackline 32 15 00 00 76 00 00 00
+trackline 32 16 08 05 00 00 00 00
+trackline 32 17 00 00 76 c0 00 00
+trackline 32 1a 03 05 00 00 00 00
+trackline 32 1b 00 00 76 c0 00 00
+trackline 32 1e 08 05 00 00 00 00
+trackline 33 00 01 05 00 00 00 00
+trackline 34 00 09 05 00 00 00 00
+trackline 34 06 15 05 00 00 00 00
+trackline 34 08 00 00 76 00 00 00
+trackline 34 0a 10 05 00 00 00 00
+trackline 34 0c 09 05 00 00 00 00
+trackline 34 0e 06 05 00 00 00 00
+trackline 34 10 08 05 00 00 00 00
+trackline 34 12 08 05 00 00 00 00
+trackline 34 15 00 00 76 00 00 00
+trackline 34 16 08 05 00 00 00 00
+trackline 34 17 00 00 76 c0 00 00
+trackline 34 1a 03 05 00 00 00 00
+trackline 34 1b 00 00 76 c0 00 00
+trackline 34 1e 08 05 00 00 00 00
+trackline 40 00 28 06 00 00 00 00
+trackline 40 0c 23 06 00 00 00 00
+trackline 40 0e 00 00 76 00 00 00
+trackline 40 10 2b 06 00 00 00 00
+trackline 40 15 00 00 76 00 00 00
+trackline 40 16 2a 06 00 00 00 00
+trackline 40 1b 00 00 76 00 00 00
+trackline 40 1c 28 06 00 00 00 00
+trackline 40 1f 00 00 76 00 00 00
+trackline 41 00 27 06 00 34 00 00
+trackline 41 05 00 00 76 00 00 00
+trackline 41 06 28 06 00 00 00 00
+trackline 41 07 00 00 76 00 00 00
+trackline 41 08 2a 06 00 00 00 00
+trackline 41 12 00 00 66 fd 00 00
+trackline 42 00 24 06 00 00 00 00
+trackline 42 0c 26 06 00 00 00 00
+trackline 42 10 28 06 00 00 00 00
+trackline 42 18 24 06 00 00 00 00
+trackline 42 1b 00 00 6c f8 00 00
+trackline 43 00 23 06 00 00 00 00
+trackline 43 08 00 00 66 ff 00 00
+trackline 44 00 27 06 00 00 00 00
+trackline 44 04 27 06 00 00 00 00
+trackline 44 06 28 06 00 00 00 00
+trackline 44 0a 28 06 00 00 00 00
+trackline 44 0c 2a 06 00 00 00 00
+trackline 44 10 00 00 66 f8 00 00
+trackline 44 14 2d 06 00 00 00 00
+trackline 44 18 2d 06 00 00 00 00
+trackline 44 1a 2a 06 00 00 00 00
+trackline 44 1b 00 00 76 00 00 00
+trackline 44 1c 24 06 00 00 00 00
+trackline 44 1d 00 00 76 00 00 00
+trackline 44 1e 23 06 00 00 00 00
+trackline 44 1f 00 00 76 00 00 00
+trackline 45 00 28 06 00 00 00 00
+trackline 45 04 00 00 66 fc 00 00
+trackline 45 08 2b 06 00 00 00 00
+trackline 45 0c 00 00 66 fc 00 00
+trackline 45 10 2a 06 00 00 00 00
+trackline 45 14 00 00 66 fc 00 00
+trackline 45 18 26 06 00 00 00 00
+trackline 45 1a 00 00 6c 03 00 00
+trackline 46 00 28 06 00 00 00 00
+trackline 50 00 04 05 00 00 00 00
+trackline 50 04 04 05 00 00 00 00
+trackline 50 06 10 05 00 00 00 00
+trackline 50 0a 0b 05 00 00 00 00
+trackline 50 0c 0e 05 00 00 00 00
+trackline 50 0e 0f 05 00 00 00 00
+trackline 50 10 04 05 00 00 00 00
+trackline 50 14 04 05 00 00 00 00
+trackline 50 16 10 05 00 00 00 00
+trackline 50 1a 0b 05 00 00 00 00
+trackline 50 1c 10 05 00 00 00 00
+trackline 50 1d 10 05 00 00 00 00
+trackline 50 1e 0b 05 00 00 00 00
+trackline 50 1f 04 05 00 00 00 00
+trackline 51 00 0b 05 00 00 00 00
+trackline 51 04 0b 05 00 00 00 00
+trackline 51 06 17 05 00 00 00 00
+trackline 51 0a 06 05 00 00 00 00
+trackline 51 0c 09 05 00 00 00 00
+trackline 51 0e 0a 05 00 00 00 00
+trackline 51 10 0b 05 00 00 00 00
+trackline 51 14 0d 05 00 00 00 00
+trackline 51 18 0e 05 00 00 00 00
+trackline 51 1c 0f 05 00 00 00 00
+trackline 51 1d 00 00 6c e0 00 00
+trackline 52 00 0c 05 00 00 00 00
+trackline 52 02 0c 05 00 00 00 00
+trackline 52 04 00 00 76 00 00 00
+trackline 52 06 07 05 00 00 00 00
+trackline 52 08 0a 05 00 00 00 00
+trackline 52 0a 0c 05 00 00 00 00
+trackline 52 0c 00 00 76 00 00 00
+trackline 52 0e 0a 05 00 00 00 00
+trackline 52 10 0c 05 00 00 00 00
+trackline 52 12 0c 05 00 00 00 00
+trackline 52 14 00 00 76 00 00 00
+trackline 52 16 07 05 00 00 00 00
+trackline 52 18 0f 05 00 00 00 00
+trackline 52 1a 0e 05 00 00 00 00
+trackline 52 1c 0c 05 00 00 00 00
+trackline 52 1e 05 05 00 00 00 00
+trackline 53 00 07 05 00 00 00 00
+trackline 53 02 07 05 00 00 00 00
+trackline 53 06 13 05 00 00 00 00
+trackline 53 0a 10 05 00 00 00 00
+trackline 53 0c 0e 05 00 00 00 00
+trackline 53 0e 0b 05 00 00 00 00
+trackline 53 10 09 05 00 00 00 00
+trackline 53 11 07 05 00 00 00 00
+trackline 53 12 17 05 00 00 00 00
+trackline 53 13 15 05 00 00 00 00
+trackline 53 14 13 05 00 00 00 00
+trackline 53 15 10 05 00 00 00 00
+trackline 53 16 0e 05 00 00 00 00
+trackline 53 17 09 05 00 00 00 00
+trackline 53 18 07 05 00 00 00 00
+trackline 53 1c 09 05 00 00 00 00
+trackline 54 00 0b 05 00 00 00 00
+trackline 55 00 0c 05 00 00 00 00
+trackline 55 0c 0c 05 00 00 00 00
+trackline 55 10 0e 05 00 00 00 00
+trackline 55 1c 0e 05 00 00 00 00
+trackline 56 00 10 05 00 00 00 00
+trackline 56 06 10 05 00 00 00 00
+trackline 56 08 00 00 76 00 00 00
+trackline 56 0c 04 05 00 00 00 00
+trackline 60 00 25 07 00 00 00 00
+trackline 60 0a 28 08 00 00 00 00
+trackline 60 0e 28 08 00 00 00 00
+trackline 60 0f 00 00 76 00 00 00
+trackline 60 10 28 08 00 00 00 00
+trackline 60 16 34 08 00 00 00 00
+trackline 60 17 00 00 76 80 00 00
+trackline 60 1a 34 08 00 00 00 00
+trackline 60 1b 00 00 76 00 00 00
+trackline 60 1c 28 08 00 00 00 00
+trackline 61 00 23 09 00 00 00 00
+trackline 61 05 00 00 76 00 00 00
+trackline 61 06 2f 09 00 00 00 00
+trackline 61 07 00 00 76 80 00 00
+trackline 61 0a 23 09 00 00 00 00
+trackline 61 0e 23 09 00 00 00 00
+trackline 61 0f 00 00 76 00 00 00
+trackline 61 10 2f 09 00 00 00 00
+trackline 61 14 23 09 00 00 00 00
+trackline 61 18 23 09 00 00 00 00
+trackline 61 1a 2f 09 00 00 00 00
+trackline 61 1c 23 09 00 00 00 00
+trackline 62 00 24 09 00 00 00 00
+trackline 62 05 00 00 76 00 00 00
+trackline 62 06 30 09 00 00 00 00
+trackline 62 07 00 00 76 80 00 00
+trackline 62 0a 24 09 00 00 00 00
+trackline 62 0e 24 09 00 00 00 00
+trackline 62 0f 00 00 76 00 00 00
+trackline 62 10 24 09 00 00 00 00
+trackline 62 16 30 09 00 00 00 00
+trackline 62 17 00 00 76 80 00 00
+trackline 62 1a 30 09 00 00 00 00
+trackline 62 1b 00 00 76 00 00 00
+trackline 62 1c 24 09 00 00 00 00
+trackline 63 00 2b 09 00 00 00 00
+trackline 63 01 00 00 76 00 00 00
+trackline 63 02 1f 09 00 00 00 00
+trackline 63 05 00 00 76 00 00 00
+trackline 63 06 2b 09 00 00 00 00
+trackline 63 07 00 00 76 00 00 00
+trackline 63 08 2b 09 00 00 00 00
+trackline 63 09 00 00 76 00 00 00
+trackline 63 0a 1f 09 00 00 00 00
+trackline 63 0d 00 00 76 00 00 00
+trackline 63 0e 2b 09 00 00 00 00
+trackline 63 0f 00 00 76 00 00 00
+trackline 63 10 2b 09 00 00 00 00
+trackline 63 11 00 00 76 00 00 00
+trackline 63 12 1f 09 00 00 00 00
+trackline 63 15 00 00 76 00 00 00
+trackline 63 16 1f 09 00 00 00 00
+trackline 63 1a 2b 09 00 00 00 00
+trackline 63 1b 00 00 76 80 00 00
+trackline 63 1e 1f 09 00 00 00 00
+trackline 63 1f 00 00 76 00 00 00
+trackline 64 00 24 09 00 00 00 00
+trackline 64 04 24 09 00 00 00 00
+trackline 64 05 00 00 76 00 00 00
+trackline 64 06 30 09 00 00 00 00
+trackline 64 08 00 00 76 00 00 00
+trackline 64 0a 30 09 00 00 00 00
+trackline 64 0b 00 00 76 00 00 00
+trackline 64 0c 24 09 00 00 00 00
+trackline 64 10 26 09 00 00 00 00
+trackline 64 12 00 00 76 00 00 00
+trackline 64 14 26 09 00 00 00 00
+trackline 64 15 00 00 76 00 00 00
+trackline 64 16 32 09 00 00 00 00
+trackline 64 19 00 00 76 00 00 00
+trackline 64 1a 32 09 00 00 00 00
+trackline 64 1b 00 00 76 00 00 00
+trackline 64 1c 26 09 00 00 00 00
+trackline 64 1d 00 00 76 00 00 00
+trackline 64 1e 32 09 00 00 00 00
+trackline 64 1f 00 00 76 00 00 00
+trackline 65 00 34 09 00 00 00 00
+trackline 65 02 34 09 00 00 00 00
+trackline 65 03 34 09 00 00 00 00
+trackline 65 04 34 09 00 00 00 00
+trackline 65 05 00 00 76 00 00 00
+trackline 65 06 28 09 00 00 00 00
+trackline 65 08 00 00 76 00 00 00
+trackline 65 0a 28 09 00 00 00 00
+trackline 65 0b 00 00 76 00 00 00
+trackline 65 0c 28 09 00 00 00 00
+trackline 65 0e 34 09 00 00 00 00
+trackline 65 10 28 09 00 00 00 00
+trackline 66 00 34 0a 00 00 00 00
+trackline 66 02 34 0a 00 00 00 00
+trackline 66 03 28 0a 00 00 00 00
+trackline 66 04 34 0a 00 00 00 00
+trackline 66 05 00 00 76 00 00 00
+trackline 66 06 28 0a 00 00 00 00
+trackline 66 08 00 00 76 00 00 00
+trackline 66 0a 28 0a 00 00 00 00
+trackline 66 0b 00 00 76 00 00 00
+trackline 66 0c 28 0a 00 00 00 00
+trackline 66 10 34 0a 00 00 00 00
+trackline 66 12 34 0a 00 00 00 00
+trackline 66 13 34 0a 00 00 00 00
+trackline 66 14 34 0a 00 00 00 00
+trackline 66 15 00 00 76 00 00 00
+trackline 66 16 28 0a 00 00 00 00
+trackline 66 18 00 00 76 00 00 00
+trackline 66 1a 28 0a 00 00 00 00
+trackline 66 1b 00 00 76 00 00 00
+trackline 66 1c 28 0a 00 00 00 00
+trackline 66 1e 34 0a 00 00 00 00
+trackline 67 00 21 09 00 00 00 00
+trackline 67 10 23 09 00 00 00 00
+trackline 68 00 25 08 00 00 00 00
+trackline 70 00 25 07 00 ff 00 00
+trackline 70 08 2c 0b 00 00 00 00
+trackline 70 0a 25 0b 00 00 00 00
+trackline 70 0e 2c 0b 00 00 00 00
+trackline 70 10 31 0b 00 00 00 00
+trackline 70 12 2c 0b 00 00 00 00
+trackline 70 14 25 0b 00 00 00 00
+trackline 70 16 34 0b 00 00 00 00
+trackline 70 17 00 00 66 00 00 00
+trackline 70 18 33 0b 00 00 00 00
+trackline 70 1a 2c 0b 00 00 00 00
+trackline 70 1c 25 0b 00 00 00 00
+trackline 70 1e 36 0b 00 00 00 00
+trackline 71 00 38 0b 00 00 00 00
+trackline 71 18 31 0b 00 00 00 00
+trackline 71 1a 34 0b 00 00 00 00
+trackline 71 1b 36 0b 00 00 00 00
+trackline 71 1c 37 0b 00 00 00 00
+trackline 71 1d 38 0b 00 00 00 00
+trackline 71 1e 3b 0b 00 00 00 00
+trackline 71 1f 3d 0b 00 00 00 00
+trackline 72 00 40 0b 00 00 00 00
+trackline 72 08 3d 0b 00 00 00 00
+trackline 72 0c 40 0b 00 00 00 00
+trackline 72 10 3f 0b 00 00 00 00
+trackline 72 11 00 00 76 00 00 00
+trackline 72 12 3b 0b 00 00 00 00
+trackline 72 14 00 00 76 00 00 00
+trackline 72 16 38 0b 00 00 00 00
+trackline 72 1a 38 0b 00 00 00 00
+trackline 72 1b 00 00 76 00 00 00
+trackline 72 1c 3f 0b 00 00 00 00
+trackline 72 1e 3b 0b 00 00 00 00
+trackline 73 00 40 0b 00 00 00 00
+trackline 73 01 3f 0b 00 00 00 00
+trackline 73 02 3d 0b 00 00 00 00
+trackline 73 03 38 0b 00 00 00 00
+trackline 73 04 34 0b 00 00 00 00
+trackline 73 05 33 0b 00 00 00 00
+trackline 73 06 36 0b 00 00 00 00
+trackline 73 07 33 0b 00 00 00 00
+trackline 73 08 34 0b 00 00 00 00
+trackline 73 09 33 0b 00 00 00 00
+trackline 73 0a 31 0b 00 00 00 00
+trackline 73 0b 2c 0b 00 00 00 00
+trackline 73 0c 2f 0b 00 00 00 00
+trackline 73 0d 2a 0b 00 00 00 00
+trackline 73 0e 33 0b 00 00 00 00
+trackline 73 0f 2f 0b 00 00 00 00
+trackline 73 10 31 0b 00 00 00 00
+trackline 73 11 00 00 76 00 00 00
+trackline 73 12 31 0b 00 00 00 00
+trackline 73 13 00 00 76 00 00 00
+trackline 73 14 31 0b 00 00 00 00
+trackline 73 15 00 00 76 00 00 00
+trackline 73 16 31 0b 00 00 00 00
+trackline 73 19 00 00 76 00 00 00
+trackline 73 1a 31 0b 00 00 00 00
+trackline 73 1b 00 00 76 00 00 00
+trackline 73 1c 3d 0b 00 00 00 00
+trackline 73 1d 00 00 76 00 00 00
+trackline 73 1e 31 0b 00 00 00 00
+trackline 73 1f 00 00 76 00 00 00
+trackline 74 00 40 0b 00 00 00 00
+trackline 74 02 31 0b 00 00 00 00
+trackline 74 04 31 0b 00 00 00 00
+trackline 74 06 3d 0b 00 00 00 00
+trackline 74 08 31 0b 00 00 00 00
+trackline 74 0a 3d 0b 00 00 00 00
+trackline 74 0c 42 0b 00 00 00 00
+trackline 74 0d 40 0b 00 00 00 00
+trackline 74 0e 3f 0b 00 00 00 00
+trackline 74 10 40 0b 00 00 00 00
+trackline 74 12 31 0b 00 00 00 00
+trackline 74 14 31 0b 00 00 00 00
+trackline 74 16 3d 0b 00 00 00 00
+trackline 74 18 31 0b 00 00 00 00
+trackline 74 1a 3d 0b 00 00 00 00
+trackline 74 1c 42 0b 00 00 00 00
+trackline 74 1d 40 0b 00 00 00 00
+trackline 74 1e 3f 0b 00 00 00 00
+trackline 75 00 3f 0b 00 00 00 00
+trackline 75 02 40 0b 00 00 00 00
+trackline 75 03 00 00 76 00 00 00
+trackline 75 04 44 0b 00 00 00 00
+trackline 75 05 00 00 76 00 00 00
+trackline 75 06 3d 0b 00 00 00 00
+trackline 75 07 44 0d 00 10 00 00
+trackline 75 08 42 0b 00 00 00 00
+trackline 75 09 3d 0d 00 10 00 00
+trackline 75 0a 31 0b 00 00 00 00
+trackline 75 0b 42 0d 00 00 00 00
+trackline 75 0c 40 0b 00 00 00 00
+trackline 75 0d 31 0d 00 00 00 00
+trackline 75 0e 38 0b 00 00 00 00
+trackline 75 0f 40 0d 00 00 00 00
+trackline 75 10 3f 0b 00 00 00 00
+trackline 75 11 3d 0d 00 00 00 00
+trackline 75 12 31 0b 00 00 00 00
+trackline 75 13 3f 0d 00 00 00 00
+trackline 75 14 3b 0b 00 00 00 00
+trackline 75 15 31 0d 00 00 00 00
+trackline 75 16 38 0b 00 00 00 00
+trackline 75 17 3b 0d 00 00 00 00
+trackline 75 18 38 0b 00 00 00 00
+trackline 75 19 38 0d 00 00 00 00
+trackline 75 1a 31 0b 00 00 00 00
+trackline 75 1b 44 0d 00 00 00 00
+trackline 75 1c 3b 0b 00 00 00 00
+trackline 75 1d 31 0d 00 00 00 00
+trackline 75 1e 3d 0b 00 00 00 00
+trackline 75 1f 3f 0b 00 00 00 00
+trackline 80 00 34 03 00 00 00 00
+trackline 80 08 31 03 00 00 00 00
+trackline 80 0c 34 03 00 00 00 00
+trackline 80 10 33 03 00 00 00 00
+trackline 80 18 31 03 00 00 00 00
+trackline 80 1c 2f 03 00 00 00 00
+trackline 81 1d 2f 03 00 00 00 00
+trackline 81 1e 31 03 00 00 00 00
+trackline 81 1f 33 03 00 00 00 00
+trackline 82 00 2f 03 6c 10 00 00
+trackline 82 04 31 03 00 00 00 00
+trackline 83 00 01 0b 00 00 00 00
+trackline 90 00 21 09 69 00 00 00
+trackline 90 04 21 09 00 00 00 00
+trackline 90 05 00 00 76 00 00 00
+trackline 90 06 2d 09 00 00 00 00
+trackline 90 0a 2d 09 00 00 00 00
+trackline 90 0b 00 00 76 00 00 00
+trackline 90 0c 21 09 00 00 00 00
+trackline 90 10 23 09 00 00 00 00
+trackline 90 12 00 00 76 80 00 00
+trackline 90 14 23 09 00 00 00 00
+trackline 90 16 00 00 76 80 00 00
+trackline 90 18 20 08 00 00 00 00
+trackline 90 1a 00 00 76 80 00 00
+trackline 90 1c 20 08 00 00 00 00
+trackline 90 1e 00 00 76 80 00 00
+trackline 91 00 25 08 00 00 00 00
+trackline 91 01 00 00 76 00 00 00
+trackline 91 02 25 08 00 00 00 00
+trackline 91 05 00 00 76 00 00 00
+trackline 91 06 31 08 00 00 00 00
+trackline 91 07 31 08 00 00 00 00
+trackline 91 08 25 08 00 00 00 00
+trackline 91 09 00 00 76 00 00 00
+trackline 91 0a 25 08 00 00 00 00
+trackline 91 0b 00 00 76 00 00 00
+trackline 91 0e 25 08 00 00 00 00
+trackline 91 0f 00 00 76 00 00 00
+trackline 91 10 25 0a 00 00 00 00
+trackline 91 11 00 00 76 00 00 00
+trackline 91 14 25 0a 00 00 00 00
+trackline 91 15 00 00 76 00 00 00
+trackline 91 16 25 08 00 00 00 00
+trackline 91 17 00 00 76 00 00 00
+trackline 91 1a 25 08 00 00 00 00
+trackline 91 1b 00 00 76 00 00 00
+trackline 91 1c 25 08 00 00 00 00
+trackline 91 1d 00 00 76 00 00 00
+trackline 91 1e 25 08 00 00 00 00
+trackline 91 1f 00 00 76 00 00 00
+trackline 92 00 19 03 69 70 00 00
+trackline 92 01 00 00 76 00 00 00
+trackline 92 02 25 03 00 00 00 00
+trackline 92 03 00 00 76 00 00 00
+trackline 92 04 25 03 00 00 00 00
+trackline 92 05 00 00 76 00 00 00
+trackline 92 06 19 03 00 00 00 00
+trackline 92 07 00 00 76 00 00 00
+trackline 92 08 25 03 00 00 00 00
+trackline 92 09 00 00 76 00 00 00
+trackline 92 0a 19 03 00 00 00 00
+trackline 92 0b 00 00 76 00 00 00
+trackline 92 0c 25 03 00 00 00 00
+trackline 92 0d 00 00 76 00 00 00
+trackline 92 0e 25 03 00 00 00 00
+trackline 92 0f 00 00 76 00 00 00
+trackline 92 10 19 03 00 00 00 00
+trackline 92 11 00 00 76 00 00 00
+trackline 92 12 25 03 00 00 00 00
+trackline 92 13 00 00 76 00 00 00
+trackline 92 14 25 03 00 00 00 00
+trackline 92 15 00 00 76 00 00 00
+trackline 92 16 19 03 00 00 00 00
+trackline 92 17 00 00 76 00 00 00
+trackline 92 18 25 03 00 00 00 00
+trackline 92 19 00 00 76 00 00 00
+trackline 92 1a 19 03 69 00 00 00
+trackline 92 1b 19 03 66 c0 00 00
+trackline 92 1c 25 03 00 00 00 00
+trackline 92 1d 00 00 76 00 00 00
+trackline 92 1e 25 03 00 00 00 00
+trackline 92 1f 00 00 76 00 00 00
+
+instrumentline 01 00 77 03
+instrumentline 01 01 76 ff
+instrumentline 01 02 74 01
+instrumentline 01 03 77 02
+instrumentline 01 04 64 90
+instrumentline 01 05 2b 31
+instrumentline 01 06 6c a0
+instrumentline 01 07 66 f0
+instrumentline 02 00 76 ff
+instrumentline 02 01 77 03
+instrumentline 02 02 74 02
+instrumentline 02 03 77 02
+instrumentline 02 04 2b 31
+instrumentline 02 05 64 70
+instrumentline 02 06 6c d0
+instrumentline 02 07 74 02
+instrumentline 02 08 66 f8
+instrumentline 02 09 6a 01
+instrumentline 03 00 77 02
+instrumentline 03 01 6d 05
+instrumentline 03 02 2b 31
+instrumentline 03 03 76 ff
+instrumentline 03 04 66 f0
+instrumentline 03 05 74 06
+instrumentline 03 06 66 00
+instrumentline 03 07 74 16
+instrumentline 03 08 7e 25
+instrumentline 04 00 77 03
+instrumentline 04 01 76 ff
+instrumentline 04 02 74 01
+instrumentline 04 03 77 00
+instrumentline 04 04 6d 05
+instrumentline 04 05 2b 3d
+instrumentline 04 06 66 f0
+instrumentline 04 07 74 06
+instrumentline 04 08 66 00
+instrumentline 04 09 74 20
+instrumentline 04 0a 66 f0
+instrumentline 05 00 77 03
+instrumentline 05 01 76 ff
+instrumentline 05 02 74 01
+instrumentline 05 03 77 02
+instrumentline 05 04 64 50
+instrumentline 05 05 6d 01
+instrumentline 05 06 2b 31
+instrumentline 05 07 74 05
+instrumentline 05 08 66 fe
+instrumentline 06 00 77 02
+instrumentline 06 01 64 80
+instrumentline 06 02 2b 3d
+instrumentline 06 03 76 c0
+instrumentline 06 04 66 08
+instrumentline 06 05 74 02
+instrumentline 06 06 66 f0
+instrumentline 06 07 74 02
+instrumentline 06 08 66 00
+instrumentline 06 09 74 16
+instrumentline 06 0a 7e 34
+instrumentline 07 00 77 03
+instrumentline 07 01 76 ff
+instrumentline 07 02 66 fc
+instrumentline 08 00 69 00
+instrumentline 08 01 77 03
+instrumentline 08 02 76 ff
+instrumentline 08 03 74 01
+instrumentline 08 04 77 02
+instrumentline 08 05 6d 05
+instrumentline 08 06 66 ff
+instrumentline 08 07 2b 3d
+instrumentline 08 08 74 03
+instrumentline 08 09 2b 38
+instrumentline 08 0a 74 03
+instrumentline 08 0b 2b 34
+instrumentline 08 0c 74 03
+instrumentline 08 0d 2b 31
+instrumentline 08 0e 74 03
+instrumentline 08 0f 6a 07
+instrumentline 09 00 69 00
+instrumentline 09 01 77 03
+instrumentline 09 02 76 ff
+instrumentline 09 03 74 01
+instrumentline 09 04 77 02
+instrumentline 09 05 6d 05
+instrumentline 09 06 66 ff
+instrumentline 09 07 2b 3d
+instrumentline 09 08 74 03
+instrumentline 09 09 2b 38
+instrumentline 09 0a 74 03
+instrumentline 09 0b 2b 35
+instrumentline 09 0c 74 03
+instrumentline 09 0d 2b 31
+instrumentline 09 0e 74 03
+instrumentline 09 0f 6a 07
+instrumentline 0a 00 69 00
+instrumentline 0a 01 77 03
+instrumentline 0a 02 76 ff
+instrumentline 0a 03 74 01
+instrumentline 0a 04 77 02
+instrumentline 0a 05 6d 05
+instrumentline 0a 06 66 ff
+instrumentline 0a 07 2b 3d
+instrumentline 0a 08 74 03
+instrumentline 0a 09 2b 38
+instrumentline 0a 0a 74 03
+instrumentline 0a 0b 2b 36
+instrumentline 0a 0c 74 03
+instrumentline 0a 0d 2b 31
+instrumentline 0a 0e 74 03
+instrumentline 0a 0f 6a 07
+instrumentline 0b 00 77 03
+instrumentline 0b 01 76 ff
+instrumentline 0b 02 74 01
+instrumentline 0b 03 77 00
+instrumentline 0b 04 6d 05
+instrumentline 0b 05 2b 3d
+instrumentline 0b 06 66 f0
+instrumentline 0b 07 74 06
+instrumentline 0b 08 66 00
+instrumentline 0b 09 74 06
+instrumentline 0b 0a 7e 25
+instrumentline 0c 00 77 03
+instrumentline 0c 01 76 ff
+instrumentline 0c 02 66 f0
+instrumentline 0d 00 76 c4
+instrumentline 0d 01 77 00
+instrumentline 0d 02 6d 05
+instrumentline 0d 03 2b 3d
+instrumentline 0d 04 66 f0
+instrumentline 0d 05 74 06
+instrumentline 0d 06 66 00
+instrumentline 0d 07 74 06
+instrumentline 0d 08 7e 25
