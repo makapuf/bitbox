@@ -115,8 +115,9 @@ int sdio_sense_state()
 }
 
 
-void message(const char * msg, ...) {
-	// does nothing on bitbox (UART ? write to flash ? to RAM )
+void __attribute__((weak))  message(const char * msg, ...){
+	// does nothing on bitbox 
+	// weak so that is can be replaced with other implementations (serial, led, ram ...)
 }
 
 // die : standard blinking to sgnal on the user led where we died and why
