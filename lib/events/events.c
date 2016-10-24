@@ -1,9 +1,10 @@
-#include "bitbox.h"
+#include "events.h"
 
 // - device handling -------------------------------------------------------------------------------------------------------------------------------------
 
 
 #define EVT_QUEUE_SIZE 64
+#define  KBR_MAX_NBR_PRESSED 6
 
 
 volatile enum device_enum device_type[2]; // currently plugged device
@@ -69,47 +70,6 @@ void event_clear()
 	evt_in=evt_out=&evt_queue[0];
 }
 
-/* This emulates the gamepad with a keyboard.
- * fetches all keyboard events,
- * discarding all others (not optimal)
- * mapping:
-
-    Space : Select,   2C
-    Enter : Start,    28
-    UDLR arrows : D-pad    52, 51, 50, 4F
-    D     : A button, 07
-    F : B button, 09
-    E : X button, 08
-    R : Y button, 15
-    Left/Right CTRL (L/R shoulders)
- */
-
-void kbd_emulate_gamepad (void)
-{
-	// kbd codes in order of gamepad buttons
-	static const uint8_t kbd_gamepad[] = {0x07, 0x09, 0x08, 0x15, 0xE0, 0xE4, 0x2c, 0x28, 0x52, 0x51, 0x50, 0x4f };
-	//
-	struct event e;
-	do {
-		e=event_get();
-		for (int i=0;i<12;i++)
-		{
-			if (kbd_gamepad[i]==e.kbd.key)
-			switch (e.type)
-			{
-				case evt_keyboard_press  :
-					gamepad_buttons[0] |= (1<<i);
-				break;
-
-				case evt_keyboard_release :
-					gamepad_buttons[0] &= ~(1<<i);
-				break;
-			}
-		}
-	} while (e.type);
-}
-
-
 
 
 // keymap : list of ranges of elements, non shifted and shifted
@@ -159,7 +119,7 @@ static const char keyb_fr[3][83] = { // normal, shift, ctrl - TODO : add right_a
     }
 };
 
-// FIXME Put config in flash ?
+// FIXME Put config in flash ? sdcard config ?
 #ifdef KEYB_FR
 static const char (*keymap)[83]=keyb_fr;
 #else
@@ -179,6 +139,148 @@ char kbd_map(uint8_t mod, uint8_t key)
 }
 
 
+// Call this every frame to check what changed and emit events
+void keyboard_poll(int device)
+{
+        static uint8_t nb_last;
+        static uint8_t keys_last[KBR_MAX_NBR_PRESSED]; // list of 0-nb_last codes of last pressed keys
+        static uint8_t mod_last;
+
+        int j;
+        struct event e;
+
+        // keyboard boot protocol : modifiers bits(Ctrl, Shift, Alt, Win L then R), reserved, char[6]
+
+        // calculates New-Last & send keypresses
+        for (int i = 0; i < KBR_MAX_NBR_PRESSED; i++) {                       
+                if (keyboard_key[device][i]==0) continue; // break?
+                // tests for errors (code 1,2 or 3)
+                if ((unsigned)(keyboard_key[device][i]-1) <= 2)
+                        return;
+
+                for (j=0; j<nb_last;j++) 
+                        if (keyboard_key[device][i]==keys_last[j]) 
+                                break;
+                
+
+                // not found ?
+                if (j==nb_last) 
+                {
+                        e.type=evt_keyboard_press;
+                        e.kbd.mod=keyboard_mod[device];
+                        e.kbd.key=keyboard_key[device][i];
+                        e.kbd.sym=kbd_map(e.kbd.mod,e.kbd.key);
+                        event_push(e);
+                }
+        }
+
+        
+        // now calculates old-new and send key released events.
+        for (int i=0;i<nb_last;i++)
+        {
+                for (j=0;j<KBR_MAX_NBR_PRESSED;j++)
+                        if (keyboard_key[device][j]==keys_last[i])
+                                break;
+                // not found
+                if (j==KBR_MAX_NBR_PRESSED)
+                {
+                        e.type=evt_keyboard_release;
+                        e.kbd.mod=keyboard_mod[device];
+                        e.kbd.key=keys_last[i];
+                        e.kbd.sym=kbd_map(keyboard_mod[device],keys_last[i]);
+                        event_push(e);
+                }                
+        }
+
+        // special case : modifier keys as keypresses
+        if (keyboard_mod[device] != mod_last)
+            for (int i=0;i<8;i++) {
+                if ((keyboard_mod[device] & ~mod_last) & (1<<i)) // new ones
+                {
+                    e.type=evt_keyboard_press;
+                    e.kbd.key=0xE0 + i; // codes are in the same order as bits                
+                    event_push(e);
+                }
+
+                if ((mod_last & ~keyboard_mod[device]) & (1<<i)) // released ones
+                {
+                    e.type=evt_keyboard_release;
+                    e.kbd.key=0xE0 + i; // codes are in the same order as bits                
+                    event_push(e);
+                }
+            }
+
+
+        // fills old keys with current 
+        nb_last=0;
+        for (int i=0;i<KBR_MAX_NBR_PRESSED;i++) {
+                if (keyboard_key[device][i])
+                        keys_last[nb_last++]=keyboard_key[device][i];
+        }
+        mod_last=keyboard_mod[device];
+}
+
+
+void mouse_poll()
+{
+	static uint8_t old_buttons;
+	struct event e;
+
+	if (mouse_x || mouse_y)
+	{
+		// mouse moved
+		e.type = evt_mouse_move;    
+		e.mov.port = 0;
+		e.mov.x = mouse_x;
+		e.mov.y = mouse_y;
+		event_push(e);
+	}
+
+	for (int i=0;i<8;i++) {
+		if ((mouse_buttons&~old_buttons) & 1<<i ) // new and not old
+		{
+			e.type=evt_mouse_click;
+			e.button.port = 0;
+			e.button.id = i;
+			event_push(e);
+		}
+		if ((old_buttons & ~mouse_buttons) & 1<<i ) // new and not old
+		{
+			e.type=evt_mouse_release;
+			e.button.port = 0;
+			e.button.id = i;
+			event_push(e);
+		}
+	}
+
+	old_buttons = mouse_buttons;
+}
+
+void device_poll()
+{
+	static uint8_t old_type[2];
+    struct event e;
+
+	for (int i=0;i<2;i++) {
+		if (device_type[i]!=old_type[i]) {
+	        e.type = evt_device_change;
+	        e.device.port = i;
+	        e.device.type = device_keyboard;
+	        event_push(e);
+		}
+		old_type[i]=device_type[i];
+	}
+}
+
+// XXX poll gamepad events ?
+
+void events_poll (void) 
+{
+	device_poll();
+    keyboard_poll(0);
+	keyboard_poll(1);
+	mouse_poll();
+}
 
 
 #ifdef TEST

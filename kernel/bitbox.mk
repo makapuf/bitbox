@@ -69,8 +69,6 @@ AUTODEPENDENCY_CFLAGS=-MMD -MF$(@:.o=.d) -MT$@
 
 # --- Engines (not target specific)
 
-GAME_C_FILES += evt_queue.c
-
 # -- Target-specifics
 $(BITBOX_TGT): DEFINES += BOARD_BITBOX
 $(MICRO_TGT):  DEFINES += BOARD_MICRO

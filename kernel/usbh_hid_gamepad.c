@@ -1,5 +1,7 @@
 #include "usbh_hid_devices.h"
 
+volatile enum device_enum device_type[2]; // currently plugged device
+
 #define THRESHOLD_HAT 30 // value above which an analog is considered commited
 
 // for now no event is fired for joysticks
@@ -119,11 +121,7 @@ static void  GAMEPAD_Init (uint8_t coreID, uint16_t vid, uint16_t pid)
     if (gamepad_descriptor[coreID]->vid ==0) // not found in table
         gamepad_descriptor[coreID] = &gamepad_parsed_descriptor[coreID];
 
-    struct event e;
-    e.type = evt_device_change;
-    e.device.port = coreID;
-    e.device.type = device_gamepad;
-    event_push(e);
+    device_type[coreID] = device_gamepad;
 }
 
 static inline uint32_t extract(uint8_t *data, uint16_t bitref, uint8_t nbits)

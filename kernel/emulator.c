@@ -22,6 +22,7 @@
 #include "fatfs/ff.h"
 
 #define VSYNC_LINES 16 // simulates 16 lines of vsync
+#define KBR_MAX_NBR_PRESSED 6
 
 #define WM_TITLE_LED_ON  "Bitbox emulator (*)"
 #define WM_TITLE_LED_OFF "Bitbox emulator"
@@ -82,9 +83,9 @@ volatile int vga_odd;
 #endif
 
 // IO
-volatile int data_mouse_x, data_mouse_y;
-volatile uint8_t data_mouse_buttons;
-
+volatile int8_t mouse_x, mouse_y;
+volatile uint8_t mouse_buttons;
+ 
 int user_button=0;
 
 // sound
@@ -95,6 +96,10 @@ static const int gamepad_max_buttons = 12;
 static const int gamepad_max_pads = 2;
 
 volatile int8_t gamepad_x[2], gamepad_y[2]; // analog pad values
+
+volatile uint8_t keyboard_mod[2]; // LCtrl =1, LShift=2, LAlt=4, LWin - Rctrl, ...
+volatile uint8_t keyboard_key[KBR_MAX_NBR_PRESSED][2]; // using raw USB key codes
+
 
 uint32_t time_left(void)
 {
@@ -414,12 +419,37 @@ uint8_t key_trans[256] = { // scan_code -> USB BootP code
 };
 #endif
 
-char kbd_map(uint8_t mod, uint8_t key); // from evt_queue.c
-
-static bool handle_gamepad()
+// this is a copy of the same function in usbh_hid_keybd
+void kbd_emulate_gamepad (void)
 {
-    uint8_t key,mod; // shortcuts
+    // kbd code for each gamepad buttons 
+    static const uint8_t kbd_gamepad[] = {
+        0x07, 0x09, 0x08, 0x15, 0xe0, 0xe4, 0x2c, 0x28, 0x52, 0x51, 0x50, 0x4f
+    };
+
+    gamepad_buttons[0]=0;
+    for (int i=0;i<sizeof(kbd_gamepad);i++) {
+        if (memchr((char *)keyboard_key[0],kbd_gamepad[i],KBR_MAX_NBR_PRESSED))
+            gamepad_buttons[0]|= (1<<i);
+    }
+
+    // special : mods
+    if (keyboard_mod[0] & 1) 
+        gamepad_buttons[0] |= gamepad_L;
+    if (keyboard_mod[0] & 16) 
+        gamepad_buttons[0] |= gamepad_R;
+
+}
+
+
+
+
+static bool handle_events()
+{
     SDL_Event sdl_event;
+    uint8_t key;
+    mouse_x = mouse_y=0; // not moved this frame 
+
     while (SDL_PollEvent(&sdl_event))
     {
         // check for messages
@@ -443,16 +473,39 @@ static bool handle_gamepad()
             if (sdl_event.key.keysym.sym == USER_BUTTON_KEY)
                 user_button=1;
 
-            // now create the keyboard event
-
             key = key_trans[sdl_event.key.keysym.scancode];
-            mod = sdl_event.key.keysym.mod;
-            // printf("%x\n",sdl_event.key.keysym.scancode );
-            event_push((struct event){
-                .type= evt_keyboard_press,
-                .kbd={ .key=key,.mod=mod,.sym=kbd_map(mod,key) }
-            });
+            // mod key ? 
+            switch (key) {
+                case 0xe0: // lctrl
+                    keyboard_mod[0] |= 1; 
+                    break;
+                case 225: // lshift
+                    keyboard_mod[0] |= 2;
+                    break;
+                case 226: // lalt
+                    keyboard_mod[0] |= 4;
+                    break;
 
+                case 0xe4: // rctrl
+                    keyboard_mod[0] |= 16; 
+                    break;
+                case 229: // rshift
+                    keyboard_mod[0] |= 32;
+                    break;
+                case 230: // ralt
+                    keyboard_mod[0] |= 64;
+                    break;
+
+                default : // set it 
+                    for (int i=0;i<KBR_MAX_NBR_PRESSED;i++) {
+                        if (keyboard_key[0][i]==0) {
+                            keyboard_key[0][i]=key;
+                            break;
+                        }
+                    }
+            }
+
+            //message("keydown %x\n",sdl_event.key.keysym.scancode);
             break;
 
         case SDL_KEYUP:
@@ -460,14 +513,40 @@ static bool handle_gamepad()
             if (sdl_event.key.keysym.sym == USER_BUTTON_KEY)
                 user_button=0;
 
-            // now create the keyboard event
             key = key_trans[sdl_event.key.keysym.scancode];
-            mod = sdl_event.key.keysym.mod;
-            event_push((struct event){
-                .type= evt_keyboard_release,
-                .kbd={ .key=key,.mod=mod,.sym=kbd_map(mod,key) }
-            });
+            // mod key ? 
+            switch (key) {
+                case 0xe0: // lctrl
+                    keyboard_mod[0] &= ~1; 
+                    break;
+                case 225: // lshift
+                    keyboard_mod[0] &= ~2;
+                    break;
+                case 226: // lalt
+                    keyboard_mod[0] &= ~4;
+                    break;
 
+                case 0xe4: // rctrl
+                    keyboard_mod[0] &= ~16; 
+                    break;
+                case 229: // rshift
+                    keyboard_mod[0] &= ~32;
+                    break;
+                case 230: // ralt
+                    keyboard_mod[0] &= ~64;
+                    break;
+
+                default : 
+                    // other one : find it & release it 
+                    for (int i=0;i<KBR_MAX_NBR_PRESSED;i++) {
+                        if (key==keyboard_key[0][i]) {
+                            keyboard_key[0][i]=0;
+                            break;
+                        }
+                    }
+            }
+
+            // message("keyup %x\n",sdl_event.key.keysym.scancode );
             break;
 
         // joypads
@@ -507,20 +586,14 @@ static bool handle_gamepad()
 
         // mouse
         case SDL_MOUSEBUTTONDOWN:
-            event_push((struct event){.type=evt_mouse_click, .button={.port=0, .id=sdl_event.button.button-1}});
-            data_mouse_buttons |= 1<<(sdl_event.button.button-1);
+            mouse_buttons |= 1<<(sdl_event.button.button-1);
             break;
         case SDL_MOUSEBUTTONUP:
-            event_push((struct event){.type=evt_mouse_release, .button={.port=0, .id=sdl_event.button.button-1}});
-            data_mouse_buttons &= ~1<<(sdl_event.button.button-1);
+            mouse_buttons &= ~1<<(sdl_event.button.button-1);
             break;
         case SDL_MOUSEMOTION :
-            event_push( (struct event){
-                .type=evt_mouse_move,
-                .mov={.port=0, .x=sdl_event.motion.xrel, .y=sdl_event.motion.yrel}
-            });
-            data_mouse_x += sdl_event.motion.xrel;
-            data_mouse_y += sdl_event.motion.yrel;
+            mouse_x = sdl_event.motion.xrel;
+            mouse_y = sdl_event.motion.yrel;
             break;
 
         } // end switch
@@ -709,7 +782,8 @@ int main ( int argc, char** argv )
     {
 
         // message processing loop
-        done = handle_gamepad();
+        done = handle_events();
+        kbd_emulate_gamepad();
         // update game
         game_frame();
 
