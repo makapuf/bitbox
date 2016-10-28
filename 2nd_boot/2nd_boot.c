@@ -289,9 +289,6 @@ char icon_name[13];
 
 void game_frame()
 {
-	// interpret keyboard as gamepad & discard all other events
-	kbd_emulate_gamepad();
-
 	if (vga_frame%2 == 0 ) {
 		// bounce guy
 		vram_char[y][x]=old_val;

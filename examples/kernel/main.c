@@ -11,12 +11,20 @@ void game_init() {
 
 void game_frame()
 {
-    kbd_emulate_gamepad ();
+    if (GAMEPAD_PRESSED(0,up)) y--;
+    if (GAMEPAD_PRESSED(0,down)) y++;
+    if (GAMEPAD_PRESSED(0,left)) x--;
+    if (GAMEPAD_PRESSED(0,right)) x++;
 
-    if (GAMEPAD_PRESSED(0,up) && y>-240) y--;
-    if (GAMEPAD_PRESSED(0,down) && y<240) y++;
-    if (GAMEPAD_PRESSED(0,left) && x>-320) x--;
-    if (GAMEPAD_PRESSED(0,right) && x<320) x++;
+    x += mouse_x;
+    y += mouse_y;
+
+    if (y<-240) y=-240;
+    if (y>240) y=240;
+    if (x<-320) x=-320;
+    if (x>320) x=320;
+
+
 
     if (gamepad_buttons[0]) {
     	snd_vol=32;
@@ -73,15 +81,7 @@ void graph_line()
 	// gamepad analog  : red point
 	if (vga_line == gamepad_y[0]+240)
 		draw_buffer[gamepad_x[0]+320] = RGB(255,0,0);
-
-
-	// display mouse state as crosshair
-	if (vga_line==data_mouse_y) {
-		for (int i=-2;i<=2;i++)	draw_buffer[data_mouse_x+i] ^= 0x7fff; 
-	}
-	if (vga_line >= data_mouse_y-2 && vga_line<=2+data_mouse_y) {
-		draw_buffer[data_mouse_x] ^= 0x7fff; 
-	}
+	
 }
 
 void game_snd_buffer(uint16_t *buffer, int len) 

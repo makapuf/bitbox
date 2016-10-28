@@ -51,7 +51,7 @@ static void KEYBRD_Init (uint8_t coreID, uint16_t vid, uint16_t pid)
     Left/Right CTRL (L/R shoulders) -> mods!
  */
 
-void kbd_emulate_gamepad (void)
+static void kbd_emulate_gamepad (void)
 {
     // kbd code for each gamepad buttons 
     static const uint8_t kbd_gamepad[] = {
@@ -60,7 +60,7 @@ void kbd_emulate_gamepad (void)
 
     gamepad_buttons[0]=0;
     for (int i=0;i<sizeof(kbd_gamepad);i++) {
-        if (memchr(keyboard_key[0],kbd_gamepad[i],KBR_MAX_NBR_PRESSED))
+        if (memchr((char *)keyboard_key[0],kbd_gamepad[i],KBR_MAX_NBR_PRESSED))
             gamepad_buttons[0]|= (1<<i);
     }
 
@@ -81,7 +81,7 @@ void kbd_emulate_gamepad (void)
 static void KEYBRD_Decode(uint8_t coreID, uint8_t *pbuf)
 {
     keyboard_mod[coreID]=pbuf[0];
-    memcpy(keyboard_key[coreID],pbuf+2,KBR_MAX_NBR_PRESSED);
+    memcpy((char *)keyboard_key[coreID],pbuf+2,KBR_MAX_NBR_PRESSED);
     kbd_emulate_gamepad();
 }
 

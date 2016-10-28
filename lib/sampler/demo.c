@@ -68,8 +68,6 @@ void game_frame() {
     static uint16_t last_buts;
     uint16_t speed; 
     
-    kbd_emulate_gamepad();
-
     if (GAMEPAD_PRESSED(0,L)) 
         speed = 0x80;
     else if (GAMEPAD_PRESSED(0,R))
