@@ -1,4 +1,4 @@
-BASE_DEMOS = demos/crappy demos/kernel demos/sdio demos/usb 
+BASE_DEMOS = examples/crappy examples/kernel examples/sdio examples/usb 
 LIB_DEMOS = lib/framebuffer  lib/textmode lib/blitter/balls lib/blitter/video lib/chiptune lib/sampler lib/serial 
 PROJECTS = 1st_boot 2nd_boot $(BASE_DEMOS) $(LIB_DEMOS)
 
