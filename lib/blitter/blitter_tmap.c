@@ -267,7 +267,7 @@ object *tilemap_new(const void *tileset, int w, int h, uint32_t header, const vo
     #else // 16-bit interface
 
     if ((header & TSET_8bit)) {
-        message("Error: 8bit tileset on a 16bit screen ?")
+        message("Error: 8bit tileset on a 16bit screen ?");
         die(4,7);
     }
 
