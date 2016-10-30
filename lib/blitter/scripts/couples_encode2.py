@@ -18,8 +18,6 @@ couples : .. .c dc d. ef gh ij ku cd sd
 
 '''
 TODO : export depuis TMX avec ptr vers data direct, plus par fichier.
-comme ca un seul type de sprite, rapide, transparency, tt bien.
-plus tard, permettre blit a l'envers ? (depuis la fin et remonter)
 '''
 
 import sys,struct
@@ -52,10 +50,11 @@ def sizecube(c) :
 
 def quantize_couples(cpls,nb):
     # vector quantize couples
-    uniq = set(cpls)
+    uniq = set(cpls) 
+    uniq.add((0,0,0,0,0,0,0,0)) # always empty couple
     if len(uniq)<=nb :
         print "directly use %d bins"%len(uniq)
-        palette = list(uniq)
+        palette = sorted(uniq) # sort ensures transparent is first 
         invpal = dict((c,n) for n,c in enumerate(palette))
         return palette, invpal
 
@@ -126,7 +125,7 @@ def reduce_couple8(c) :
     for n in 0,4 : # offset 0 and 4
         r,g,b =[(x*7+127)/255 for x in c[n:n+3]] # convert to three bits
         a=c[n+3]
-        out.append( r<<5 | (g&~1)<<2 | (b&~1) | (g&1) if a>128 else TRANSP8 ) # OR g and b
+        out.append( (r<<5) | (g&~1)<<2 | b if a>128 else TRANSP8 ) # or use G ? 
     return out[1]<<8 | out[0]
 
 def reduce_couple(c) :
@@ -196,22 +195,22 @@ def couples_encode(img,f,frame_height, mode, micro, out_file=None):
         # now encode line : (header + blit) x n
         if y%16==0 :
             ofs = sum(len(x) for x in s_blits)
-            line16.append(ofs/2)
+            line16.append(ofs)
 
         blits = [] # a blit will be either a list of couples or a tuple (nb,couple)
         #print len(line_couples), [invpal[x] for x in line_couples]
 
         for bl in packbits(invpal[x] for x in line_couples) :
             if type(bl)==tuple :
-                s_blits.append(struct.pack('BB',*bl))
+                s_blits.append(struct.pack('bB',-bl[0],bl[1]))
             else :
-                s_blits.append(struct.pack('%dB'%len(bl),*bl))
+                s_blits.append(struct.pack('b%dB'%len(bl),len(bl),*bl))
 
     # spr write
-
     add_record(f,'header',struct.pack("<2I",w,frame_height)) # 1 frame for now
     if micro : 
         add_record(f,'palette_couple8',struct.pack("<%dH"%len(intpal8),*intpal8))
+        print "palette:",intpal8
     else : 
         add_record(f,'palette_couple',struct.pack("<%dL"%len(intpal),*intpal))
     add_record(f,mode,''.join(s_blits))

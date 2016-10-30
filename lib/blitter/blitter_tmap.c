@@ -257,8 +257,9 @@ object *tilemap_new(const void *tileset, int w, int h, uint32_t header, const vo
     if (!(header & TSET_8bit)) {
         die(4,5);
     }
-    if ((header&0xf) != TMAP_U8)
+    if ((header&0xf) != TMAP_U8) {
         die(4,6); // not implemented
+    }
 
     o->a = (uintptr_t)tileset-tilesize*tilesize; // to start at index 1 and not 0, offset now in bytes.
     o->line = tilemap_u8_line8;
@@ -266,6 +267,7 @@ object *tilemap_new(const void *tileset, int w, int h, uint32_t header, const vo
     #else // 16-bit interface
 
     if ((header & TSET_8bit)) {
+        message("Error: 8bit tileset on a 16bit screen ?")
         die(4,7);
     }
 

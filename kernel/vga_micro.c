@@ -278,7 +278,7 @@ void  __attribute__ ((used)) TIM3_IRQHandler(void) // attribute used neded if ca
 
         if(vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+VGA_V_SYNC+VGA_V_BACKPORCH+1) {
             vga_line=0;
-            graph_line8();  // first line next frame!
+            graph_line();  // first line next frame!
         }
 
     }

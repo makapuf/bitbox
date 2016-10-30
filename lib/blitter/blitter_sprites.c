@@ -73,7 +73,7 @@ enum sprite_recordID {
 static void sprite_frame8(object *o, int start_line);
 static void sprite_pbc_frame(object *o, int start_line);
 static void sprite_u8_line(object *o);
-static void sprite_pbc_line(object *o);
+static void sprite_pbc_line8(object *o);
 #else
 static void sprite_frame(object *o, int start_line);
 static void sprite_u16_line(object *o);
@@ -122,7 +122,9 @@ object * sprite_new(const void *p, int x, int y, int z)
                 sprite_data += (sz+3)/4; // skip, don't read
                 break;
 
-            #if VGA_BPP!=8
+            //-----------------------------------------------------------------
+
+            #if VGA_BPP!=8 
 
             case sprite_recordID__palette :
                 o->a = (uintptr_t)sprite_data;
@@ -169,7 +171,8 @@ object * sprite_new(const void *p, int x, int y, int z)
                 sprite_data += (sz+3)/4; // skip, don't read
                 break;
             
-            #else // ----------------------------------------
+            #else 
+            // 8bit output ----------------------------------------
 
             case sprite_recordID__palette_couple8 :
                 o->a = (uintptr_t)sprite_data;
@@ -177,7 +180,7 @@ object * sprite_new(const void *p, int x, int y, int z)
                 break;
 
             case sprite_recordID__pbc: 
-                o->line = sprite_pbc_line;
+                o->line = sprite_pbc_line8;
                 o->frame= sprite_pbc_frame;
 
                 o->data = sprite_data;
@@ -196,13 +199,14 @@ object * sprite_new(const void *p, int x, int y, int z)
             #endif 
 
             default :
-                message("Unknown record loading sprite : %d\n",t);
-                die (7,7); // error : unknown record !
+                message("Unknown record loading sprite : %d at offset %d \n",t,sprite_data-(uint32_t*)p);
+                die(7,7); // error : unknown record !
                 break;
         }
     }
-    o->ry=0;
     o->c = (uintptr_t) o->data; // ry=0 !
+    o->ry=10000; // will appear next frame
+
     //
     o->x=x;
     o->y=y;
@@ -211,7 +215,7 @@ object * sprite_new(const void *p, int x, int y, int z)
     return o;
 }
 
-#if VGA_BPP==16
+#if VGA_BPP==16 
 static void sprite_frame (object *o, int start_line)
 {
     // start line is how much we need to crop to handle out of screen data
@@ -238,11 +242,14 @@ static void sprite_frame (object *o, int start_line)
 }
 #else
 
+// - 8Bpp 
+
 static void sprite_frame8 (object *o, int start_line)
 {
     // start line is how much we need to crop to handle out of screen data
     // also handles skipped lines
     //  nb skip:4, nb blit: 3, eol:1
+    // a: palette, c: current data
 
     start_line += o->fr*o->h;
     o->c = (intptr_t)o->data;
@@ -263,31 +270,38 @@ static void sprite_frame8 (object *o, int start_line)
 }
 
 // beware: no clipping !
-// XXX publish a clipped and unclipped version
-static void sprite_pbc_line (object *o) {
-    o->x &= ~1;
+// XXX publish a clipped and unclipped version, determine at frame start if clipped
 
-    int8_t *  restrict src=o->data;
+static void sprite_pbc_line8 (object *o) {
+    o->x &= ~1; // XXX only even for now
+
+    int8_t *  restrict src=(int8_t*)o->c;
     uint16_t * restrict dst=(uint16_t*)(draw_buffer+o->x); // u16 for vga8
-    uint16_t * restrict couple_palette = (uint16_t *)o->c;
+    uint16_t * restrict couple_palette = (uint16_t *)o->a;
 
     while (dst <(uint16_t*) draw_buffer+o->x/2+o->w/2) {
         int8_t n=*src++;
         if (n<0) {
-            if (*src) { // XXX handle semitransp couples
-                for (int i=0;i<-n;i++) { 
-                    *dst++ = couple_palette[*src];
+            uint8_t c=*src++;
+            if (c) { // c==0 is the full transparent couple. XXX handle semitransp couples 
+                for (int i=0;i<-n;i++) {
+                    *dst++ = couple_palette[c];
                 }
             } else {
                 dst-=n; // n is negative
             }
-            src++;
         } else {
             for (int i=0;i<n;i++) {
-                *dst++ = couple_palette[*src++];
+                // MASKBLIT ?
+                if (*src) {
+                    *dst++ = couple_palette[(uint8_t)*src++];
+                } else {
+                    dst++;src++;
+                }
             }
         }
     }
+    o->c=(intptr_t)src;
 }
 
 #endif
@@ -305,15 +319,15 @@ static void sprite_pbc_frame(object *o, int start_line)
     start_line %= 16; // remainder
 
     // Skip first lines as needed
-    int couples=start_line*o->w/2; // couples
-    while (start_line) {
-        int8_t h = *(int8_t *)o->c++;
-        if (h>0) { // copy
-            o->c += h;
-            couples -= h;
+    int couples=start_line*(o->w/2); // remaining couples to skip
+    while (couples>0) {
+        int8_t n = *(int8_t *)o->c++;
+        if (n>=0) { // copy
+            o->c += n; 
+            couples -= n;
         } else { // fill or skip
             o->c++;
-            couples += h;
+            couples += n; // n is negative
         }
     }
 }

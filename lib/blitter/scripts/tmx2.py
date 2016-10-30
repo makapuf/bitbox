@@ -160,7 +160,7 @@ def export_sprite(outfile,tiles,tileset_elt) :
 
     # export data as spr
     print "/* Sprite data : ",imgsrc,len(srcs),' frames, in file:',sprfile
-    couples_encode2.couples_encode(src,f,ts_h, 'c8',args.micro)
+    couples_encode2.couples_encode(src,f,ts_h, 'pbc',args.micro)
     #if args.micro :
     #    sprite_encode8.image_encode(src,f,ts_h,'u8')
     #else :
