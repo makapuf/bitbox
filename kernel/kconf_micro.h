@@ -25,9 +25,9 @@
 #error VGA_BPP must be equal to 8 for bitbox micro targets !
 #endif
 
-#if defined (VGA_MODE==NONE)
+#if VGA_MODE==NONE
 
-#elif defined(VGA_MODE==400)
+#elif VGA_MODE==400
 // 400x300 based on 800x600 + skipline
 
 #define VGA_H_PIXELS 400
