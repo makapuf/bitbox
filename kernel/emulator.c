@@ -126,8 +126,8 @@ void expand_buffer ( void )
     {
         // expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
         // cost is ~ 5 cycles per pixel. not accelerated by putting palette in CCMRAM
-        const uint32_t * restrict src = (uint32_t*)&draw_buffer[VGA_H_PIXELS/2-4];
-        uint32_t * restrict dst=(uint32_t*)&draw_buffer[VGA_H_PIXELS-4];
+        const uint32_t * restrict src = (uint32_t*)&draw_buffer[VGA_H_PIXELS/2-2];
+        uint32_t * restrict dst=(uint32_t*)&draw_buffer[VGA_H_PIXELS-2];
         for (int i=0;i<VGA_H_PIXELS/4;i++) {
             uint32_t pix=*src--; // read 4 src pixels
             *dst-- = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
