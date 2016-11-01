@@ -75,6 +75,7 @@ parser.add_argument('-m','--micro', default=False, help='outputs a 8-bit data ti
 parser.add_argument('-a','--export-tile-attributes', default=False, help='exports a bitfield property from tiles from is_xxx boolean tile attributes as an u8 bin array, after tileset data.',action="store_true")
 parser.add_argument('-x','--export-objects', default=False, help='exports object data directly to c file.', action="store_true")
 parser.add_argument('-s','--export-sprites', default=False, help='exports object data in c file and sprites as 16c spr files. Honors micro palette.',action="store_true")
+parser.add_argument('-i','--export-images', default=False, help='exports images layer as spr pbc files. Honors micro palette.',action="store_true")
 
 #parser.add_argument('-g','--group-anims', default=False, help='exports animations groups - by object type. animations will be a u8** instead of u8',action="store_true")
 
@@ -158,14 +159,12 @@ def export_sprite(outfile,tiles,tileset_elt) :
     # SAVE_SPRITES ?
     # src.save(outfile.name+'.png')  # make it an option ?
 
-    # export data as spr
+    # export data as spr XXX to pb8
     print "/* Sprite data : ",imgsrc,len(srcs),' frames, in file:',sprfile
-    couples_encode2.couples_encode(src,f,ts_h, 'pbc',args.micro)
-    #if args.micro :
-    #    sprite_encode8.image_encode(src,f,ts_h,'u8')
-    #else :
-    #    sprite_encode2.image_encode(src,f,ts_h,'p4')
-
+    if args.micro :
+        sprite_encode8.image_encode(src,outfile,ts_h,'u8')
+    else :
+        sprite_encode2.image_encode(src,outfile,ts_h,'p4')
     print '*/'
 
 
@@ -382,6 +381,19 @@ if args.export_objects or args.export_sprites :
         for (t,s),anim in zip(all_states_sorted, state_anims) :
             print >>c_file,'    (uint8_t []){'+','.join(str(typ_tiles_sorted[t].index(tid)) for tid in anim)+', 255 }, // %s_%s'%(t,s)
         print >>c_file,'};'
+
+    # export images as spr files in pbc format
+    if args.export_images : 
+        print "\n// Image Layers, exported as big pbc sprites"
+        for imagelayer in root.findall('imagelayer') :
+            imgname=imagelayer.find('image').get('source')
+            src = Image.open(imgname).convert('RGBA')
+            sprfile=base_name+'_'+imagelayer.get('name')+'.spr'
+            with open(os.path.join(base_path,sprfile),'w+') as f :
+                print '/* Image : ',imgname,'to file:',sprfile
+                couples_encode2.couples_encode(src,f,src.size[1],'pbc',args.micro)
+                print '*/'
+
 
     print "// "+'-'*80
     print "#ifdef TILEMAPS_IMPLEMENTATION"
