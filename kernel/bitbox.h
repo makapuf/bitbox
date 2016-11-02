@@ -24,6 +24,7 @@ void game_snd_buffer(uint16_t *buffer, int len);
 	#define RGB(r,g,b)  (((r)&0xe0) | ((g)&0xc0)>>3 | (((b)&0xe0)>>5))
 	typedef uint8_t pixel_t;
 #else
+    #define VGA_BPP 16 // make it default
 	#define RGB(r,g,b)  ((((r)>>3)&0x1f)<<10 | (((g)>>3)&0x1f)<<5 | (((b)>>3)&0x1f))
 	typedef uint16_t pixel_t;
 #endif 
