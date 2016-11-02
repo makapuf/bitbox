@@ -120,10 +120,7 @@ void __attribute__((weak)) graph_vsync() {} // default empty
 
 void expand_buffer ( void )
 {
-    #ifdef VGA_SKIPLINE
-    if (vga_odd)
-    #endif
-    {
+    if (vga_odd) {
         // expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
         // cost is ~ 5 cycles per pixel. not accelerated by putting palette in CCMRAM
         const uint32_t * restrict src = (uint32_t*)&draw_buffer[VGA_H_PIXELS/2-2];
