@@ -8,6 +8,7 @@
  */ 
 
 #include <stdint.h>
+#include "bitbox.h"
 
 // TODO define window for overscan to lower RAM usage ?
 
