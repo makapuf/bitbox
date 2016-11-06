@@ -142,9 +142,8 @@ char kbd_map(uint8_t mod, uint8_t key)
 // Call this every frame to check what changed and emit events
 void keyboard_poll(int device)
 {
-        static uint8_t nb_last;
-        static uint8_t keys_last[KBR_MAX_NBR_PRESSED]; // list of 0-nb_last codes of last pressed keys
-        static uint8_t mod_last;
+        static uint8_t keys_last[2][KBR_MAX_NBR_PRESSED]; // list of 0-nb_last codes of last pressed keys
+        static uint8_t mod_last[2];
 
         int j;
         struct event e;
@@ -153,71 +152,67 @@ void keyboard_poll(int device)
 
         // calculates New-Last & send keypresses
         for (int i = 0; i < KBR_MAX_NBR_PRESSED; i++) {                       
-                if (keyboard_key[device][i]==0) continue; // break?
-                // tests for errors (code 1,2 or 3)
-                if ((unsigned)(keyboard_key[device][i]-1) <= 2)
-                        return;
+            if (keyboard_key[device][i]==0) continue; // break?
+            // tests for errors (code 1,2 or 3)
+            if ((unsigned)(keyboard_key[device][i]-1) <= 2)
+                return;
 
-                for (j=0; j<nb_last;j++) 
-                        if (keyboard_key[device][i]==keys_last[j]) 
-                                break;
-                
+            for (j=0; j<KBR_MAX_NBR_PRESSED;j++) 
+                if (keys_last[device][j] && keyboard_key[device][i]==keys_last[device][j]) 
+                    break;
 
-                // not found ?
-                if (j==nb_last) 
-                {
-                        e.type=evt_keyboard_press;
-                        e.kbd.mod=keyboard_mod[device];
-                        e.kbd.key=keyboard_key[device][i];
-                        e.kbd.sym=kbd_map(e.kbd.mod,e.kbd.key);
-                        event_push(e);
-                }
+            // not found ?
+            if (j==KBR_MAX_NBR_PRESSED) 
+            {
+                e.type=evt_keyboard_press;
+                e.kbd.mod=keyboard_mod[device];
+                e.kbd.key=keyboard_key[device][i];
+                e.kbd.sym=kbd_map(e.kbd.mod,e.kbd.key);
+                event_push(e);
+            }
         }
 
         
         // now calculates old-new and send key released events.
-        for (int i=0;i<nb_last;i++)
-        {
-                for (j=0;j<KBR_MAX_NBR_PRESSED;j++)
-                        if (keyboard_key[device][j]==keys_last[i])
-                                break;
-                // not found
-                if (j==KBR_MAX_NBR_PRESSED)
-                {
-                        e.type=evt_keyboard_release;
-                        e.kbd.mod=keyboard_mod[device];
-                        e.kbd.key=keys_last[i];
-                        e.kbd.sym=kbd_map(keyboard_mod[device],keys_last[i]);
-                        event_push(e);
-                }                
+        for (int i=0;i<KBR_MAX_NBR_PRESSED;i++) {
+            for (j=0;j<KBR_MAX_NBR_PRESSED;j++)
+                if (keyboard_key[device][j]==keys_last[device][i])
+                    break;
+
+            // not found
+            if (j==KBR_MAX_NBR_PRESSED) {
+                e.type=evt_keyboard_release;
+                e.kbd.mod=keyboard_mod[device];
+                e.kbd.key=keys_last[device][i];
+                e.kbd.sym=kbd_map(keyboard_mod[device],keys_last[device][i]);
+                event_push(e);
+            }                
         }
 
         // special case : modifier keys as keypresses
-        if (keyboard_mod[device] != mod_last)
+        if (keyboard_mod[device] != mod_last[device]) {
             for (int i=0;i<8;i++) {
-                if ((keyboard_mod[device] & ~mod_last) & (1<<i)) // new ones
+                if ((keyboard_mod[device] & ~mod_last[device]) & (1<<i)) // new ones
                 {
                     e.type=evt_keyboard_press;
                     e.kbd.key=0xE0 + i; // codes are in the same order as bits                
                     event_push(e);
                 }
 
-                if ((mod_last & ~keyboard_mod[device]) & (1<<i)) // released ones
+                if ((mod_last[device] & ~keyboard_mod[device]) & (1<<i)) // released ones
                 {
                     e.type=evt_keyboard_release;
                     e.kbd.key=0xE0 + i; // codes are in the same order as bits                
                     event_push(e);
                 }
             }
+        }
 
 
         // fills old keys with current 
-        nb_last=0;
-        for (int i=0;i<KBR_MAX_NBR_PRESSED;i++) {
-                if (keyboard_key[device][i])
-                        keys_last[nb_last++]=keyboard_key[device][i];
-        }
-        mod_last=keyboard_mod[device];
+        for (int i=0;i<KBR_MAX_NBR_PRESSED;i++)
+            keys_last[device][i]=keyboard_key[device][i];
+        mod_last[device]=keyboard_mod[device];
 }
 
 

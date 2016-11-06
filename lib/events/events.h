@@ -1,6 +1,8 @@
 /*
- * Bitbox event handling library. This is useful to generate events and better keybpard handling.
- * based on bitbox state globals, you will need to call events_poller each frame.  
+ * Bitbox event handling library. Used to generate async events and interpret keyboard keys.
+ * Based on bitbox state globals.
+ *
+ * NOTE : you will need to call events_poll each frame !
  */
 
 #include "bitbox.h"
