@@ -98,7 +98,7 @@ static const int gamepad_max_pads = 2;
 volatile int8_t gamepad_x[2], gamepad_y[2]; // analog pad values
 
 volatile uint8_t keyboard_mod[2]; // LCtrl =1, LShift=2, LAlt=4, LWin - Rctrl, ...
-volatile uint8_t keyboard_key[KBR_MAX_NBR_PRESSED][2]; // using raw USB key codes
+volatile uint8_t keyboard_key[2][KBR_MAX_NBR_PRESSED]; // using raw USB key codes
 
 
 uint32_t time_left(void)

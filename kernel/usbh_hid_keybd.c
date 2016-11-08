@@ -15,7 +15,7 @@ static void  KEYBRD_Decode(uint8_t,uint8_t *data);
 #endif
 
 volatile uint8_t keyboard_mod[2]; // LCtrl =1, LShift=2, LAlt=4, LWin - Rctrl, ...
-volatile uint8_t keyboard_key[6][2]; // using raw USB key codes
+volatile uint8_t keyboard_key[2][6]; // using raw USB key codes
 
 
 HID_cb_TypeDef HID_KEYBRD_cb= 

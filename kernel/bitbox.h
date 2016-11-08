@@ -98,7 +98,7 @@ extern volatile uint8_t mouse_buttons;
 // Keyboard status : currently pressed keys
 // also updates gamepad_buttons : space->select enter->start, udlr->arrows, keys->buttons : DFER -> ABXY, LR -> LR Ctrl.
 extern volatile uint8_t keyboard_mod[2]; // LCtrl =1, LShift=2, LAlt=4, LWin - Rctrl, ...
-extern volatile uint8_t keyboard_key[6][2]; // using raw USB key codes
+extern volatile uint8_t keyboard_key[2][6]; // using raw USB key codes
 
 // --- misc
 void die(int where, int cause); // blink leds
