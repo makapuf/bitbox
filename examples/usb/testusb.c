@@ -47,11 +47,11 @@ void game_frame()
 	// mouse
 	vram[cy / 16][cx / 8] = cbak;
 
-	cy += mouse_y;
+	cy += mouse_y; mouse_y=0;
 	if (cy < 0) cy = 480;
 	else if (cy >= 480) cy = 0;
 	
-	cx += mouse_x; 
+	cx += mouse_x; mouse_x=0;
 	if (cx < 0) cx = 640;
 	else if (cx >= 640) cx = 0;
 
@@ -67,6 +67,10 @@ void game_frame()
 	vram[6][19]=mouse_buttons & mousebut_left?'L':'l';
 	vram[6][20]=mouse_buttons & mousebut_middle?'M':'m';
 	vram[6][21]=mouse_buttons & mousebut_right?'R':'r';
+
+	vram[6][23]=HEX_Digits[(mouse_buttons>>4) & 0xF];
+	vram[6][24]=HEX_Digits[mouse_buttons&0xf];
+
 
 	// gamepad buttons
 	vram[PAD_Y+1][PAD_X+3] = GAMEPAD_PRESSED(0,up) ? 'U':'u';
