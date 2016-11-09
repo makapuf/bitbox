@@ -292,5 +292,42 @@ object *rect_new(int16_t x, int16_t y, int16_t w, int16_t h,int16_t z, uint16_t 
     o->line=color_blit;
     return o;
 }
-// make a gradient ? 
+
+// callback per line : generate a couple of pixels and blit them
+static void line_gen(object *o)
+{
+    uint32_t (*gen_couple)(int x) = (uint32_t (*)(int x)) o->a;
+
+    uint32_t  * restrict dst = (uint32_t*)draw_buffer;
+
+    uint32_t x= gen_couple(vga_line-o->y);
+    int nb; // number of 8 x couples or quads to blit
+
+    #if VGA_BPP==8
+    x*=0x10001;
+    nb = VGA_H_PIXELS/4/8;
+    #else 
+    nb = VGA_H_PIXELS/2/8;
+    #endif 
+    for (int i=0;i<nb;i++) {
+        for (int j=0;j<8;j++)
+            *dst++ = x;
+    }
+}
+
+object *linegen_new(uint32_t (*gen_couple)(int ))
+{
+    object *o = blitter_new();
+    if (!o) return 0; // error
+
+    o->x=0; o->y=0; o->z=255; // default values
+    o->w=VGA_H_PIXELS; 
+    o->h=32767;
+
+    o->a = (intptr_t)gen_couple;
+
+    o->frame=0;
+    o->line=line_gen;
+    return o;
+}
 
