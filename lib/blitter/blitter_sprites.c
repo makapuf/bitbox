@@ -70,11 +70,13 @@ enum sprite_recordID {
 };
 
 #if VGA_BPP==8
+typedef uint16_t couple_t;
+
 static void sprite_frame8(object *o, int start_line);
-static void sprite_pbc_frame(object *o, int start_line);
 static void sprite_u8_line(object *o);
-static void sprite_pbc_line8(object *o);
 #else
+typedef uint32_t couple_t;
+
 static void sprite_frame(object *o, int start_line);
 static void sprite_u16_line(object *o);
 static void sprite_p4_line(object *o);
@@ -83,6 +85,8 @@ static void sprite_rle_line(object *o);
 static void sprite_p8_line(object *o) {}
 #endif
 
+static void sprite_pbc_frame(object *o, int start_line);
+static void sprite_pbc_line(object *o);
 
 
 #define EOL(x) (x&1)
@@ -179,15 +183,6 @@ object * sprite_new(const void *p, int x, int y, int z)
                 sprite_data += (sz+3)/4; // skip, don't read
                 break;
 
-            case sprite_recordID__pbc: 
-                o->line = sprite_pbc_line8;
-                o->frame= sprite_pbc_frame;
-
-                o->data = sprite_data;
-                o->d = 0;
-                sprite_data += (sz+3)/4;
-                break;
-
             case sprite_recordID__u8 :
                 o->line = sprite_u8_line;
                 o->frame = sprite_frame8;
@@ -197,6 +192,17 @@ object * sprite_new(const void *p, int x, int y, int z)
                 break;
 
             #endif 
+
+            // always 
+            case sprite_recordID__pbc: 
+                o->line = sprite_pbc_line;
+                o->frame= sprite_pbc_frame;
+
+                o->data = sprite_data;
+                o->d = 0;
+                sprite_data += (sz+3)/4;
+                break;
+
 
             default :
                 message("Unknown record loading sprite : %d at offset %d \n",t,sprite_data-(uint32_t*)p);
@@ -269,17 +275,20 @@ static void sprite_frame8 (object *o, int start_line)
     }
 }
 
+#endif
+
+
 // beware: no clipping !
 // XXX publish a clipped and unclipped version, determine at frame start if clipped
 
-static void sprite_pbc_line8 (object *o) {
+static void sprite_pbc_line (object *o) {
     o->x &= ~1; // XXX only even for now
 
     int8_t *  restrict src=(int8_t*)o->c;
-    uint16_t * restrict dst=(uint16_t*)(draw_buffer+o->x); // u16 for vga8
-    uint16_t * restrict couple_palette = (uint16_t *)o->a;
+    couple_t * restrict dst=(couple_t*)(draw_buffer+o->x); // u16 for vga8
+    couple_t * restrict couple_palette = (couple_t *)o->a;
 
-    while (dst <(uint16_t*) draw_buffer+o->x/2+o->w/2) {
+    while (dst <(couple_t*) draw_buffer+o->x/2+o->w/2) {
         int8_t n=*src++;
         if (n<0) {
             uint8_t c=*src++;
@@ -292,7 +301,7 @@ static void sprite_pbc_line8 (object *o) {
             }
         } else {
             for (int i=0;i<n;i++) {
-                // MASKBLIT ?
+                // MASKBLIT ? opaque ?
                 if (*src) {
                     *dst++ = couple_palette[(uint8_t)*src++];
                 } else {
@@ -303,9 +312,6 @@ static void sprite_pbc_line8 (object *o) {
     }
     o->c=(intptr_t)src;
 }
-
-#endif
-
 static void sprite_pbc_frame(object *o, int start_line)
 {
     // start line is how much we need to crop to handle out of screen data
