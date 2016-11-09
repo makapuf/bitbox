@@ -32,14 +32,13 @@ const int tilesizes[] = {16,32,8};
                 );
             */
 
-// FIXME factorize much of this (as linlines)
+// FIXME factorize much of this (as inlines)
 
-void tilemap_u8_line(object *o)
+static inline void tilemap_u8_line(object *o, const unsigned int tilesize)
 {
     // in this version, we can assume that we don't have a full
 
     // use current frame, line, buffer
-    unsigned int tilesize = tilesizes[((o->b)>>4)&3];;
     unsigned int tilemap_w = o->b>>20;
     unsigned int tilemap_h = (o->b >>8) & 0xfff;
 
@@ -63,8 +62,8 @@ void tilemap_u8_line(object *o)
     // pixel addr of the last pixel
     const uint32_t *dst_max = (uint32_t*) &draw_buffer[min(o->x+o->w, VGA_H_PIXELS)];
 
-    uint32_t *tiledata = (uint32_t *)o->a;
-    uint32_t * restrict src;
+    const uint32_t *tiledata = (uint32_t *)o->a;
+    const uint32_t * restrict src;
 
     // first, finish first tile (if not on a boundary) , 2 pix at a time
     if (o->x<0 && o->x%tilesize) {
@@ -84,14 +83,12 @@ void tilemap_u8_line(object *o)
         if (tile_x>=tilemap_w) tile_x-=tilemap_w;
 
         // blit one tile, 2pix=32bits at a time, 8 times = 16pixels, 16 times=32pixels
-        if (idxptr[tile_x]) {
+        if (idxptr[tile_x]) 
+        {
             src = &tiledata[(idxptr[tile_x]*tilesize + offset)*tilesize*2/4];
 
-            for (int i=0;i<4;i++) *dst++=*src++; // 4 words = 8pixels
-            if (tilesize>=16) // 16 or 32
-                for (int i=0;i<4;i++) *dst++=*src++; // 8 more
-            if (tilesize==32)
-                for (int i=0;i<8;i++) *dst++=*src++; // 16 more
+            for (int i=0;i<tilesize/2;i++) 
+                *dst++=*src++; // 1 word = 2 pixel2
 
         } else { // skip the tile
             dst += tilesize/2; // words per tile
@@ -99,18 +96,26 @@ void tilemap_u8_line(object *o)
         tile_x++;
 
     }
+}
 
+// specialize - generic case
+void tilemap_u8_line_any(object *o) {
+    tilemap_u8_line(o, tilesizes[((o->b)>>4)&3]);
+}
+
+// specialize - 16pixels wide case
+void tilemap_u8_line_16(object *o) {
+    tilemap_u8_line(o,16);
 }
 
 
-void tilemap_u16_line(object *o)
+
+static inline void tilemap_u16_line(object *o, const unsigned int tilesize)
 {
     // in this version, we can assume that we don't have a full
     // TODO : take care of smaller x, don't recalc all each time. case o->x <0
-    // TODO handle tilesize=8
 
     // use current frame, line, buffer
-    unsigned int tilesize = tilesizes[((o->b)>>4)&3];;
     unsigned int tilemap_w = o->b>>20;
     unsigned int tilemap_h = (o->b >>8) & 0xfff;
 
@@ -168,10 +173,20 @@ void tilemap_u16_line(object *o)
             dst += tilesize/2; // words per tile
         }
         tile_x++;
-
     }
-
 }
+
+// specialize - generic case
+void tilemap_u16_line_any(object *o) {
+    tilemap_u16_line(o, tilesizes[((o->b)>>4)&3]);
+}
+
+// specialize - 16pixels wide case
+void tilemap_u16_line_16(object *o) {
+    tilemap_u16_line(o, 16);
+}
+
+
 
 void tilemap_u8_line8(object *o)
 {
@@ -274,10 +289,10 @@ object *tilemap_new(const void *tileset, int w, int h, uint32_t header, const vo
     o->a = (uintptr_t)tileset-2*tilesize*tilesize; // to start at index 1 and not 0, offset now in bytes.
     switch (header & 0xf) {
         case TMAP_U8 :
-            o->line=tilemap_u8_line;
+            o->line = tilesize==16 ? tilemap_u8_line_16 : tilemap_u8_line_any;
             break;
         case TMAP_U16 :
-            o->line=tilemap_u16_line;
+            o->line = tilesize==16 ? tilemap_u16_line_16 : tilemap_u16_line_any;
             break;
         default:
             die(4,4);
