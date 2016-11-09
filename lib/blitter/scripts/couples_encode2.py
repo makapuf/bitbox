@@ -258,21 +258,25 @@ if __name__=='__main__' :
 
     print '\n***',args
 
-    # prepare input as vertically stacked images
     src = Image.open(args.file).convert('RGBA')
 
     dw=src.size[0]/args.frames_x
     dh=src.size[1]/args.frames_y
-    dst = Image.new("RGBA", (dw,dh*args.frames_y*args.frames_x))
+    
+    # if needed (x>1) prepare input as vertically stacked images
+    if args.frames_x>1 : 
+        dst = Image.new("RGBA", (dw,dh*args.frames_y*args.frames_x))
 
-    for j in range(args.frames_y) :
-        for i in range(args.frames_x) :
-            im=src.crop((i*dw,j*dh,i*dw+dw,j*dh+dh))
-            dst.paste(im,(0,dh*(j*args.frames_x+i)))
+        for j in range(args.frames_y) :
+            for i in range(args.frames_x) :
+                im=src.crop((i*dw,j*dh,i*dw+dw,j*dh+dh))
+                dst.paste(im,(0,dh*(j*args.frames_x+i)))
+    else :
+        dst=src
 
     # output
     f = open(args.file.rsplit('.',1)[0]+'.spr','wb+')
-    couples_encode(dst,f,dh*args.frames_x*args.frames_y,'c8',args.micro, args.file+'.png')
+    couples_encode(dst,f,dh,'pbc',args.micro, args.file+'.png')
     #
     #f.seek(0)
     #image_decode(f).save(args.file_out+'.png') #note that only the first is written (but all are decoded)

@@ -277,7 +277,7 @@ if __name__=='__main__' :
     parser = argparse.ArgumentParser()
     parser.add_argument("file_out",help="Output file name. Usually .spr")
     parser.add_argument('file_in', nargs='+', help="Input files in order as frames.")
-    parser.add_argument("-m","--mode",help="Encoding mode",choices=('u16','p4','p8'))
+    parser.add_argument("-m","--mode",help="Encoding mode. default : use image number of colors",choices=('u16','p4','p8'))
     parser.add_argument("-d","--decode",help='Decode the file instead of encoding',default=False,action='store_true')
     args = parser.parse_args()
 

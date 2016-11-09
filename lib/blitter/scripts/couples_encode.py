@@ -19,60 +19,7 @@ ALPHA_T=127
 # reduce  first : ecrase 3 dernier bits (faire mieux dehors)
 # ameliorer vector quantization
 
-def avg(l) : return sum(l)/float(len(l)) if l else 0
-def stddev(l,avg) : return sum(((x-avg)*(x-avg)) for x in l)/float(len(l))
-
-def quantize_couples(cpls,nb=255):
-    # vector quantize couples
-    uniq = set(cpls)
-    if len(uniq)<=nb : 
-        print "directly use %d bins"%len(uniq)
-        palette = list(uniq)
-        invpal = dict((c,n) for n,c in enumerate(palette))
-        return palette, invpal
-
-    bins=[
-        [c for c  in cpls if c[3]< ALPHA_T and c[7]< ALPHA_T ],
-        [c for c  in cpls if c[3]>=ALPHA_T and c[7]< ALPHA_T ],
-        [c for c  in cpls if c[3]< ALPHA_T and c[7]>=ALPHA_T ],
-        [c for c  in cpls if c[3]>=ALPHA_T and c[7]>=ALPHA_T ],
-        ]  # one per couple alpha possibilities, so they never get in the same bin (and 1bit cut alpha)
-
-    print "  reducing from %d bins to %d"%(len(cpls),nb)
-    while len(bins)<nb : 
-        # find id of largest set  
-        cid = max(range(len(bins)),key=lambda i:len(bins[i]))
-        colorset =bins[cid] 
-        
-        # choix de l'axe : max d'ecart type 
-        avgs = [avg([c[i] for c in bins[cid]]) for i in range(8)]
-        stdv = [stddev([c[i] for c in bins[cid]],avgs[i]) for i in range(8)]
-
-        axis = max(range(len(stdv)), key=lambda x:stdv[x]) # pas sur l'axe alpha
-
-        # couper a la moyenne : enlever & remettre 2 decoupes        
-        del bins[cid]
-        bins.append(set(c for c in colorset if c[axis] > avgs[axis]))
-        bins.append(set(c for c in colorset if c[axis] <= avgs[axis]))
-
-    # now make an invert mapping (asserts not too big !) from mean
-    palette=[]
-    invpal = {}
-    for cl in bins :
-        # find best representant of cl
-        acl=tuple(int(round(avg([c[i] for c in cl])/32.)*31) for i in range(8))
-        if any( x>255 for x in acl) : print acl, cl
-
-        # cut alpha
-        r1,g1,b1,a1,r2,g2,b2,a2 = acl
-        acl = (r1,g1,b1, 255 if a1>ALPHA_T else 0, r2,g2,b2, 255 if a2>ALPHA_T else 0)
-
-        if acl not in palette : 
-            palette.append(acl)
-
-        for c in cl : 
-            invpal[c]=palette.index(acl) # takes first if already in palette
-    return palette, invpal
+from couples_encode2 import quantize_couples
 
 def reduce_couple(c) :
     'R8G8B8A8 to A1R5G5B5 - x2 for couples'
