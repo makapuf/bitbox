@@ -2,7 +2,7 @@
 NAME = test_blitter
 
 GAME_C_FILES = main.c lib/blitter/blitter.c lib/blitter/blitter_tmap.c lib/blitter/blitter_sprites.c
-DEFINES = VGA_MODE=640
+DEFINES = VGA_MODE=640 
 GAME_BINARY_FILES = ball.spr bg.tset bg.tmap ball_small.spr
 
 NO_USB=1
@@ -15,7 +15,12 @@ bg.tset bg.tmap bg.h: bg.tmx bg.png
 	python2 ../scripts/tmx.py bg.tmx > bg.h
 
 ball.spr : ball/????.png
-	python2 ../scripts/couples_encode.py $@ $(sort $^)
+	python2 ../scripts/sprite_encode2.py $@ $(sort $^) -m u16
+	# OR 
+	#montage ball/*.png -geometry +0+0 -background none -tile 1x ball.png
+	#python2 ../scripts/couples_encode2.py ball.png -y 8 
+	# OR 
+	#python2 ../scripts/couples_encode.py $@ $(sort $^)
 
 ball_small.spr : ball_small/????.png
 	python2 ../scripts/couples_encode.py $@ $(sort $^)
