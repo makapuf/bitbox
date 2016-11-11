@@ -483,14 +483,16 @@ void clear()
    #endif
 }
 
-void print_at(int column, int line, const char *msg)
+int print_at(int column, int line, const char *msg)
 {
-	for(int k = 0; msg[k] && (k+column+line*SCREEN_W<SCREEN_H*SCREEN_W); k++) {
+	int k;
+	for(k = 0; msg[k] && (k+column+line*SCREEN_W<SCREEN_H*SCREEN_W); k++) {
 		vram[line][column + k] = msg[k];
 		#ifdef COLOR_TEXT
 		vram_attr[line][column + k] = text_color;
 		#endif
   	}
+	return k;
 }
 
 // draws an empty window at this position, asserts x1<x2 && y1<y2
