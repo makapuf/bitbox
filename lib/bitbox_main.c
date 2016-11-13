@@ -5,7 +5,6 @@ __attribute__((weak)) int main(void)
 	game_init();
 
 	while (1) {
-		game_frame();
 
 		// wait next frame.
 		#ifndef NO_VGA
@@ -13,6 +12,7 @@ __attribute__((weak)) int main(void)
 		while (oframe==vga_frame);
 		#endif
 
-		set_led(button_state());
+		game_frame();
+		//set_led(button_state());
 	}
 }
