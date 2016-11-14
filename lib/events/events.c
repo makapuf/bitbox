@@ -229,6 +229,7 @@ void mouse_poll()
 		e.mov.x = mouse_x;
 		e.mov.y = mouse_y;
 		event_push(e);
+        mouse_x=mouse_y=0;
 	}
 
 	for (int i=0;i<8;i++) {
