@@ -21,6 +21,9 @@ extern char vram_attr[SCREEN_H][SCREEN_W]; // 0-63 and loops
 
 void clear();
 void set_palette(uint8_t pen, uint16_t color, uint16_t background); // for 8bit, use values <256
-void print_at(int column, int line, uint8_t pen, const char *msg);
+
+// Print a string. Returns the number of char actually printed
+int print_at(int column, int line, uint8_t pen, const char *msg); 
+
 // draws an empty window at this position, asserts x1<x2 && y1<y2
 void window (uint8_t pen, int x1, int y1, int x2, int y2);

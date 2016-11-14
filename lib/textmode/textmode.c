@@ -77,12 +77,14 @@ void clear()
    set_palette(0,0x7fff,0x0000); // white on black
 }
 
-void print_at(int column, int line, uint8_t pen, const char *msg)
+int print_at(int column, int line, uint8_t pen, const char *msg)
 {
-	for(int k = 0; msg[k] && (k+column+line*SCREEN_W<SCREEN_H*SCREEN_W); k++) {
+	int k;
+	for(k = 0; msg[k] && (k+column+line*SCREEN_W<SCREEN_H*SCREEN_W); k++) {
 		vram[line][column + k] = msg[k];
 		vram_attr[line][column + k] = pen;
   	}
+  	return k;
 }
 
 // draws an empty window at this position, asserts x1<x2 && y1<y2
