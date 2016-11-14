@@ -127,7 +127,8 @@ extern uint32_t palette[];
 extern uint8_t text_color;
 #endif
 
-void print_at(int column, int line, const char *msg);
+// Print a string. Returns the number of char actually printed.
+int print_at(int column, int line, const char *msg);
 
 // draws an empty window at this position, asserts x1<x2 && y1<y2
 void window (int x1, int y1, int x2, int y2);

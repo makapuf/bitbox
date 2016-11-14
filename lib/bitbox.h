@@ -139,10 +139,16 @@ enum gamepad_buttons_enum {
 #define GAMEPAD_PRESSED(id , key) (gamepad_buttons[id] & (gamepad_##key))
 enum keycodes{
 	KEY_ERR = 0xff,
-	KEY_RIGHT = 128,
-	KEY_LEFT = 129,
-	KEY_DOWN = 130,
-	KEY_UP = 131
+	KEY_INSER = 128,
+	KEY_HOME = 129,
+	KEY_PAGEUP = 130,
+	KEY_DEL = 131,
+	KEY_END = 132,
+	KEY_PAGEDOWN = 133,
+	KEY_RIGHT = 134,
+	KEY_LEFT = 135,
+	KEY_DOWN = 136,
+	KEY_UP = 137
 };
 
 struct event { //should be coded in 32bits

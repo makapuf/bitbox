@@ -121,19 +121,22 @@ static const char keyb_en[3][83] = { // normal, shift, ctrl
         'o','p','q','r','s','t','u','v','w','x','y','z','1','2','3','4','5','6',
         '7','8','9','0','\n',0x1B,'\b','\t',' ','-','=','[',']','\\','#',';','\'','`',
         ',','.','/',
-        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP
+        [73]=KEY_INSER,KEY_HOME,KEY_PAGEUP,KEY_DEL,KEY_END,KEY_PAGEDOWN,
+             KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP
     },{
         ERR,ERR,ERR,ERR,'A','B','C','D','E','F','G','H','I','J','K','L','M','N',
         'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@','#','$','%','^',
         '&','*','(',')','\n',0x1B,'\b','\t',' ','_','+','{','}','|','#',':','"','~',
         '<','>','?',
-        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP,
+        [73]=KEY_INSER,KEY_HOME,KEY_PAGEUP,KEY_DEL,KEY_END,KEY_PAGEDOWN,
+             KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP
     },{
         ERR,ERR,ERR,ERR, 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10, 11, 12, 13, 14,
          15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,'1','2','3','4','5','6',
         '7','8','9','0','\n',0x1B,'\b','\t',' ','-','=','[',']','\\',ERR,';','\'','`',
         ',','.','/',
-        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP,
+        [73]=KEY_INSER,KEY_HOME,KEY_PAGEUP,KEY_DEL,KEY_END,KEY_PAGEDOWN,
+             KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP
     }
 };
 
@@ -143,19 +146,22 @@ static const char keyb_fr[3][83] = { // normal, shift, ctrl - TODO : add right_a
         'o','p','a','r','s','t','u','v','z','x','y','w','&',0xe9,'\"','\'','(','-',
         0xe8,'_',0xe7,0xe0,'\n',0x1B,'\b','\t',' ',')','=','^','$','\\','#','m',0xF9,'~',
         ';',':','!',
-        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP
+        [73]=KEY_INSER,KEY_HOME,KEY_PAGEUP,KEY_DEL,KEY_END,KEY_PAGEDOWN,
+             KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP
     },{
         ERR,ERR,ERR,ERR,'Q','B','C','D','E','F','G','H','I','J','K','L','?','N',
         'O','P','A','R','S','T','U','V','Z','X','Y','W','1','2','3','4','5','6',
         '7','8','9','0','\n',0x1B,'\b','\t',' ',0xB0,'+',0xa8,0xa3,'*','#','M','%',0xB5,
         '.','/',0xA7,
-        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP,
+        [73]=KEY_INSER,KEY_HOME,KEY_PAGEUP,KEY_DEL,KEY_END,KEY_PAGEDOWN,
+             KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP
     },{
         ERR,ERR,ERR,ERR, 17, 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10, 11, 12,',', 14,
          15, 16, 1 , 18, 19, 20, 21, 22, 26, 24, 25, 23,'1','2','3','4','5','6',
         '7','8','9','0','\n',0x1B,'\b','\t',' ','-','=','[',']','\\',ERR,';','\'','`',
          13,'.','/',
-        [79]=KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP,
+        [73]=KEY_INSER,KEY_HOME,KEY_PAGEUP,KEY_DEL,KEY_END,KEY_PAGEDOWN,
+             KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_UP
     }
 };
 
