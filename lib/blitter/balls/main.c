@@ -2,6 +2,10 @@
 #include <bitbox.h>
 #include "lib/blitter/blitter.h"
 
+#if BITBOX_KERNEL != 0010 
+#error must be compiled with kernel version v0.10 
+#endif 
+
 #include "bg.h"
 
 #define SPRITE ball_small_spr
@@ -9,6 +13,7 @@
 
 extern const char SPRITE[];
 extern const char SPRITE_BIG[];
+
 
 // x and y  should be volatile since the vga thread must see the changes to x and y 
 // which are runnin in the main thread 

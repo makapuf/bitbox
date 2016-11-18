@@ -8,6 +8,10 @@
 #include "stm32f4xx.h" // profile
 #endif
 
+#if BITBOX_KERNEL != 0010 
+#error must be compiled with kernel version v0.10 
+#endif 
+
 extern int line_time;
 
 typedef struct {

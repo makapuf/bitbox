@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "kconf.h" // kernel conf can be the basis of values
 
+#define BITBOX_KERNEL 0010 
 
 // --- Main -----------------------------------------------------------------------------
 void game_init(void); // user provided
