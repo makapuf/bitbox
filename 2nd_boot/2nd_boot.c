@@ -9,12 +9,12 @@
 	cannot intialize USB if already plugged - interactions with bootloader 1 ?
  */
 
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h> // qsort
 // #include "system.h" // system_init
 #include "bitbox.h"
 #include "fatfs/ff.h"
-
 #include "flashit.h"
 #include "build/binaries.h"
 
@@ -286,6 +286,8 @@ int offset=0; // display offset (scrolling)
 int x =5,y=10 , dir_x=1, dir_y=1;
 char old_val=' ';
 char icon_name[13];
+bool last_button=false; // button last status
+int frame_pressed; // frame when button was pressed
 
 void game_frame()
 {
@@ -305,6 +307,29 @@ void game_frame()
 	}
 
 	if (!nb_files) return; // no need to go further
+
+
+	// handle button operation
+	if (last_button && !button_state()) { // just released 
+		if (vga_frame-frame_pressed<120) { // go down
+			if (selected<DISPLAY_LINES-1)
+				selected +=1;
+			else
+				offset += 1;
+
+			if (selected+offset >= nb_files) {
+				offset=selected=0;
+			}
+		}
+	} else if (button_state() ) { 
+		if (!last_button)		// just pressed
+			frame_pressed=vga_frame;
+		if (vga_frame-frame_pressed>120) {
+			// start flashing
+			gamepad_buttons[0] |= gamepad_A;
+		}
+	}
+	last_button=button_state();
 
 
 	// handle input
