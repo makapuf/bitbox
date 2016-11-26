@@ -379,6 +379,8 @@ void game_frame()
 
 
 	// update_display
+	const int scroll_offset = offset*DISPLAY_LINES/nb_files;
+	const int scroll_height = DISPLAY_LINES*DISPLAY_LINES/nb_files;
 	for (int i=0;i<min(offset+nb_files, DISPLAY_LINES);i++)
 	{
 		int l;
@@ -390,6 +392,10 @@ void game_frame()
 		// cursor
 		vram_char[LIST_Y+i][8]=(i==selected)?0x10:' ';
 		vram_char[LIST_Y+i][25]=(i==selected)?0x11:' ';
+
+		// scrollbar
+		char c = (i>=scroll_offset && i<scroll_offset+scroll_height) ? '\xb1' : '\xb3';
+		vram_char[LIST_Y+i][27] = c;
 	}
 
 
