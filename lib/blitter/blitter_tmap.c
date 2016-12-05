@@ -32,7 +32,7 @@ const int tilesizes[] = {16,32,8};
                 );
             */
 
-// FIXME factorize much of this (as inlines)
+// FIXME factorize much of this (as inlines), compute x-info in frame ?
 
 static inline void tilemap_u8_line(object *o, const unsigned int tilesize)
 {
@@ -42,7 +42,7 @@ static inline void tilemap_u8_line(object *o, const unsigned int tilesize)
     unsigned int tilemap_w = o->b>>20;
     unsigned int tilemap_h = (o->b >>8) & 0xfff;
 
-    o->x &= ~1; // force even addresses ...
+    //o->x &= ~1; // force even addresses ...
 
     // --- line related
     // line inside tilemap (pixel), looped.
@@ -54,8 +54,8 @@ static inline void tilemap_u8_line(object *o, const unsigned int tilesize)
 
     // --- column related
 
-    // horizontal tile offset in tilemap
-    int tile_x = ((o->x<0?-o->x:0)/tilesize) & (tilemap_w-1);  // positive modulo as tilemap_w is a power of two
+    // horizontal tile offset in tilemap (once by frame)
+    int tile_x = ((o->x<0?-o->x:0)/tilesize) % tilemap_w;
 
     uint32_t * restrict dst = (uint32_t*) &draw_buffer[o->x<0?0:o->x];
 
@@ -87,8 +87,9 @@ static inline void tilemap_u8_line(object *o, const unsigned int tilesize)
         {
             src = &tiledata[(idxptr[tile_x]*tilesize + offset)*tilesize*2/4];
 
-            for (int i=0;i<tilesize/2;i++) 
-                *dst++=*src++; // 1 word = 2 pixel2
+            for (int i=0;i<tilesize/8;i++) 
+                for (int j=0;j<4;j++)
+                    *dst++=*src++; // 1 word = 2 pixel2, blit 8 by 8 pixels
 
         } else { // skip the tile
             dst += tilesize/2; // words per tile
