@@ -177,8 +177,6 @@ USB_OTG_STS USB_OTG_SelectCore(USB_OTG_CORE_HANDLE *pdev,
     pdev->cfg.dev_endpoints    = 4 ;
     pdev->cfg.TotalFifoSize    = 320; /* in 32-bits */
     pdev->cfg.phy_itface       = USB_OTG_EMBEDDED_PHY;     
-    
-  
   }
   else if (coreID == USB_OTG_HS_CORE_ID)
   {
@@ -196,34 +194,25 @@ USB_OTG_STS USB_OTG_SelectCore(USB_OTG_CORE_HANDLE *pdev,
     
   }
   
-  pdev->regs.GREGS = (USB_OTG_GREGS *)(baseAddress + \
-    USB_OTG_CORE_GLOBAL_REGS_OFFSET);
-  pdev->regs.DREGS =  (USB_OTG_DREGS  *)  (baseAddress + \
-    USB_OTG_DEV_GLOBAL_REG_OFFSET);
+  pdev->regs.GREGS = (USB_OTG_GREGS *) (baseAddress + USB_OTG_CORE_GLOBAL_REGS_OFFSET);
+  pdev->regs.DREGS = (USB_OTG_DREGS *) (baseAddress + USB_OTG_DEV_GLOBAL_REG_OFFSET);
   
   for (i = 0; i < pdev->cfg.dev_endpoints; i++)
   {
-    pdev->regs.INEP_REGS[i]  = (USB_OTG_INEPREGS *)  \
-      (baseAddress + USB_OTG_DEV_IN_EP_REG_OFFSET + \
-        (i * USB_OTG_EP_REG_OFFSET));
-    pdev->regs.OUTEP_REGS[i] = (USB_OTG_OUTEPREGS *) \
-      (baseAddress + USB_OTG_DEV_OUT_EP_REG_OFFSET + \
-        (i * USB_OTG_EP_REG_OFFSET));
+    pdev->regs.INEP_REGS[i]  = (USB_OTG_INEPREGS  *) (baseAddress + USB_OTG_DEV_IN_EP_REG_OFFSET  + (i * USB_OTG_EP_REG_OFFSET));
+    pdev->regs.OUTEP_REGS[i] = (USB_OTG_OUTEPREGS *) (baseAddress + USB_OTG_DEV_OUT_EP_REG_OFFSET + (i * USB_OTG_EP_REG_OFFSET));
   }
-  pdev->regs.HREGS = (USB_OTG_HREGS *)(baseAddress + \
-    USB_OTG_HOST_GLOBAL_REG_OFFSET);
+  pdev->regs.HREGS = (USB_OTG_HREGS *)(baseAddress + USB_OTG_HOST_GLOBAL_REG_OFFSET);
   pdev->regs.HPRT0 = (uint32_t *)(baseAddress + USB_OTG_HOST_PORT_REGS_OFFSET);
   
   for (i = 0; i < pdev->cfg.host_channels; i++)
   {
-    pdev->regs.HC_REGS[i] = (USB_OTG_HC_REGS *)(baseAddress + \
-      USB_OTG_HOST_CHAN_REGS_OFFSET + \
-        (i * USB_OTG_CHAN_REGS_OFFSET));
+    pdev->regs.HC_REGS[i] = (USB_OTG_HC_REGS *)(baseAddress + USB_OTG_HOST_CHAN_REGS_OFFSET + (i * USB_OTG_CHAN_REGS_OFFSET));
   }
+
   for (i = 0; i < pdev->cfg.host_channels; i++)
   {
-    pdev->regs.DFIFO[i] = (uint32_t *)(baseAddress + USB_OTG_DATA_FIFO_OFFSET +\
-      (i * USB_OTG_DATA_FIFO_SIZE));
+    pdev->regs.DFIFO[i] = (uint32_t *)(baseAddress + USB_OTG_DATA_FIFO_OFFSET + (i * USB_OTG_DATA_FIFO_SIZE));
   }
   pdev->regs.PCGCCTL = (uint32_t *)(baseAddress + USB_OTG_PCGCCTL_OFFSET);
   
@@ -345,69 +334,6 @@ USB_OTG_STS USB_OTG_FlushRxFifo( USB_OTG_CORE_HANDLE *pdev )
   return status;
 }
 
-
-/**
-* @brief  USB_OTG_SetCurrentMode : Set ID line
-* @param  pdev : Selected device
-* @param  mode :  (Host/device)
-* @retval USB_OTG_STS : status
-*/
-USB_OTG_STS USB_OTG_SetCurrentMode(USB_OTG_CORE_HANDLE *pdev , uint8_t mode)
-{
-  USB_OTG_STS status = USB_OTG_OK;
-  USB_OTG_GUSBCFG_TypeDef  usbcfg;
-  
-  usbcfg.d32 = USB_OTG_READ_REG32(&pdev->regs.GREGS->GUSBCFG);
-  
-  usbcfg.b.force_host = 0;
-  usbcfg.b.force_dev = 0;
-  
-  if ( mode == HOST_MODE)
-  {
-    usbcfg.b.force_host = 1;
-  }
-  else if ( mode == DEVICE_MODE)
-  {
-    usbcfg.b.force_dev = 1;
-  }
-  
-  USB_OTG_WRITE_REG32(&pdev->regs.GREGS->GUSBCFG, usbcfg.d32);
-  USB_OTG_BSP_mDelay(50);
-  return status;
-}
-
-
-/**
-* @brief  USB_OTG_GetMode : Get current mode
-* @param  pdev : Selected device
-* @retval current mode
-*/
-uint32_t USB_OTG_GetMode(USB_OTG_CORE_HANDLE *pdev)
-{
-  return (USB_OTG_READ_REG32(&pdev->regs.GREGS->GINTSTS ) & 0x1);
-}
-
-
-/**
-* @brief  USB_OTG_IsDeviceMode : Check if it is device mode
-* @param  pdev : Selected device
-* @retval num_in_ep
-*/
-uint8_t USB_OTG_IsDeviceMode(USB_OTG_CORE_HANDLE *pdev)
-{
-  return (USB_OTG_GetMode(pdev) != HOST_MODE);
-}
-
-
-/**
-* @brief  USB_OTG_IsHostMode : Check if it is host mode
-* @param  pdev : Selected device
-* @retval num_in_ep
-*/
-uint8_t USB_OTG_IsHostMode(USB_OTG_CORE_HANDLE *pdev)
-{
-  return (USB_OTG_GetMode(pdev) == HOST_MODE);
-}
 
 
 /**
@@ -718,6 +644,7 @@ USB_OTG_STS USB_OTG_HC_Init(USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num)
       }
     }
     break;
+    
   case EP_TYPE_INTR:
     hcintmsk.b.xfercompl = 1;
     hcintmsk.b.nak = 1;
@@ -732,17 +659,8 @@ USB_OTG_STS USB_OTG_HC_Init(USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num)
     }
     
     break;
-  case EP_TYPE_ISOC:
-    hcintmsk.b.xfercompl = 1;
-    hcintmsk.b.frmovrun = 1;
-    hcintmsk.b.ack = 1;
-    
-    if (pdev->host.hc[hc_num].ep_is_in) 
-    {
-      hcintmsk.b.xacterr = 1;
-      hcintmsk.b.bblerr = 1;
-    }
-    break;
+    // removed isochrone
+ 
   }
   
   

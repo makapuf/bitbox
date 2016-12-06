@@ -28,68 +28,11 @@
 
 #include "usbh_ioreq.h"
 
-/** @addtogroup USBH_LIB
-  * @{
-  */
 
-/** @addtogroup USBH_LIB_CORE
-* @{
-*/
-  
-/** @defgroup USBH_IOREQ 
-  * @brief This file handles the standard protocol processing (USB v2.0)
-  * @{
-  */
-
-
-/** @defgroup USBH_IOREQ_Private_Defines
-  * @{
-  */ 
-/**
-  * @}
-  */ 
- 
-
-/** @defgroup USBH_IOREQ_Private_TypesDefinitions
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-
-/** @defgroup USBH_IOREQ_Private_Macros
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBH_IOREQ_Private_Variables
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBH_IOREQ_Private_FunctionPrototypes
-  * @{
-  */ 
 static USBH_Status USBH_SubmitSetupRequest(USBH_HOST *phost,
                                            uint8_t* buff, 
                                            uint16_t length);
 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBH_IOREQ_Private_Functions
-  * @{
-  */ 
 
 
 /**
@@ -233,70 +176,6 @@ USBH_Status USBH_CtlReceiveData(USB_OTG_CORE_HANDLE *pdev,
 }
 
 
-/**
-  * @brief  USBH_BulkSendData
-  *         Sends the Bulk Packet to the device
-  * @param  pdev: Selected device
-  * @param  buff: Buffer pointer from which the Data will be sent to Device
-  * @param  length: Length of the data to be sent
-  * @param  hc_num: Host channel Number
-  * @retval Status
-  */
-USBH_Status USBH_BulkSendData ( USB_OTG_CORE_HANDLE *pdev, 
-                                uint8_t *buff, 
-                                uint16_t length,
-                                uint8_t hc_num)
-{ 
-  pdev->host.hc[hc_num].ep_is_in = 0;
-  pdev->host.hc[hc_num].xfer_buff = buff;
-  pdev->host.hc[hc_num].xfer_len = length;  
-
- /* Set the Data Toggle bit as per the Flag */
-  if ( pdev->host.hc[hc_num].toggle_out == 0)
-  { /* Put the PID 0 */
-      pdev->host.hc[hc_num].data_pid = HC_PID_DATA0;    
-  }
- else
- { /* Put the PID 1 */
-      pdev->host.hc[hc_num].data_pid = HC_PID_DATA1 ;
- }
-
-  HCD_SubmitRequest (pdev , hc_num);   
-  return USBH_OK;
-}
-
-
-/**
-  * @brief  USBH_BulkReceiveData
-  *         Receives IN bulk packet from device
-  * @param  pdev: Selected device
-  * @param  buff: Buffer pointer in which the received data packet to be copied
-  * @param  length: Length of the data to be received
-  * @param  hc_num: Host channel Number
-  * @retval Status. 
-  */
-USBH_Status USBH_BulkReceiveData( USB_OTG_CORE_HANDLE *pdev, 
-                                uint8_t *buff, 
-                                uint16_t length,
-                                uint8_t hc_num)
-{
-  pdev->host.hc[hc_num].ep_is_in = 1;   
-  pdev->host.hc[hc_num].xfer_buff = buff;
-  pdev->host.hc[hc_num].xfer_len = length;
-  
-
-  if( pdev->host.hc[hc_num].toggle_in == 0)
-  {
-    pdev->host.hc[hc_num].data_pid = HC_PID_DATA0;
-  }
-  else
-  {
-    pdev->host.hc[hc_num].data_pid = HC_PID_DATA1;
-  }
-
-  HCD_SubmitRequest (pdev , hc_num);  
-  return USBH_OK;
-}
 
 
 /**
@@ -399,76 +278,3 @@ static USBH_Status USBH_SubmitSetupRequest(USBH_HOST *phost,
 
   return USBH_OK;  
 }
-
-
-/**
-  * @brief  USBH_IsocReceiveData
-  *         Receives the Device Response to the Isochronous IN token
-  * @param  pdev: Selected device
-  * @param  buff: Buffer pointer in which the response needs to be copied
-  * @param  length: Length of the data to be received
-  * @param  hc_num: Host channel Number
-  * @retval Status. 
-  */
-USBH_Status USBH_IsocReceiveData( USB_OTG_CORE_HANDLE *pdev, 
-                                uint8_t *buff, 
-                                uint32_t length,
-                                uint8_t hc_num)
-{    
-  
-  pdev->host.hc[hc_num].ep_is_in = 1;  
-  pdev->host.hc[hc_num].xfer_buff = buff;
-  pdev->host.hc[hc_num].xfer_len = length;
-  pdev->host.hc[hc_num].data_pid = HC_PID_DATA0;
-  
-
-  HCD_SubmitRequest (pdev , hc_num);  
-  
-  return USBH_OK;
-}
-
-/**
-  * @brief  USBH_IsocSendData
-  *         Sends the data on Isochronous OUT Endpoint
-  * @param  pdev: Selected device
-  * @param  buff: Buffer pointer from where the data needs to be copied
-  * @param  length: Length of the data to be sent
-  * @param  hc_num: Host channel Number
-  * @retval Status. 
-  */
-USBH_Status USBH_IsocSendData( USB_OTG_CORE_HANDLE *pdev, 
-                                uint8_t *buff, 
-                                uint32_t length,
-                                uint8_t hc_num)
-{
-  
-  pdev->host.hc[hc_num].ep_is_in = 0;  
-  pdev->host.hc[hc_num].xfer_buff = buff;
-  pdev->host.hc[hc_num].xfer_len = length;
-  pdev->host.hc[hc_num].data_pid = HC_PID_DATA0;
-  
-  HCD_SubmitRequest (pdev , hc_num);  
-  
-  return USBH_OK;
-}
-
-/**
-* @}
-*/ 
-
-/**
-* @}
-*/ 
-
-/**
-* @}
-*/
-
-/**
-* @}
-*/ 
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
-
-
