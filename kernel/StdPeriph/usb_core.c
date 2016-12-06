@@ -46,14 +46,9 @@ static void USB_OTG_EnableCommonInt(USB_OTG_CORE_HANDLE *pdev)
   USB_OTG_WRITE_REG32( &pdev->regs.GREGS->GINTMSK, int_mask.d32);
 }
 
-/**
-* @brief  USB_OTG_CoreReset : Soft reset of the core
-* @param  pdev : Selected device
-* @retval USB_OTG_STS : status
-*/
+// USB_OTG_CoreReset : Soft reset of the core
 static USB_OTG_STS USB_OTG_CoreReset(USB_OTG_CORE_HANDLE *pdev)
 {
-  USB_OTG_STS status = USB_OTG_OK;
   __IO USB_OTG_GRSTCTL_TypeDef  greset;
   uint32_t count = 0;
   
@@ -63,12 +58,12 @@ static USB_OTG_STS USB_OTG_CoreReset(USB_OTG_CORE_HANDLE *pdev)
   {
     USB_OTG_BSP_uDelay(3);
     greset.d32 = USB_OTG_READ_REG32(&pdev->regs.GREGS->GRSTCTL);
-    if (++count > 200000)
-    {
-      return USB_OTG_OK;
+    if (++count > 200000) {
+      return USB_OTG_OK; // XXX NOPE ? 
     }
   }
   while (greset.b.ahbidle == 0);
+
   /* Core Soft Reset */
   count = 0;
   greset.b.csftrst = 1;
@@ -77,78 +72,49 @@ static USB_OTG_STS USB_OTG_CoreReset(USB_OTG_CORE_HANDLE *pdev)
   {
     greset.d32 = USB_OTG_READ_REG32(&pdev->regs.GREGS->GRSTCTL);
     if (++count > 200000)
-    {
       break;
-    }
+    
   }
   while (greset.b.csftrst == 1);
   /* Wait for 3 PHY Clocks*/
   USB_OTG_BSP_uDelay(3);
-  return status;
+  return USB_OTG_OK;
 }
 
-/**
-* @brief  USB_OTG_WritePacket : Writes a packet into the Tx FIFO associated 
-*         with the EP
-* @param  pdev : Selected device
-* @param  src : source pointer
-* @param  ch_ep_num : end point number
-* @param  bytes : No. of bytes
-* @retval USB_OTG_STS : status
-*/
-USB_OTG_STS USB_OTG_WritePacket(USB_OTG_CORE_HANDLE *pdev, 
-                                uint8_t             *src, 
-                                uint8_t             ch_ep_num, 
-                                uint16_t            len)
+// Writes a packet into the Tx FIFO associated 
+
+USB_OTG_STS USB_OTG_WritePacket(USB_OTG_CORE_HANDLE *pdev,uint8_t *src, uint8_t ch_ep_num, uint16_t len)
 {
-  USB_OTG_STS status = USB_OTG_OK;
   if (pdev->cfg.dma_enable == 0)
   {
-    uint32_t count32b= 0 , i= 0;
     __IO uint32_t *fifo;
-    
-    count32b =  (len + 3) / 4;
+
+    uint32_t count32b =  (len + 3) / 4;
     fifo = pdev->regs.DFIFO[ch_ep_num];
-    for (i = 0; i < count32b; i++, src+=4)
-    {
-      USB_OTG_WRITE_REG32( fifo, *((__packed uint32_t *)src) );
+    for (int i = 0; i < count32b; i++, src+=4) {
+        USB_OTG_WRITE_REG32( fifo, *((__packed uint32_t *)src) );
     }
+
   }
-  return status;
+  return USB_OTG_OK;
 }
 
 
-/**
-* @brief  USB_OTG_ReadPacket : Reads a packet from the Rx FIFO
-* @param  pdev : Selected device
-* @param  dest : Destination Pointer
-* @param  bytes : No. of bytes
-* @retval None
-*/
-void *USB_OTG_ReadPacket(USB_OTG_CORE_HANDLE *pdev, 
-                         uint8_t *dest, 
-                         uint16_t len)
+// Reads a packet from the Rx FIFO
+void *USB_OTG_ReadPacket(USB_OTG_CORE_HANDLE *pdev, uint8_t *dest, uint16_t len)
 {
-  uint32_t i=0;
   uint32_t count32b = (len + 3) / 4;
   
   __IO uint32_t *fifo = pdev->regs.DFIFO[0];
   
-  for ( i = 0; i < count32b; i++, dest += 4 )
-  {
-    *(__packed uint32_t *)dest = USB_OTG_READ_REG32(fifo);
-    
+  for (int i = 0; i < count32b; i++, dest += 4 ) {
+      *(__packed uint32_t *)dest = USB_OTG_READ_REG32(fifo);
   }
+
   return ((void *)dest);
 }
 
-/**
-* @brief  USB_OTG_SelectCore 
-*         Initialize core registers address.
-* @param  pdev : Selected device
-* @param  coreID : USB OTG Core ID
-* @retval USB_OTG_STS : status
-*/
+// Initialize core registers address.
 USB_OTG_STS USB_OTG_SelectCore(USB_OTG_CORE_HANDLE *pdev, 
                                USB_OTG_CORE_ID_TypeDef coreID)
 {
@@ -231,7 +197,7 @@ USB_OTG_STS USB_OTG_CoreInit(USB_OTG_CORE_HANDLE *pdev)
   gccfg.d32 = 0;
   ahbcfg.d32 = 0;
   
-    usbcfg.d32 = USB_OTG_READ_REG32(&pdev->regs.GREGS->GUSBCFG);;
+  usbcfg.d32 = USB_OTG_READ_REG32(&pdev->regs.GREGS->GUSBCFG);;
   usbcfg.b.physel  = 1; /* FS Interface */
   USB_OTG_WRITE_REG32 (&pdev->regs.GREGS->GUSBCFG, usbcfg.d32);
   /* Reset after a PHY select and set Host mode */
@@ -268,15 +234,8 @@ USB_OTG_STS USB_OTG_CoreInit(USB_OTG_CORE_HANDLE *pdev)
 
 
 
-/**
-* @brief  USB_OTG_FlushTxFifo : Flush a Tx FIFO
-* @param  pdev : Selected device
-* @param  num : FO num
-* @retval USB_OTG_STS : status
-*/
-USB_OTG_STS USB_OTG_FlushTxFifo (USB_OTG_CORE_HANDLE *pdev , uint32_t num )
+USB_OTG_STS USB_OTG_FlushTxFifo (USB_OTG_CORE_HANDLE *pdev , uint32_t num)
 {
-  USB_OTG_STS status = USB_OTG_OK;
   __IO USB_OTG_GRSTCTL_TypeDef  greset;
   
   uint32_t count = 0;
@@ -284,29 +243,22 @@ USB_OTG_STS USB_OTG_FlushTxFifo (USB_OTG_CORE_HANDLE *pdev , uint32_t num )
   greset.b.txfflsh = 1;
   greset.b.txfnum  = num;
   USB_OTG_WRITE_REG32( &pdev->regs.GREGS->GRSTCTL, greset.d32 );
-  do
-  {
+  do {
     greset.d32 = USB_OTG_READ_REG32( &pdev->regs.GREGS->GRSTCTL);
     if (++count > 200000)
-    {
       break;
-    }
-  }
-  while (greset.b.txfflsh == 1);
+    
+  } while (greset.b.txfflsh == 1);
+
   /* Wait for 3 PHY Clocks*/
   USB_OTG_BSP_uDelay(3);
-  return status;
+  return USB_OTG_OK;
 }
 
 
-/**
-* @brief  USB_OTG_FlushRxFifo : Flush a Rx FIFO
-* @param  pdev : Selected device
-* @retval USB_OTG_STS : status
-*/
+
 USB_OTG_STS USB_OTG_FlushRxFifo( USB_OTG_CORE_HANDLE *pdev )
 {
-  USB_OTG_STS status = USB_OTG_OK;
   __IO USB_OTG_GRSTCTL_TypeDef  greset;
   uint32_t count = 0;
   
@@ -324,17 +276,12 @@ USB_OTG_STS USB_OTG_FlushRxFifo( USB_OTG_CORE_HANDLE *pdev )
   while (greset.b.rxfflsh == 1);
   /* Wait for 3 PHY Clocks*/
   USB_OTG_BSP_uDelay(3);
-  return status;
+  return USB_OTG_OK;
 }
 
 
-
-/**
-* @brief  USB_OTG_ReadCoreItr : returns the Core Interrupt register
-* @param  pdev : Selected device
-* @retval Status
-*/
-uint32_t USB_OTG_ReadCoreItr(USB_OTG_CORE_HANDLE *pdev)
+// returns the Core Interrupt register XXX inline
+uint32_t USB_OTG_ReadCoreItr (USB_OTG_CORE_HANDLE *pdev) 
 {
   uint32_t v = 0;
   v = USB_OTG_READ_REG32(&pdev->regs.GREGS->GINTSTS);
@@ -343,17 +290,6 @@ uint32_t USB_OTG_ReadCoreItr(USB_OTG_CORE_HANDLE *pdev)
 }
 
 
-/**
-* @brief  USB_OTG_ReadOtgItr : returns the USB_OTG Interrupt register
-* @param  pdev : Selected device
-* @retval Status
-*/
-uint32_t USB_OTG_ReadOtgItr (USB_OTG_CORE_HANDLE *pdev)
-{
-  return (USB_OTG_READ_REG32 (&pdev->regs.GREGS->GOTGINT));
-}
-
-#ifdef USE_HOST_MODE
 /**
 * @brief  USB_OTG_CoreInitHost : Initializes USB_OTG controller for host mode
 * @param  pdev : Selected device
@@ -887,4 +823,3 @@ void USB_OTG_StopHost(USB_OTG_CORE_HANDLE *pdev)
   USB_OTG_FlushRxFifo(pdev);
   USB_OTG_FlushTxFifo(pdev ,  0x10 );  
 }
-#endif

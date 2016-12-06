@@ -11,9 +11,9 @@
 #include "usb_defines.h"
 #include "usb_hcd_int.h"
 
-#if defined (__GNUC__) /*!< GNU Compiler */
-#pragma GCC optimize ("O0")
-#endif 
+//#if defined (__GNUC__)
+//#pragma GCC optimize ("O0")
+//#endif 
 
 static void  USB_OTG_USBH_handle_sof_ISR(USB_OTG_CORE_HANDLE *pdev);
 static void  USB_OTG_USBH_handle_port_ISR(USB_OTG_CORE_HANDLE *pdev);
@@ -35,6 +35,7 @@ void USBH_OTG_ISR_Handler (USB_OTG_CORE_HANDLE *pdev)
   /* Check if HOST Mode : removed , always the case */
 
   gintsts.d32 = USB_OTG_ReadCoreItr(pdev);
+
   if (!gintsts.d32) { return ; }
   
   if (gintsts.b.sofintr) {
@@ -288,7 +289,7 @@ static void USB_OTG_USBH_handle_port_ISR (USB_OTG_CORE_HANDLE *pdev)
   {
     hprt0_dup.b.prtovrcurrchng = 1;
   }
-  
+
   if (do_reset)
   {
     USB_OTG_ResetPort(pdev);
