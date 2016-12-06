@@ -31,95 +31,46 @@
 #include "usb_conf.h"
 #include "usb_bsp.h"
 
-
-/** @addtogroup USB_OTG_DRIVER
-  * @{
-  */
-  
-/** @defgroup USB_HCD 
-  * @brief This file is the interface between EFSL ans Host mass-storage class
-  * @{
-  */
-
-
-/** @defgroup USB_HCD_Private_Defines
-  * @{
-  */ 
-/**
-  * @}
-  */ 
- 
-
-/** @defgroup USB_HCD_Private_TypesDefinitions
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-
-/** @defgroup USB_HCD_Private_Macros
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USB_HCD_Private_Variables
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USB_HCD_Private_FunctionPrototypes
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USB_HCD_Private_Functions
-  * @{
-  */ 
-
-/**
-  * @brief  HCD_Init 
-  *         Initialize the HOST portion of the driver.
-  * @param  pdev: Selected device
-  * @param  base_address: OTG base address
-  * @retval Status
-  */
-uint32_t HCD_Init(USB_OTG_CORE_HANDLE *pdev , 
-                  USB_OTG_CORE_ID_TypeDef coreID)
+//  Initialize the HOST portion of the driver.
+void HCD_Init(USB_OTG_CORE_HANDLE *pdev, USB_OTG_CORE_ID_TypeDef coreID)
 {
   uint8_t i = 0;
   pdev->host.ConnSts = 0;
   
-  for (i= 0; i< USB_OTG_MAX_TX_FIFOS; i++)
-  {
-  pdev->host.ErrCnt[i]  = 0;
-  pdev->host.XferCnt[i]   = 0;
-  pdev->host.HC_Status[i]   = HC_IDLE;
+  for (i= 0; i< USB_OTG_MAX_TX_FIFOS; i++) {
+      pdev->host.ErrCnt[i]  = 0;
+      pdev->host.XferCnt[i] = 0;
+      pdev->host.HC_Status[i] = HC_IDLE;
   }
   pdev->host.hc[0].max_packet  = 8; 
 
   USB_OTG_SelectCore(pdev, coreID);
-#ifndef DUAL_ROLE_MODE_ENABLED
-  USB_OTG_DisableGlobalInt(pdev);
+
+  // --- USB OTG Disable GlobalInt
+  USB_OTG_GAHBCFG_TypeDef ahbcfg;
+
+  ahbcfg.d32 = 0;
+  ahbcfg.b.glblintrmsk = 1; /* Enable interrupts */
+  USB_OTG_MODIFY_REG32(&pdev->regs.GREGS->GAHBCFG, ahbcfg.d32, 0);
+
+  // ----
   USB_OTG_CoreInit(pdev);
 
-  /* Force Host Mode*/
-  USB_OTG_SetCurrentMode(pdev , HOST_MODE);
+  // -- Force Host Mode 
+  USB_OTG_GUSBCFG_TypeDef  usbcfg;
+  usbcfg.d32 = USB_OTG_READ_REG32(&pdev->regs.GREGS->GUSBCFG);
+  usbcfg.b.force_host = 1;
+  USB_OTG_WRITE_REG32(&pdev->regs.GREGS->GUSBCFG, usbcfg.d32);
+
+  // -- delay 
+  USB_OTG_BSP_mDelay(50);
+
+  // -- init host
   USB_OTG_CoreInitHost(pdev);
-  USB_OTG_EnableGlobalInt(pdev);
-#endif
-   
-  return 0;
+
+  // Enable global int 
+  USB_OTG_MODIFY_REG32(&pdev->regs.GREGS->GAHBCFG, 0, ahbcfg.d32);
+
 }
 
 

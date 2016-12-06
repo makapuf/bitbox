@@ -151,44 +151,6 @@ uint8_t USBH_SOF (USB_OTG_CORE_HANDLE *pdev)
   /* This callback could be used to implement a scheduler process */
   return 0;  
 }
-/**
-  * @brief  USBH_Init
-  *         Host hardware and stack initializations 
-  * @param  class_cb: Class callback structure address
-  * @param  usr_cb: User callback structure address --> no more (makapuf
-  * @retval None
-  */
-void USBH_Init(USB_OTG_CORE_HANDLE *pdev,
-               USB_OTG_CORE_ID_TypeDef coreID,
-               USBH_HOST *phost,               
-               USBH_Class_cb_TypeDef *class_cb
-               // makapuf USBH_Usr_cb_TypeDef *usr_cb
-               )
-{
-     
-  /* Hardware Init */
-  USB_OTG_BSP_Init(pdev);  
-  
-  /* configure GPIO pin used for switching VBUS power */
-  USB_OTG_BSP_ConfigVBUS(0);  
-  
-  
-  /* Host de-initializations */
-  USBH_DeInit(pdev, phost);
-  
-  /*Register class and user callbacks */
-  phost->class_cb = class_cb;
-  // phost->usr_cb = usr_cb;   makapuf
-    
-  /* Start the USB OTG core */     
-   HCD_Init(pdev , coreID);
-   
-  /* Upon Init call usr call back */
-  // phost->usr_cb->Init(); makapuf
-  
-  /* Enable Interrupts */
-  USB_OTG_BSP_EnableInterrupt(pdev);
-}
 
 /**
   * @brief  USBH_DeInit 

@@ -1,33 +1,4 @@
-/**
-  ******************************************************************************
-  * @file    usb_conf.h
-  * @author  MCD Application Team
-  * @version V2.1.0
-  * @date    19-March-2012
-  * @brief   General low level driver configuration
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; COPYRIGHT 2012 STMicroelectronics</center></h2>
-  *
-  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
-  * You may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at:
-  *
-  *        http://www.st.com/software_license_agreement_liberty_v2
-  *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  *
-  ******************************************************************************
-  */
-
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USB_CONF__H__
-#define __USB_CONF__H__
+#pragma once
 
 /* Includes ------------------------------------------------------------------*/
 // will define which USB core is used
@@ -63,9 +34,9 @@
 
 /****************** USB OTG HS CONFIGURATION **********************************/
 #ifdef USB_OTG_HS_CORE
- #define RX_FIFO_HS_SIZE                          512
- #define TXH_NP_HS_FIFOSIZ                        256
- #define TXH_P_HS_FIFOSIZ                         256
+ #define RX_FIFO_HS_SIZE                          128
+ #define TXH_NP_HS_FIFOSIZ                        96
+ #define TXH_P_HS_FIFOSIZ                         96
 
 // #define USB_OTG_HS_LOW_PWR_MGMT_SUPPORT
 // #define USB_OTG_HS_SOF_OUTPUT_ENABLED
@@ -98,29 +69,7 @@
 //#define USE_DEVICE_MODE
 //#define USE_OTG_MODE
 
-#ifndef USB_OTG_FS_CORE
- #ifndef USB_OTG_HS_CORE
-    #error  "USB_OTG_HS_CORE or USB_OTG_FS_CORE should be defined"
- #endif
-#endif
 
-#ifndef USE_DEVICE_MODE
- #ifndef USE_HOST_MODE
-    #error  "USE_DEVICE_MODE or USE_HOST_MODE should be defined"
- #endif
-#endif
-
-#ifndef USE_USB_OTG_HS
- #ifndef USE_USB_OTG_FS
-    #error  "USE_USB_OTG_HS or USE_USB_OTG_FS should be defined"
- #endif
-#else //USE_USB_OTG_HS
- #ifndef USE_ULPI_PHY
-  #ifndef USE_EMBEDDED_PHY
-     #error  "USE_ULPI_PHY or USE_EMBEDDED_PHY should be defined"
-  #endif
- #endif
-#endif
 
 /****************** C Compilers dependant keywords ****************************/
 /* In HS mode and when the DMA is used, all variables and data structures dealing
@@ -137,9 +86,4 @@
 #define __packed    __attribute__ ((__packed__)) 
 
 
-
-#endif //__USB_CONF__H__
-
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

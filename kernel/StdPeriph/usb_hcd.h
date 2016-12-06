@@ -77,7 +77,7 @@
 /** @defgroup USB_HCD_Exported_FunctionsPrototype
   * @{
   */ 
-uint32_t  HCD_Init                 (USB_OTG_CORE_HANDLE *pdev ,
+void  HCD_Init                 (USB_OTG_CORE_HANDLE *pdev ,
                                     USB_OTG_CORE_ID_TypeDef coreID);
 uint32_t  HCD_HC_Init              (USB_OTG_CORE_HANDLE *pdev , 
                                     uint8_t hc_num); 

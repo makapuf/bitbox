@@ -11,8 +11,6 @@
 
 ErrorStatus HSEStartUpStatus;
 
-
-
 #ifdef USE_USB_OTG_FS  
 USB_OTG_CORE_HANDLE USB_OTG_FS_Core;
 USBH_HOST USB_FS_Host;
@@ -52,17 +50,9 @@ void TIM4_IRQHandler()
   }
 }
 
-void setup_usb()
+
+void setup_usb_timer()
 {
-  /* Init FS/HS Cores */
-  #ifdef USE_USB_OTG_HS
-  USBH_Init(&USB_OTG_Core, USB_OTG_HS_CORE_ID,&USB_Host, &HID_cb);
-  #endif 
-
-  #ifdef USE_USB_OTG_FS
-  USBH_Init(&USB_OTG_FS_Core, USB_OTG_FS_CORE_ID, &USB_FS_Host, &HID_cb);
-  #endif
-
   // Enable 125Hz USB timer timer 4
   RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
 
@@ -84,17 +74,12 @@ void setup_usb()
 }
 
 
-
-void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
+void setup_usb_hardware(void)
 {
 
-
-  // OTG FS
-  RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
-
-  /* Configure VBUS:PA9 ID:PA10 DM:PA11 DP:PA12 Pins  - STM32F405 here ! */  
-
   #ifdef USE_USB_OTG_FS
+  /* Configure VBUS:PA9 ID:PA10 DM:PA11 DP:PA12 Pins  - STM32F405 here ! */  
+  RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;  
   RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
   GPIOA->MODER |= GPIO_MODER_MODER9_0 * 0b10101010; // mode = AF(0b10)
   GPIOA->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR9_0 * 0b11111111; // SPEED=100MHz 
@@ -104,8 +89,9 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
   #endif 
   
 
-  // OTG HS - pins PB12:id 13:vbus 14:dm 15:dp / 100MHz / Alt / USB_OTG2_FS
   #ifdef  USE_USB_OTG_HS 
+  // OTG HS - pins PB12:id 13:vbus 14:dm 15:dp / 100MHz / Alt / USB_OTG2_FS
+  RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;  
   RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
   GPIOB->MODER |= GPIO_MODER_MODER12_0 * 0b10101010; // mode = AF(0b10)
   GPIOB->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR12_0 * 0b11111111; // SPEED=100MHz 
@@ -113,48 +99,40 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
   GPIOB->AFR[1] |= 0xCCCC0000UL ; // PB12-15 alt func nb 12 (datasheet p45 + refman p153)
   RCC->AHB1ENR |= RCC_AHB1ENR_OTGHSEN; 
   #endif
-
-
 }
+
+void setup_usb()
+{
+  /* Init FS/HS Cores */
+  setup_usb_hardware();
+
+  #ifdef USE_USB_OTG_HS
+  USBH_DeInit(&USB_OTG_Core,&USB_Host);    /* Host de-initializations */
+  USB_Host.class_cb = &HID_cb;
+  HCD_Init(&USB_OTG_Core, USB_OTG_HS_CORE_ID); // Start the USB OTG core
+
+  SetInterruptPriority(OTG_HS_IRQn,3); // enable interrupt
+  EnableInterrupt(OTG_HS_IRQn);
+  #endif
+
+  #ifdef USE_USB_OTG_FS
+
+  USBH_DeInit(&USB_OTG_FS_Core,&USB_FS_Host);    /* Host de-initializations */
+  USB_FS_Host.class_cb = &HID_cb;
+  HCD_Init(&USB_OTG_FS_Core, USB_OTG_FS_CORE_ID); // Start the USB OTG FS core
+  
+  SetInterruptPriority(OTG_FS_IRQn,3);  // Enable Interrupts
+  EnableInterrupt(OTG_FS_IRQn);
+  #endif
+
+  setup_usb_timer();
+}
+
+
 
 // erased because vbus is always high by hardware
 void USB_OTG_BSP_DriveVBUS(USB_OTG_CORE_HANDLE *pdev, uint8_t state) {}
 void USB_OTG_BSP_ConfigVBUS(USB_OTG_CORE_HANDLE *pdev) {}
-
-
-/**
-  * @brief  USB_OTG_BSP_EnableInterrupt
-  *         Configures USB Global interrupt
-  * @param  None
-  * @retval None
-  */
-void USB_OTG_BSP_EnableInterrupt(USB_OTG_CORE_HANDLE *pdev)
-{
-  NVIC_InitTypeDef NVIC_InitStructure; 
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-
-
-#ifdef USE_USB_OTG_FS
-  //InstallInterruptHandler(OTG_FS_IRQn,OTG_FS_IRQHandler);
-  NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);  
-#endif
-
-
-
-#ifdef USE_USB_OTG_HS
-  //InstallInterruptHandler(OTG_HS_IRQn,OTG_HS_IRQHandler);
-  NVIC_InitStructure.NVIC_IRQChannel = OTG_HS_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);    
-#endif
-}
-
 
 
 /**
