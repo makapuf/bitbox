@@ -36,20 +36,13 @@ static void USB_OTG_EnableCommonInt(USB_OTG_CORE_HANDLE *pdev)
   
   int_mask.d32 = 0;
   /* Clear any pending USB_OTG Interrupts */
-#ifndef USE_OTG_MODE
   USB_OTG_WRITE_REG32( &pdev->regs.GREGS->GOTGINT, 0xFFFFFFFF);
-#endif
   /* Clear any pending interrupts */
   USB_OTG_WRITE_REG32( &pdev->regs.GREGS->GINTSTS, 0xBFFFFFFF);
   /* Enable the interrupts in the INTMSK */
   int_mask.b.wkupintr = 1;
   int_mask.b.usbsuspend = 1; 
   
-#ifdef USE_OTG_MODE
-  int_mask.b.otgintr = 1;
-  int_mask.b.sessreqintr = 1;
-  int_mask.b.conidstschng = 1;
-#endif
   USB_OTG_WRITE_REG32( &pdev->regs.GREGS->GINTMSK, int_mask.d32);
 }
 
@@ -424,12 +417,7 @@ USB_OTG_STS USB_OTG_CoreInitHost(USB_OTG_CORE_HANDLE *pdev)
   }
 #endif  
   
-#ifdef USE_OTG_MODE
-  /* Clear Host Set HNP Enable in the USB_OTG Control Register */
-  gotgctl.b.hstsethnpen = 1;
-  USB_OTG_MODIFY_REG32( &pdev->regs.GREGS->GOTGCTL, gotgctl.d32, 0);
-#endif
-  
+ 
   /* Make sure the FIFOs are flushed. */
   USB_OTG_FlushTxFifo(pdev, 0x10 );         /* all Tx FIFOs */
   USB_OTG_FlushRxFifo(pdev);
@@ -441,9 +429,9 @@ USB_OTG_STS USB_OTG_CoreInitHost(USB_OTG_CORE_HANDLE *pdev)
     USB_OTG_WRITE_REG32( &pdev->regs.HC_REGS[i]->HCINT, 0xFFFFFFFF );
     USB_OTG_WRITE_REG32( &pdev->regs.HC_REGS[i]->HCINTMSK, 0 );
   }
-#ifndef USE_OTG_MODE
+
   USB_OTG_DriveVbus(pdev, 1);
-#endif
+
   
   USB_OTG_EnableHostInt(pdev);
   return status;
@@ -644,7 +632,7 @@ USB_OTG_STS USB_OTG_HC_Init(USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num)
       }
     }
     break;
-    
+
   case EP_TYPE_INTR:
     hcintmsk.b.xfercompl = 1;
     hcintmsk.b.nak = 1;

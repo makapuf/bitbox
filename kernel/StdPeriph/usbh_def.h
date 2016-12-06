@@ -25,21 +25,7 @@
   ******************************************************************************
   */ 
 
-/** @addtogroup USBH_LIB
-  * @{
-  */
-
-/** @addtogroup USBH_LIB_CORE
-* @{
-*/
-  
-/** @defgroup USBH_DEF
-  * @brief This file is includes USB descriptors
-  * @{
-  */ 
-
-#ifndef  USBH_DEF_H
-#define  USBH_DEF_H
+#pragma once 
 
 #ifndef USBH_NULL
 #define USBH_NULL ((void *)0)
@@ -282,7 +268,4 @@ typedef struct _EndpointDescriptor
   uint8_t   bInterval;          /* is used to specify the polling interval of certain transfers. */
 }
 USBH_EpDesc_TypeDef;
-#endif
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
