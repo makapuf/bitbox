@@ -217,34 +217,31 @@ void USBH_Process(USB_OTG_CORE_HANDLE *pdev , USBH_HOST *phost)
     phost->Control.hc_num_in = USBH_Alloc_Channel(pdev, 0x80);  
   
     /* Reset USB Device */
-    if ( HCD_ResetPort(pdev) == 0)
-    {
-      // makapuf phost->usr_cb->ResetDevice();
-      /*  Wait for USB USBH_ISR_PrtEnDisableChange()  
-      Host is Now ready to start the Enumeration 
-      */
+    HCD_ResetPort(pdev);
+    /*  Wait for USB USBH_ISR_PrtEnDisableChange()  
+    Host is Now ready to start the Enumeration 
+    */
+    
+    phost->device_prop.speed = HCD_GetCurrentSpeed(pdev);
+    
+    phost->gState = HOST_ENUMERATION;
+    // makapuf phost->usr_cb->DeviceSpeedDetected(phost->device_prop.speed);
       
-      phost->device_prop.speed = HCD_GetCurrentSpeed(pdev);
-      
-      phost->gState = HOST_ENUMERATION;
-      // makapuf phost->usr_cb->DeviceSpeedDetected(phost->device_prop.speed);
-        
-      /* Open Control pipes */
-      USBH_Open_Channel (pdev,
-                           phost->Control.hc_num_in,
-                           phost->device_prop.address,
-                           phost->device_prop.speed,
-                           EP_TYPE_CTRL,
-                           phost->Control.ep0size); 
-      
-      /* Open Control pipes */
-      USBH_Open_Channel (pdev,
-                           phost->Control.hc_num_out,
-                           phost->device_prop.address,
-                           phost->device_prop.speed,
-                           EP_TYPE_CTRL,
-                           phost->Control.ep0size);          
-   }
+    /* Open Control pipes */
+    USBH_Open_Channel (pdev,
+                         phost->Control.hc_num_in,
+                         phost->device_prop.address,
+                         phost->device_prop.speed,
+                         EP_TYPE_CTRL,
+                         phost->Control.ep0size); 
+    
+    /* Open Control pipes */
+    USBH_Open_Channel (pdev,
+                         phost->Control.hc_num_out,
+                         phost->device_prop.address,
+                         phost->device_prop.speed,
+                         EP_TYPE_CTRL,
+                         phost->Control.ep0size);          
     break;
     
   case HOST_ENUMERATION:     

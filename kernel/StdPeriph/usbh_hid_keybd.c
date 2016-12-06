@@ -5,7 +5,6 @@
 
 #define  KBR_MAX_NBR_PRESSED 6
 
-static int  KEYBRD_Detect (uint16_t,uint16_t);
 static void  KEYBRD_Init (uint8_t,uint16_t,uint16_t);
 static void  KEYBRD_Decode(uint8_t,uint8_t *data);
 
@@ -20,16 +19,10 @@ volatile uint8_t keyboard_key[2][6]; // using raw USB key codes
 
 HID_cb_TypeDef HID_KEYBRD_cb= 
 {
-    KEYBRD_Detect,
     KEYBRD_Init,
     KEYBRD_Decode
 };
 
-
-static int  KEYBRD_Detect (uint16_t vid, uint16_t pid)
-{
-    return 1;
-}
 
 
 static void KEYBRD_Init (uint8_t coreID, uint16_t vid, uint16_t pid)

@@ -76,13 +76,11 @@ static const USB_Gamepad_descriptor device_table[] = {
 #define MAX_REPORT_SIZE 128
 
 static inline uint32_t extract(uint8_t *,uint16_t,uint8_t);
-static int   GAMEPAD_Detect(uint16_t,uint16_t);
 static void  GAMEPAD_Init (uint8_t, uint16_t,uint16_t);
 static void  GAMEPAD_Decode(uint8_t, uint8_t *data);
 
 HID_cb_TypeDef HID_GAMEPAD_cb = 
 {
-    GAMEPAD_Detect,
     GAMEPAD_Init,
     GAMEPAD_Decode,
 };
@@ -102,17 +100,6 @@ static const USB_Gamepad_descriptor *GAMEPAD_FindDesc(uint16_t vid, uint16_t pid
     }
 
     return &device_table[i];
-}
-
-
-static int GAMEPAD_Detect (uint16_t vid, uint16_t pid)
-{
-    /*
-    const USB_Gamepad_descriptor *gp = GAMEPAD_FindDesc(vid,pid);
-    if (gp->vid == 0) return 0;
-    */
-    // shall return 1 only if gamepad descriptor is OK - but we dont have it ...
-    return 1;
 }
 
 static void  GAMEPAD_Init (uint8_t coreID, uint16_t vid, uint16_t pid)

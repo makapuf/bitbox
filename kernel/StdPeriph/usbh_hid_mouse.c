@@ -2,7 +2,6 @@
 #include "usbh_hid_devices.h"
 
 
-static int MOUSE_Detect (uint16_t, uint16_t);
 static void  MOUSE_Init (uint8_t, uint16_t, uint16_t);
 static void  MOUSE_Decode(uint8_t, uint8_t *data);
 
@@ -16,20 +15,12 @@ volatile int8_t mouse_x;
 volatile int8_t mouse_y;
 volatile uint8_t  mouse_buttons = 0;
  
-// struct _HID_MOUSE_Data HID_MOUSE_Data;
 HID_cb_TypeDef HID_MOUSE_cb = 
 {
-	MOUSE_Detect,
 	MOUSE_Init,
 	MOUSE_Decode,
 };
 
-
-static int MOUSE_Detect (uint16_t vid,uint16_t pid)
-{
-	/* Call User Init*/
-	return 1;
-}
 
 static void  MOUSE_Init (uint8_t coreID, uint16_t vid, uint16_t pid)
 {

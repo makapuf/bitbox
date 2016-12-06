@@ -56,7 +56,7 @@ void HCD_Init(USB_OTG_CORE_HANDLE *pdev, USB_OTG_CORE_ID_TypeDef coreID)
   // ----
   USB_OTG_CoreInit(pdev);
 
-  // -- Force Host Mode 
+  // -- Setup mode : Force Host Mode 
   USB_OTG_GUSBCFG_TypeDef  usbcfg;
   usbcfg.d32 = USB_OTG_READ_REG32(&pdev->regs.GREGS->GUSBCFG);
   usbcfg.b.force_host = 1;
@@ -74,101 +74,9 @@ void HCD_Init(USB_OTG_CORE_HANDLE *pdev, USB_OTG_CORE_ID_TypeDef coreID)
 }
 
 
-/**
-  * @brief  HCD_GetCurrentSpeed
-  *         Get Current device Speed.
-  * @param  pdev : Selected device
-  * @retval Status
-  */
-
-uint32_t HCD_GetCurrentSpeed (USB_OTG_CORE_HANDLE *pdev)
-{    
-    USB_OTG_HPRT0_TypeDef  HPRT0;
-    HPRT0.d32 = USB_OTG_READ_REG32(pdev->regs.HPRT0);
-    
-    return HPRT0.b.prtspd;
-}
-
-/**
-  * @brief  HCD_ResetPort
-  *         Issues the reset command to device
-  * @param  pdev : Selected device
-  * @retval Status
-  */
-uint32_t HCD_ResetPort(USB_OTG_CORE_HANDLE *pdev)
-{
-  /*
-  Before starting to drive a USB reset, the application waits for the OTG 
-  interrupt triggered by the debounce done bit (DBCDNE bit in OTG_FS_GOTGINT), 
-  which indicates that the bus is stable again after the electrical debounce 
-  caused by the attachment of a pull-up resistor on DP (FS) or DM (LS).
-  */
-  
-  USB_OTG_ResetPort(pdev); 
-  return 0;
-}
-
-/**
-  * @brief  HCD_IsDeviceConnected
-  *         Check if the device is connected.
-  * @param  pdev : Selected device
-  * @retval Device connection status. 1 -> connected and 0 -> disconnected
-  * 
-  */
-uint32_t HCD_IsDeviceConnected(USB_OTG_CORE_HANDLE *pdev)
-{
-  return (pdev->host.ConnSts);
-}
-
-/**
-  * @brief  HCD_GetCurrentFrame 
-  *         This function returns the frame number for sof packet
-  * @param  pdev : Selected device
-  * @retval Frame number
-  * 
-  */
-uint32_t HCD_GetCurrentFrame (USB_OTG_CORE_HANDLE *pdev) 
-{
- return (USB_OTG_READ_REG32(&pdev->regs.HREGS->HFNUM) & 0xFFFF) ;
-}
-
-/**
-  * @brief  HCD_GetURB_State 
-  *         This function returns the last URBstate
-  * @param  pdev: Selected device
-  * @retval URB_STATE
-  * 
-  */
-URB_STATE HCD_GetURB_State (USB_OTG_CORE_HANDLE *pdev , uint8_t ch_num) 
-{
-  return pdev->host.URB_State[ch_num] ;
-}
-
-/**
-  * @brief  HCD_GetXferCnt 
-  *         This function returns the last URBstate
-  * @param  pdev: Selected device
-  * @retval No. of data bytes transferred
-  * 
-  */
-uint32_t HCD_GetXferCnt (USB_OTG_CORE_HANDLE *pdev, uint8_t ch_num) 
-{
-  return pdev->host.XferCnt[ch_num] ;
-}
 
 
 
-/**
-  * @brief  HCD_GetHCState 
-  *         This function returns the HC Status 
-  * @param  pdev: Selected device
-  * @retval HC_STATUS
-  * 
-  */
-HC_STATUS HCD_GetHCState (USB_OTG_CORE_HANDLE *pdev ,  uint8_t ch_num) 
-{
-  return pdev->host.HC_Status[ch_num] ;
-}
 
 /**
   * @brief  HCD_HC_Init 
@@ -197,17 +105,3 @@ uint32_t HCD_SubmitRequest (USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num)
   return USB_OTG_HC_StartXfer(pdev, hc_num);
 }
 
-
-/**
-* @}
-*/ 
-
-/**
-* @}
-*/ 
-
-/**
-* @}
-*/
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

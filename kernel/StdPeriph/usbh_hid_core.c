@@ -43,50 +43,7 @@
 #include "usbh_hid_core.h"
 #include "usbh_hid_devices.h"
 
-/** @addtogroup USBH_LIB
-* @{
-*/
 
-/** @addtogroup USBH_CLASS
-* @{
-*/
-
-/** @addtogroup USBH_HID_CLASS
-* @{
-*/
-
-/** @defgroup USBH_HID_CORE 
-* @brief    This file includes HID Layer Handlers for USB Host HID class.
-* @{
-*/ 
-
-/** @defgroup USBH_HID_CORE_Private_TypesDefinitions
-* @{
-*/ 
-/**
-* @}
-*/ 
-
-
-/** @defgroup USBH_HID_CORE_Private_Defines
-* @{
-*/ 
-/**
-* @}
-*/ 
-
-
-/** @defgroup USBH_HID_CORE_Private_Macros
-* @{
-*/ 
-/**
-* @}
-*/ 
-
-
-/** @defgroup USBH_HID_CORE_Private_Variables
-* @{
-*/
 #ifdef USB_OTG_HS_INTERNAL_DMA_ENABLED
   #if defined ( __ICCARM__ ) /*!< IAR Compiler */
     #pragma data_alignment=4   
@@ -190,8 +147,9 @@ static USBH_Status USBH_HID_InterfaceInit ( USB_OTG_CORE_HANDLE *pdev,
   USBH_Status status = USBH_BUSY ;
   HID_Machine->state = HID_ERROR;
   
+  // should always be the case, no need to detect
+  //if (HID_GAMEPAD_cb.Detect(pphost->device_prop.Dev_Desc.idVendor, pphost->device_prop.Dev_Desc.idProduct) || (pphost->device_prop.Itf_Desc[0].bInterfaceSubClass  == HID_BOOT_CODE)) 
 
-  if (HID_GAMEPAD_cb.Detect(pphost->device_prop.Dev_Desc.idVendor, pphost->device_prop.Dev_Desc.idProduct) || (pphost->device_prop.Itf_Desc[0].bInterfaceSubClass  == HID_BOOT_CODE)) 
   { 
     /*Decode Bootclass Protocl: Mouse or Keyboard*/
     if(pphost->device_prop.Itf_Desc[0].bInterfaceProtocol == HID_KEYBRD_BOOT_CODE)
@@ -266,11 +224,14 @@ static USBH_Status USBH_HID_InterfaceInit ( USB_OTG_CORE_HANDLE *pdev,
      start_toggles[pdev->cfg.coreID] =0;
      status = USBH_OK; 
   }
+
+  /*
   else
   {
     // pphost->usr_cb->DeviceNotSupported();   
   }
-
+  */
+  
   return status;
   
 }
