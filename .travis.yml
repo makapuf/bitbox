@@ -7,10 +7,10 @@ before_script:
   - sudo apt-get -qq update
   - sudo apt-get -qq install gcc-arm-none-eabi libsdl1.2-dev 
   - pip install Pillow
-
-  # check it worked
+  # check it worked  
   - arm-none-eabi-gcc --version 
   - gcc --version
+  - pip list 
   - python -c "from PIL import Image"
   
 script:
@@ -19,4 +19,4 @@ script:
 after_script:
 
 env:
-  - BITBOX=../
+  - BITBOX=/home/travis/build/makapuf/bitbox

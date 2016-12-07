@@ -9,12 +9,12 @@
 	cannot intialize USB if already plugged - interactions with bootloader 1 ?
  */
 
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h> // qsort
 // #include "system.h" // system_init
 #include "bitbox.h"
 #include "fatfs/ff.h"
-
 #include "flashit.h"
 #include "build/binaries.h"
 
@@ -286,12 +286,11 @@ int offset=0; // display offset (scrolling)
 int x =5,y=10 , dir_x=1, dir_y=1;
 char old_val=' ';
 char icon_name[13];
+bool last_button=false; // button last status
+int frame_pressed; // frame when button was pressed
 
 void game_frame()
 {
-	// interpret keyboard as gamepad & discard all other events
-	kbd_emulate_gamepad();
-
 	if (vga_frame%2 == 0 ) {
 		// bounce guy
 		vram_char[y][x]=old_val;
@@ -308,6 +307,29 @@ void game_frame()
 	}
 
 	if (!nb_files) return; // no need to go further
+
+
+	// handle button operation
+	if (last_button && !button_state()) { // just released 
+		if (vga_frame-frame_pressed<120) { // go down
+			if (selected<DISPLAY_LINES-1)
+				selected +=1;
+			else
+				offset += 1;
+
+			if (selected+offset >= nb_files) {
+				offset=selected=0;
+			}
+		}
+	} else if (button_state() ) { 
+		if (!last_button)		// just pressed
+			frame_pressed=vga_frame;
+		if (vga_frame-frame_pressed>120) {
+			// start flashing
+			gamepad_buttons[0] |= gamepad_A;
+		}
+	}
+	last_button=button_state();
 
 
 	// handle input
@@ -357,6 +379,8 @@ void game_frame()
 
 
 	// update_display
+	const int scroll_offset = offset*DISPLAY_LINES/nb_files;
+	const int scroll_height = DISPLAY_LINES*DISPLAY_LINES/nb_files;
 	for (int i=0;i<min(offset+nb_files, DISPLAY_LINES);i++)
 	{
 		int l;
@@ -368,6 +392,10 @@ void game_frame()
 		// cursor
 		vram_char[LIST_Y+i][8]=(i==selected)?0x10:' ';
 		vram_char[LIST_Y+i][25]=(i==selected)?0x11:' ';
+
+		// scrollbar
+		char c = (i>=scroll_offset && i<scroll_offset+scroll_height) ? '\xb1' : '\xb3';
+		vram_char[LIST_Y+i][27] = c;
 	}
 
 

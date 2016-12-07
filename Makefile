@@ -1,5 +1,6 @@
-TESTABLE = crappy test_chip test_engine test_kernel test_sampler test_sdio test_simplegraph test_simpletxt test_simpletxt_color test_usb 
-PROJECTS = 1st_boot 2nd_boot test_video $(TESTABLE)
+BASE_DEMOS = examples/crappy examples/kernel examples/sdio examples/usb 
+LIB_DEMOS = lib/framebuffer  lib/textmode lib/blitter/balls lib/blitter/video lib/chiptune lib/sampler lib/serial 
+PROJECTS = 1st_boot 2nd_boot $(BASE_DEMOS) $(LIB_DEMOS)
 
 ALLCLEAN = $(patsubst %,%-clean,$(PROJECTS))
 ALLTEST = $(patsubst %,%-test,$(TESTABLE))
@@ -7,7 +8,7 @@ ALLTEST = $(patsubst %,%-test,$(TESTABLE))
 .PHONY: $(PROJECTS) 
 .PHONY: $(ALLCLEAN)
 
-$(info makin $(PROJECTS))
+$(info making $(PROJECTS))
 
 all: $(PROJECTS) 
 

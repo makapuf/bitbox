@@ -1,0 +1,57 @@
+musicchip tune
+version 1
+
+songline 00 01 00 02 00 00 00 00 00
+songline 01 00 00 00 e0 00 00 00 00
+
+trackline 01 00 30 01 00 00 00 00
+trackline 01 02 2f 01 00 00 00 00
+trackline 01 03 30 01 00 00 00 00
+trackline 01 04 2f 01 00 00 00 00
+trackline 01 05 30 01 00 00 00 00
+trackline 01 06 2f 01 00 00 00 00
+trackline 01 07 30 01 00 00 00 00
+trackline 01 08 2b 01 00 00 00 00
+trackline 01 0a 2a 01 00 00 00 00
+trackline 01 0b 2b 01 00 00 00 00
+trackline 01 0c 2a 01 00 00 00 00
+trackline 01 0d 2b 01 00 00 00 00
+trackline 01 0e 2a 01 00 00 00 00
+trackline 01 0f 2b 01 00 00 00 00
+trackline 01 10 28 01 00 00 00 00
+trackline 01 11 29 01 00 00 00 00
+trackline 01 12 2a 01 00 00 00 00
+trackline 01 13 2b 01 00 00 00 00
+trackline 01 14 28 01 00 00 00 00
+trackline 01 15 29 01 00 00 00 00
+trackline 01 16 2a 01 00 00 00 00
+trackline 01 17 2b 01 00 00 00 00
+trackline 01 18 28 01 00 00 00 00
+trackline 01 1a 24 01 00 00 00 00
+trackline 01 1c 22 01 00 00 00 00
+trackline 02 00 17 01 00 00 00 00
+trackline 02 02 18 01 00 00 00 00
+trackline 02 04 17 01 00 00 00 00
+trackline 02 06 18 01 00 00 00 00
+trackline 02 08 12 01 00 00 00 00
+trackline 02 0a 13 01 00 00 00 00
+trackline 02 0c 12 01 00 00 00 00
+trackline 02 0e 13 01 00 00 00 00
+trackline 02 10 10 01 00 00 00 00
+trackline 02 11 11 01 00 00 00 00
+trackline 02 12 12 01 00 00 00 00
+trackline 02 13 13 01 00 00 00 00
+trackline 02 14 10 01 00 00 00 00
+trackline 02 15 11 01 00 00 00 00
+trackline 02 16 12 01 00 00 00 00
+trackline 02 17 13 01 00 00 00 00
+trackline 02 18 10 01 00 00 00 00
+trackline 02 1a 0c 01 00 00 00 00
+trackline 02 1c 0a 01 00 00 00 00
+
+instrumentline 01 00 2b 31
+instrumentline 01 01 77 02
+instrumentline 01 02 64 80
+instrumentline 01 03 76 80
+instrumentline 01 04 74 06
+instrumentline 01 05 66 fc
