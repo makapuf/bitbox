@@ -25,10 +25,10 @@ CHANGELOG.md
 
 - changed graph_frame callbacks to graph_vsync optional callback called in each vsync line 
 	Porting : 
-	    quickest (if you define a non-empty graph_frame) 
-	    is to change graph_frame to graph_vsync and add a line like: 
-
-	        if (vga_line!=VGA_PIXELS_V) return; 
+	    *Option 1 : is to call your old graph_frame at the end of game_frame if you want it called before drawing
+	    *Option 2 : is to change graph_frame to graph_vsync and add a line like: 
+	        if (vga_line!=VGA_V_PIXELS) return; 
+	    *Note that graph_vsync gets called at the end of drawing, and you may also want to avoid it for vga_odd frames.
 
 - put events in its own library and removed from bitbox. Now only state variables are handled by kernel, events are handled by 
 	porting : 
