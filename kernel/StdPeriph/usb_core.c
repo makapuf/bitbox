@@ -627,8 +627,8 @@ USB_OTG_STS USB_OTG_HC_StartXfer(USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num)
   USB_OTG_STS status = USB_OTG_OK;
   USB_OTG_HCCHAR_TypeDef   hcchar;
   USB_OTG_HCTSIZn_TypeDef  hctsiz;
-  USB_OTG_HNPTXSTS_TypeDef hnptxsts; 
-  USB_OTG_HPTXSTS_TypeDef  hptxsts; 
+  union USB_OTG_HNPTXSTS hnptxsts; 
+  union USB_OTG_HPTXSTS  hptxsts; 
   USB_OTG_GINTMSK_TypeDef  intmsk;
   uint16_t                 len_words = 0;   
   
@@ -705,6 +705,7 @@ USB_OTG_STS USB_OTG_HC_StartXfer(USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num)
         }
         
         break;
+
         /* Periodic transfer */
       case EP_TYPE_INTR:
       case EP_TYPE_ISOC:
@@ -733,17 +734,11 @@ USB_OTG_STS USB_OTG_HC_StartXfer(USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num)
 }
 
 
-/**
-* @brief  USB_OTG_HC_Halt : Halt channel
-* @param  pdev : Selected device
-* @param  hc_num : channel number
-* @retval USB_OTG_STS : status
-*/
+// Halt channel
 USB_OTG_STS USB_OTG_HC_Halt(USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num)
 {
-  USB_OTG_STS status = USB_OTG_OK;
-  USB_OTG_HNPTXSTS_TypeDef            nptxsts;
-  USB_OTG_HPTXSTS_TypeDef             hptxsts;
+  union USB_OTG_HNPTXSTS            nptxsts;
+  union USB_OTG_HPTXSTS             hptxsts;
   USB_OTG_HCCHAR_TypeDef              hcchar;
   
   nptxsts.d32 = 0;
@@ -770,14 +765,10 @@ USB_OTG_STS USB_OTG_HC_Halt(USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num)
     }
   }
   USB_OTG_WRITE_REG32(&pdev->regs.HC_REGS[hc_num]->HCCHAR, hcchar.d32);
-  return status;
+  return USB_OTG_OK;
 }
 
-/**
-* @brief  Issue a ping token
-* @param  None
-* @retval : None
-*/
+// Issue a ping token
 USB_OTG_STS USB_OTG_HC_DoPing(USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num)
 {
   USB_OTG_STS               status = USB_OTG_OK;
@@ -796,30 +787,4 @@ USB_OTG_STS USB_OTG_HC_DoPing(USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num)
   return status;  
 }
 
-/**
-* @brief  Stop the device and clean up fifo's
-* @param  None
-* @retval : None
-*/
-void USB_OTG_StopHost(USB_OTG_CORE_HANDLE *pdev)
-{
-  USB_OTG_HCCHAR_TypeDef  hcchar;
-  uint32_t                i;
-  
-  USB_OTG_WRITE_REG32(&pdev->regs.HREGS->HAINTMSK , 0);
-  USB_OTG_WRITE_REG32(&pdev->regs.HREGS->HAINT,      0xFFFFFFFF);
-  /* Flush out any leftover queued requests. */
-  
-  for (i = 0; i < pdev->cfg.host_channels; i++)
-  {
-    hcchar.d32 = USB_OTG_READ_REG32(&pdev->regs.HC_REGS[i]->HCCHAR);
-    hcchar.b.chen = 0;
-    hcchar.b.chdis = 1;
-    hcchar.b.epdir = 0;
-    USB_OTG_WRITE_REG32(&pdev->regs.HC_REGS[i]->HCCHAR, hcchar.d32);
-  }
-  
-  /* Flush the FIFO */
-  USB_OTG_FlushRxFifo(pdev);
-  USB_OTG_FlushTxFifo(pdev ,  0x10 );  
-}
+// Stop the device and clean up fifo's -> deleted

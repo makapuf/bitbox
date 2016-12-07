@@ -78,28 +78,15 @@ void HCD_Init(USB_OTG_CORE_HANDLE *pdev, USB_OTG_CORE_ID_TypeDef coreID)
 
 
 
-/**
-  * @brief  HCD_HC_Init 
-  *         This function prepare a HC and start a transfer
-  * @param  pdev: Selected device
-  * @param  hc_num: Channel number 
-  * @retval status 
-  */
+// This function prepare a HC and start a transfer
 uint32_t HCD_HC_Init (USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num) 
 {
   return USB_OTG_HC_Init(pdev, hc_num);  
 }
 
-/**
-  * @brief  HCD_SubmitRequest 
-  *         This function prepare a HC and start a transfer
-  * @param  pdev: Selected device
-  * @param  hc_num: Channel number 
-  * @retval status
-  */
+//  This function prepare a HC and start a transfer
 uint32_t HCD_SubmitRequest (USB_OTG_CORE_HANDLE *pdev , uint8_t hc_num) 
 {
-  
   pdev->host.URB_State[hc_num] =   URB_IDLE;  
   pdev->host.hc[hc_num].xfer_count = 0 ;
   return USB_OTG_HC_StartXfer(pdev, hc_num);

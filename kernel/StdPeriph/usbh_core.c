@@ -35,23 +35,6 @@
 #include "usb_hcd_int.h"
 
 
-/** @addtogroup USBH_LIB
-  * @{
-  */
-
-/** @addtogroup USBH_LIB_CORE
-* @{
-*/
-
-/** @defgroup USBH_CORE 
-  * @brief TThis file handles the basic enumaration when a device is connected 
-  *          to the host.
-  * @{
-  */ 
-
-/** @defgroup USBH_CORE_Private_TypesDefinitions
-  * @{
-  */ 
 uint8_t USBH_Disconnected (USB_OTG_CORE_HANDLE *pdev); 
 uint8_t USBH_Connected (USB_OTG_CORE_HANDLE *pdev); 
 uint8_t USBH_SOF (USB_OTG_CORE_HANDLE *pdev); 
@@ -69,38 +52,8 @@ USBH_HCD_INT_cb_TypeDef  *USBH_HCD_INT_fops = &USBH_HCD_INT_cb;
 HOST_State Tab_State_Machine[100];
 unsigned int Previous_status = 11;
 volatile unsigned int Tab_State_Machine_incr = 0;
-/**
-  * @}
-  */ 
 
 
-/** @defgroup USBH_CORE_Private_Defines
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBH_CORE_Private_Macros
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBH_CORE_Private_Variables
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBH_CORE_Private_FunctionPrototypes
-  * @{
-  */
 static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost);
 USBH_Status USBH_HandleControl (USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost);
 
@@ -152,12 +105,7 @@ uint8_t USBH_SOF (USB_OTG_CORE_HANDLE *pdev)
   return 0;  
 }
 
-/**
-  * @brief  USBH_DeInit 
-  *         Re-Initialize Host
-  * @param  None 
-  * @retval status: USBH_Status
-  */
+// Re-Initialize Host
 USBH_Status USBH_DeInit(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
 {
   /* Software Init */
@@ -178,12 +126,7 @@ USBH_Status USBH_DeInit(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
   return USBH_OK;
 }
 
-/**
-* @brief  USBH_Process
-*         USB Host core main state machine process
-* @param  None 
-* @retval None
-*/
+// USB Host core main state machine process
 void USBH_Process(USB_OTG_CORE_HANDLE *pdev , USBH_HOST *phost)
 {
   volatile USBH_Status status = USBH_FAIL;
@@ -325,12 +268,7 @@ void USBH_Process(USB_OTG_CORE_HANDLE *pdev , USBH_HOST *phost)
 }
 
 
-/**
-  * @brief  USBH_ErrorHandle 
-  *         This function handles the Error on Host side.
-  * @param  errType : Type of Error or Busy/OK state
-  * @retval None
-  */
+// This function handles the Error on Host side.
 void USBH_ErrorHandle(USBH_HOST *phost, USBH_Status errType)
 {
   /* Error unrecovered or not supported device speed */
@@ -659,14 +597,8 @@ USBH_Status USBH_HandleControl (USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
     /* Start DATA out transfer (only one DATA packet)*/
     pdev->host.hc[phost->Control.hc_num_out].toggle_out = 1; 
         
-    USBH_CtlSendData (pdev,
-                      phost->Control.buff, 
-                      phost->Control.length , 
-                      phost->Control.hc_num_out);
+    USBH_CtlSendData (pdev,phost->Control.buff, phost->Control.length , phost->Control.hc_num_out);
     
-
-
-
     
     phost->Control.state = CTRL_DATA_OUT_WAIT;
     break;
@@ -795,26 +727,3 @@ USBH_Status USBH_HandleControl (USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
   }
   return status;
 }
-
-
-/**
-* @}
-*/ 
-
-/**
-* @}
-*/ 
-
-/**
-* @}
-*/
-
-/**
-* @}
-*/ 
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
-
-
-

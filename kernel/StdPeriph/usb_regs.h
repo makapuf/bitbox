@@ -444,7 +444,7 @@ typedef union _USB_OTG_FSIZ_TypeDef {
   } b;
 } USB_OTG_FSIZ_TypeDef ;
 
-typedef union _USB_OTG_HNPTXSTS_TypeDef {
+union USB_OTG_HNPTXSTS {
   uint32_t d32;
   struct {
     unsigned nptxfspcavail :16;
@@ -453,10 +453,10 @@ typedef union _USB_OTG_HNPTXSTS_TypeDef {
           unsigned terminate :1;
           unsigned token :2;
           unsigned chnum :4; 
-    } nptxqtop;
+    } __attribute__((packed)) nptxqtop;
     unsigned Reserved:1;
   } b;
-} USB_OTG_HNPTXSTS_TypeDef ;
+};
 
 typedef union _USB_OTG_DTXFSTSn_TypeDef 
 {
@@ -761,29 +761,25 @@ uint32_t frrem :
   }
   b;
 } USB_OTG_HFNUM_TypeDef ;
-typedef union _USB_OTG_HPTXSTS_TypeDef 
+
+
+union USB_OTG_HPTXSTS
 {
   uint32_t d32;
-  struct
-  {
-uint32_t ptxfspcavail :
-    16;
-uint32_t ptxqspcavail :
-    8;
-      struct
-        {
-          uint32_t terminate :
-            1;
-          uint32_t token :
-            2;
-          uint32_t chnum :
-            4; 
-          uint32_t odd_even :
-            1;            
-         } ptxqtop;    
-  }
-  b;
-} USB_OTG_HPTXSTS_TypeDef ;
+
+  struct {
+    unsigned ptxfspcavail : 16;
+    unsigned ptxqspcavail : 8;
+    struct {
+      unsigned terminate : 1;
+      unsigned token : 2;
+      unsigned chnum : 4; 
+      unsigned odd_even : 1;            
+    } __attribute__((packed)) ptxqtop;    
+    
+  }  b;
+};
+
 typedef union _USB_OTG_HPRT0_TypeDef 
 {
   uint32_t d32;

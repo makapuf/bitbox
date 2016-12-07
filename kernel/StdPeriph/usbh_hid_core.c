@@ -231,20 +231,13 @@ static USBH_Status USBH_HID_InterfaceInit ( USB_OTG_CORE_HANDLE *pdev,
     // pphost->usr_cb->DeviceNotSupported();   
   }
   */
-  
+
   return status;
   
 }
 
 
-
-/**
-* @brief  USBH_HID_InterfaceDeInit 
-*         The function DeInit the Host Channels used for the HID class.
-* @param  pdev: Selected device
-* @param  hdev: Selected device property
-* @retval None
-*/
+// The function DeInit the Host Channels used for the HID class.
 void USBH_HID_InterfaceDeInit ( USB_OTG_CORE_HANDLE *pdev,
                                void *phost)
 {
@@ -268,16 +261,8 @@ void USBH_HID_InterfaceDeInit ( USB_OTG_CORE_HANDLE *pdev,
   start_toggles[pdev->cfg.coreID] = 0;
 }
 
-/**
-* @brief  USBH_HID_ClassRequest 
-*         The function is responsible for handling HID Class requests
-*         for HID class.
-* @param  pdev: Selected device
-* @param  hdev: Selected device property
-* @retval  USBH_Status :Response for USB Set Protocol request
-*/
-static USBH_Status USBH_HID_ClassRequest(USB_OTG_CORE_HANDLE *pdev , 
-                                         void *phost)
+// The function is responsible for handling HID Class requests for HID class.
+static USBH_Status USBH_HID_ClassRequest(USB_OTG_CORE_HANDLE *pdev, void *phost)
 {   
   USBH_HOST *pphost = phost;
   HID_Machine_TypeDef *HID_Machine = &HID_Machines[pdev->cfg.coreID];   
