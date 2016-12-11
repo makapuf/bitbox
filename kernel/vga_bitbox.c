@@ -359,13 +359,10 @@ void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
 		if (!vga_odd) {
 			if (vga_line == VGA_V_PIXELS) {
 				vga_frame++; // new frame sync starts just at vsync.
-			}
-
-			if (vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) {
-					GPIOA->BSRRH |= GPIO_BSRR_BS_0; // raise VSync line
+			} else if (vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+1) {
+					GPIOA->BSRRH |= GPIO_BSRR_BS_0; // lower VSync line
 			} else if(vga_line==VGA_V_PIXELS+1+VGA_V_FRONTPORCH+VGA_V_SYNC)	{
 					GPIOA->BSRRL |= GPIO_BSRR_BS_0; // raise VSync line
-
 			} else if(vga_line==VGA_V_PIXELS+VGA_V_FRONTPORCH+VGA_V_SYNC+VGA_V_BACKPORCH) {
 				vga_line=0; // we're on vga_odd=0, next time will be a vga_odd=1 and vga_line=0
 	            graph_line();  // first line next frame!
