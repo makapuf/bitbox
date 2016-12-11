@@ -110,19 +110,18 @@ void setup_usb()
   USBH_DeInit(&USB_OTG_Core,&USB_Host);    /* Host de-initializations */
   USB_Host.class_cb = &HID_cb;
   HCD_Init(&USB_OTG_Core, USB_OTG_HS_CORE_ID); // Start the USB OTG core
-
-  SetInterruptPriority(OTG_HS_IRQn,3); // enable interrupt
-  EnableInterrupt(OTG_HS_IRQn);
+  
+  NVIC_EnableIRQ(OTG_HS_IRQn);
+  NVIC_SetPriority(OTG_HS_IRQn,14); // enable interrupt, low priority
   #endif
 
   #ifdef USE_USB_OTG_FS
-
   USBH_DeInit(&USB_OTG_FS_Core,&USB_FS_Host);    /* Host de-initializations */
   USB_FS_Host.class_cb = &HID_cb;
   HCD_Init(&USB_OTG_FS_Core, USB_OTG_FS_CORE_ID); // Start the USB OTG FS core
   
-  SetInterruptPriority(OTG_FS_IRQn,3);  // Enable Interrupts
-  EnableInterrupt(OTG_FS_IRQn);
+  NVIC_EnableIRQ(OTG_FS_IRQn);
+  NVIC_SetPriority(OTG_FS_IRQn,14); // enable interrupt, low priority
   #endif
 
   setup_usb_timer();
@@ -135,12 +134,7 @@ void USB_OTG_BSP_DriveVBUS(USB_OTG_CORE_HANDLE *pdev, uint8_t state) {}
 void USB_OTG_BSP_ConfigVBUS(USB_OTG_CORE_HANDLE *pdev) {}
 
 
-/**
-  * @brief  USB_OTG_BSP_uDelay
-  *         This function provides delay time in micro sec
-  * @param  usec : Value of delay required in micro sec
-  * @retval None
-  */
+// This function provides delay time in micro sec
 void USB_OTG_BSP_uDelay (const uint32_t usec)
 {
 
@@ -157,12 +151,7 @@ void USB_OTG_BSP_uDelay (const uint32_t usec)
 
 }
 
-/**
-  * @brief  USB_OTG_BSP_mDelay
-  *          This function provides delay time in milli sec
-  * @param  msec : Value of delay required in milli sec
-  * @retval None
-  */
+// This function provides delay time in milli sec
 void USB_OTG_BSP_mDelay (const uint32_t msec)
 {
   USB_OTG_BSP_uDelay(msec * 1000);

@@ -37,7 +37,7 @@ sprites :
     multilayer ?
     external tilesheets for shared sprites between tmx ?
 tilemap :
-    export properties as terrains (handle blocking as 4 bits ?)
+    export properties from terrains (handle blocking as 4 bits ?)
 
     handle H?V symmetry ?
     allow change export order horizontally / vertically / bottom/up or top/down ex : xY yX ...  ?
@@ -117,7 +117,7 @@ for ts in tilesets :
                     print "// warning duplicate name %s of tile id %d"%(prop_value,tid)
                 print "#define %s_%s %d"%(base_name,prop_value,tid)
                 tilenames.add(prop_value)
-            elif prop_name.startswith('is_') :
+            elif prop_name.startswith('is_') : 
                 k=prop_name.split('is_')[1]
                 tilebools[k].append(tid)
 
@@ -331,6 +331,8 @@ if args.export_objects or args.export_sprites :
         print "\n// sprites"
         print "extern void *%s_sprites[%s_t_nb]; // pointers to spr files, one per type (non-const since they are ints to be loaded dynamically)"%(base_name,base_name)
         print "extern uint8_t *%s_anims[%s_st_nb]; // pointers to array of u8 animation data, one per state"%(base_name,base_name)
+        print "extern uint8_t %s_hitbox[%s_st_nb][4]; // hitbox for a state (x1,y1,x2,y2) "%(base_name,base_name)
+
         print
 
         print >>c_file, "\n// sprites (see refs from data_h)"
@@ -340,6 +342,7 @@ if args.export_objects or args.export_sprites :
         typ_tiles = defaultdict(set) # dict typ : set of animation tiles
         typ_tileset = {} # typ:ts as xml element
         state_anims = [] # list of tid animations per state
+        state_hitbox = [] # list of hitbox per state
 
         prev_type=None
         for (t,s) in all_states_sorted :
@@ -350,6 +353,7 @@ if args.export_objects or args.export_sprites :
 
             # find animation gids. if no animation, animation is made from only one tile : the tile id
             animtile = ts.find("tile[@id='%s']"%(tid-firstgid)) # id within tileset
+
             anim_elt = animtile.find('animation') if animtile != None else None
             if anim_elt != None :
                 animation_tid = [ int(frame_elt.get('tileid'))+firstgid for frame_elt in anim_elt.findall('frame')]
@@ -359,6 +363,18 @@ if args.export_objects or args.export_sprites :
             # append to current types' set of unique tile GID
             typ_tiles[t] |= set(animation_tid)
             state_anims.append(animation_tid) # keep all animations
+
+            # find hitbox or set it empty
+            try : 
+                hit = animtile.find('objectgroup').find('object') # take first one  <object id="1" x="10.75" y="15.125" width="10.375" height="11.375"/>
+                state_hitbox.append((
+                    int(float(hit.get('x'))),
+                    int(float(hit.get('y'))),
+                    int(float(hit.get('x'))+float(hit.get('width'))),
+                    int(float(hit.get('y'))+float(hit.get('height')))
+                ))
+            except AttributeError,e : 
+                state_hitbox.append((0,0,0,0))
 
         # freeze tile anims
         typ_tiles_sorted = { k:sorted(v) for k,v in typ_tiles.items() }
@@ -381,6 +397,13 @@ if args.export_objects or args.export_sprites :
         for (t,s),anim in zip(all_states_sorted, state_anims) :
             print >>c_file,'    (uint8_t []){'+','.join(str(typ_tiles_sorted[t].index(tid)) for tid in anim)+', 255 }, // %s_%s'%(t,s)
         print >>c_file,'};'
+
+        # animations hitboxes
+        print >>c_file,'uint8_t %s_hitbox[][4] = {'%base_name
+        for (t,s),box in zip(all_states_sorted, state_hitbox):
+            print >>c_file, '    {%d,%d,%d,%d}, // %s_%s'%(box[0],box[1],box[2],box[3],t,s)
+        print >>c_file,'};'
+
 
     # export images as spr files in pbc format
     if args.export_images : 
