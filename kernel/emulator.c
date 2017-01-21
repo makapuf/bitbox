@@ -686,12 +686,6 @@ FRESULT f_opendir ( DIR* dp, const TCHAR* path )
     }
 }
 
-int is_regular_file (const char *path) {
-    struct stat path_stat;
-    if (stat(path, &path_stat))
-        return 0;
-    return S_ISREG(path_stat.st_mode);
-}
 
 FRESULT f_readdir ( DIR* dp, FILINFO* fno )
 {
@@ -701,10 +695,11 @@ FRESULT f_readdir ( DIR* dp, FILINFO* fno )
     if (de) {
         for (int i=0;i<13;i++)
             fno->fname[i]=de->d_name[i];
-        if (is_regular_file(de->d_name))
-            fno->fattrib = 0;
-        else
+        
+        fno->fattrib = 0;
+        if (de->d_type & DT_DIR)
             fno->fattrib = AM_DIR;
+        
         return FR_OK;
     } else {
         if (errno) {
