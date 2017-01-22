@@ -56,7 +56,7 @@ INCLUDES=-I$(BITBOX)/kernel/ -I$(BITBOX)/kernel/cmsis -I$(BITBOX)/kernel/StdPeri
 C_OPTS = -std=c99 -g -Wall -ffast-math -fsingle-precision-constant -fsigned-char -ffunction-sections -fdata-sections -funroll-loops -fomit-frame-pointer
 
 ifneq ($(HOST), Darwin)
-  LD_FLAGS = -Wl,--gc-sections -Wl,-Map,output.map
+  LD_FLAGS = -Wl,--gc-sections
 else
   LD_FLAGS = -dead_strip
   $(BITBOX_TGT): LD_FLAGS = -Wl,--gc-sections
