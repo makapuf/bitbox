@@ -1,5 +1,5 @@
 NAME=test_chip
-SONG=bomber
+SONG=test2
 
 BITBOX?=../../
 
