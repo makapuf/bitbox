@@ -64,10 +64,10 @@ int screen_height;
 static uint32_t next_time;
 
 // options
-int slow; // parameter : run slower ?
-int fullscreen; // shall run fullscreen
-int quiet=1; // quiet by default now
-int scale=1; // scale display by this in pixels
+static int slow; // parameter : run slower ?
+static int fullscreen; // shall run fullscreen
+static int quiet=1; // quiet by default now
+static int scale=1; // scale display by this in pixels
 
 // Video
 SDL_Surface* screen;
@@ -223,6 +223,12 @@ static void mixaudio(void * userdata, Uint8 * stream, int len)
 // this callback is called each time we need to fill the buffer
 {
     game_snd_buffer((uint16_t *)stream,len/2);
+#ifdef __HAIKU__
+	// On Haiku, U8 audio format is broken so we convert to signed
+	int i;
+	for (i = 0; i < len; i++)
+		stream[i] -= 128;
+#endif
 }
 
 void audio_init(void)
@@ -230,13 +236,17 @@ void audio_init(void)
     SDL_AudioSpec desired;
 
     desired.freq = BITBOX_SAMPLERATE;
+#ifdef __HAIKU__
+    desired.format = AUDIO_S8;
+#else
     desired.format = AUDIO_U8;
+#endif
     desired.channels = 2;
 
-    /* Le tampon audio contiendra at least one vga_frame worth samples */
-    desired.samples = BITBOX_SNDBUF_LEN*2; // XXX WHY is it halved ??
+    /* The audio buffers holds at least one vga_frame worth samples */
+    desired.samples = BITBOX_SNDBUF_LEN;
 
-    /* Mise en place de la fonction de rappel et des données utilisateur */
+    /* Setup callback and "user data" parameter passed to it (we don't use it) */
     desired.callback = &mixaudio;
     desired.userdata = NULL;
 
