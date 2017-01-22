@@ -8,6 +8,7 @@
 # Binaries
 *.elf
 *.bin
+*.map
 
 # emulation of current game
 *_emu
