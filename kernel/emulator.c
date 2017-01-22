@@ -686,11 +686,12 @@ FRESULT f_opendir ( DIR* dp, const TCHAR* path )
     }
 }
 
-
 FRESULT f_readdir ( DIR* dp, FILINFO* fno )
 {
     errno=0;
-    struct dirent *de = readdir((NIX_DIR *)dp->fs); // updates ?
+    char buffer[260]; // assumes max path size for FAT32
+
+    struct dirent *de = readdir((NIX_DIR *)dp->fs); 
 
     if (de) {
         for (int i=0;i<13;i++)
@@ -698,12 +699,18 @@ FRESULT f_readdir ( DIR* dp, FILINFO* fno )
 
         fno->fattrib = 0;
 
-        struct stat stbuf;
-        stat(de->d_name, &stbuf);
-        if (S_ISDIR(stbuf.st_mode))
-            fno->fattrib = AM_DIR;
+        // check attributes of found file
+        strncpy(buffer,dp->dir,260);
+        strcat(buffer,"/");
+        strcat(buffer,fno->fname);
 
+        struct stat stbuf;
+        stat(buffer,&stbuf);
+
+        if (S_ISDIR(stbuf.st_mode))
+             fno->fattrib = AM_DIR;
         return FR_OK;
+
     } else {
         if (errno) {
             printf("Error reading directory %s : %s\n",dp->dir, strerror(errno)); // not neces an erro, can be end of dir.
