@@ -28,7 +28,7 @@ CHANGELOG.md
 	    quickest (if you define a non-empty graph_frame) 
 	    is to change graph_frame to graph_vsync and add a line like: 
 
-	        if (vga_line!=VGA_PIXELS_V) return; 
+	        if (vga_line!=VGA_V_PIXELS) return; 
 
 - put events in its own library and removed from bitbox. Now only state variables are handled by kernel, events are handled by 
 	porting : 

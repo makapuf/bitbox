@@ -695,11 +695,14 @@ FRESULT f_readdir ( DIR* dp, FILINFO* fno )
     if (de) {
         for (int i=0;i<13;i++)
             fno->fname[i]=de->d_name[i];
-        
+
         fno->fattrib = 0;
-        if (de->d_type & DT_DIR)
+
+        struct stat stbuf;
+        stat(de->d_name, &stbuf);
+        if (S_ISDIR(stbuf.st_mode))
             fno->fattrib = AM_DIR;
-        
+
         return FR_OK;
     } else {
         if (errno) {

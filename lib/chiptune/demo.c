@@ -1,5 +1,5 @@
 #include "bitbox.h"
-#include "lib/chiptune/chiptune.h"
+#include "lib/chiptune/player.h"
 
 extern const struct ChipSong SONG;
 
