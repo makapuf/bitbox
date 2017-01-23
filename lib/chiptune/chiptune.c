@@ -83,6 +83,10 @@ uint16_t gen_sample()
 	}
 	// Now put the two channels together in the output word
 	// acc [-32640,31620] > ret 2*[1,251]
-	return (128 + (acc[0] >> 8)) | ((128 + (acc[1] >> 8)) << 8);	// [1,251]
+
+	if (MAX_CHANNELS == 4)
+		return (128 + (acc[0] >> 7)) | ((128 + (acc[1] >> 7)) << 8);    // [1,251]
+	else
+		return (128 + (acc[0] >> 8)) | ((128 + (acc[1] >> 8)) << 8);    // [1,251]
 }
 

@@ -1,4 +1,5 @@
 /* Music player for the chiptune engine
+ * Copyright 2015, Makapuf <makapuf2@gmail.com>
  * Copyright 2014, Adrien Destugues <pulkomandy@pulkomandy.tk>
  * Copyright 2007, Linus Akesson
  * Based on the "Hardware Chiptune" project */

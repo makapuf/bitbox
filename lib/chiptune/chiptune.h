@@ -9,7 +9,10 @@
 #pragma once
 #include <stdint.h>
 
+
+#ifndef MAX_CHANNELS
 #define MAX_CHANNELS 8
+#endif
 
 // These are our possible waveforms. Any other value plays silence.
 enum {

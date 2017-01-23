@@ -93,7 +93,7 @@ for name in args.file_in :
 	#print "    .nb_tracks = %d,"%len(tracks)
 	print "    .tracks = (uint32_t *[]) {"
 	for n,(tr,trid) in enumerate(zip(tracks, track_ids)) : 
-		print "        (uint32_t[]){",
+		print "        (uint32_t[%d]){" % (tracklength),
 		lastindex = 0
 		for track,index, note, instr, c1,p1,c2,p2 in tr : 
 			while lastindex < int(index,16) : 
