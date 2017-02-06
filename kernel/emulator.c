@@ -219,7 +219,7 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen (SDL_Surface *scr)
 
 
 #ifndef NO_AUDIO
-static void mixaudio(void * userdata, Uint8 * stream, int len)
+static void mixaudio(void * userdata, uint8_t * stream, int len)
 // this callback is called each time we need to fill the buffer
 {
     game_snd_buffer((uint16_t *)stream,len/2);
