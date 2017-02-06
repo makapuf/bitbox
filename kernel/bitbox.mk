@@ -112,11 +112,11 @@ endif
 $(SDL_TGT): C_OPTS   += $(shell sdl-config --cflags)
 $(SDL_TGT): HOSTLIBS += $(shell sdl-config --libs)
 
-KERNEL_SDL   +=emulator.c
-KERNEL_TEST  +=tester.c
+KERNEL_SDL   +=main_sdl.c
+KERNEL_TEST  +=main_test.c
 KERNEL_MICRO +=board_micro.c startup.c bitbox_main.c
-KERNEL_BITBOX+=board.c startup.c bitbox_main.c
-KERNEL_PAL   +=board.c startup.c bitbox_main.c
+KERNEL_BITBOX+=board_bitbox.c startup.c bitbox_main.c
+KERNEL_PAL   +=board_bitbox.c startup.c bitbox_main.c
 
 # -- Optional AND target specific
 
