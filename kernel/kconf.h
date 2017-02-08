@@ -11,12 +11,12 @@
 #include "kconf_micro.h"
 #elif defined(BOARD_BITBOX)
 #include "kconf_bitbox.h"
-#elif defined(EMULATOR)
-#include "kconf_emu.h"
 #elif defined(BOARD_PAL)
 #include "kconf_pal.h"
+#elif defined(EMULATOR)
+#include "kconf_emu.h"
 #else 
-#error no know board
+#error no known board
 #endif
 
 // --------------------------------------
