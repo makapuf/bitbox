@@ -4,37 +4,16 @@
 # --------
 # $NAME_$BOARD (default), clean
  
-# Variables used
+# Variables used (export them)
 # --------------
-#   BITBOX should point to the base bitbox source dir (where this file is)
 #   TYPE= sdl | test
-
-#   NAME : name of the project
-#   GAME_C_FILES c files of the project
-#   GAME_C_OPTS : C language options. Those will be used for the ARM game as well as the emulator.
-
-#	DEFINES : C defines, will be added as -Dxxx to GAME_C_OPTS, you can use either
-#       VGA_MODE=xxx : define a vga mode.
-#		  they can be used to define specific kernel resolution. Usable values are
-#         320x240, 384x271, 400x300, 640x480, 800x600 (see kconf.h) 
-#         See also PAL_MODE for specific 15kHz modes in kconf_pal.h
-#       VGA_BPP=8 or 16 (default) : use a 8bpp mode (for micro, emulated on kernel)
-#       PROFILE		- enable profiling in kernel (red line / pixels onscreen)
-
-# Other Makefile flags :
-#  Those flags include a number of support C files to the build. They also export the flags as C defines
-#		NO_USB,       - when you don't want to use USB input related function)
-#		NO_AUDIO      - disable sound support
-#		USE_SDCARD,   - when you want to use SDcard+fatfs support 
-#
-
-# More arcane options :
-#     USE_SD_SENSE  - enabling this will disable being used on rev2 !
-#     DISABLE_ESC_EXIT - for the emulator only, disable quit when pressing ESC
-#     KEYB_FR       - enable AZERTY keybard mapping
+#   BITBOX NAME GAME_C_FILES DEFINES (VGA_MODE, VGA_BPP, ...)
+#   GAME_C_OPTS DEFINES NO_USB NO_AUDIO USE_SDCARD
+# More arcane defines :
+#   USE_SD_SENSE DISABLE_ESC_EXIT KEYB_FR
 
 HOST = $(shell uname)
-$(warning compiling $(NAME))
+$(warning compiling $(NAME) with c files $(GAME_C_FILES))
 DEFINES += EMULATOR 
 
 # get canonical Bitbox path
@@ -72,12 +51,12 @@ CC=gcc
 ifeq ($(TYPE), sdl)
   C_OPTS   += $(shell sdl-config --cflags)
   HOSTLIBS += $(shell sdl-config --libs)
-else ifeq ($TYPE), test)
+else ifeq ($(TYPE), test)
 else 
-  $(error unknown type defined, please use sdl or test)
+  $(error unknown type $(TYPE) defined, please use sdl or test)
 endif
 
-KERNEL   += main_$(TYPE).c micro_palette.c
+KERNEL := main_$(TYPE).c micro_palette.c
 
 # -- Optional features 
 
@@ -94,16 +73,15 @@ endif
 # --- Compilation
 
 ALL_CFLAGS = $(DEFINES:%=-D%) $(C_OPTS) $(INCLUDES) $(GAME_C_OPTS)
-
-# must put different rules and not only once since multi target pattern rules are special :)
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+	@$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+	@echo CC $<
 
 # --- Autodependecies (headers...)
 -include $(BUILD_DIR)/$(TYPE)/*.d
 
-# --- Targets
+# --- link
 $(NAME)_$(TYPE): $(GAME_C_FILES:%.c=$(BUILD_DIR)/%.o) $(KERNEL:%.c=$(BUILD_DIR)/%.o)
 	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS)
 

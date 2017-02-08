@@ -3,36 +3,15 @@
 # TARGETS 
 # --------
 # clean, stlink, dfu, debug, $NAME_$BOARD.elf/bin (default)
- 
-# Variables used
+
+# Variables used (export them)
 # --------------
-#   BITBOX should point to the base bitbox source dir (where this file is)
 #   BOARD= bitbox | micro | pal 
-
-#   NAME : name of the project
-#   GAME_C_FILES c files of the project
-#   GAME_C_OPTS : C language options. Those will be used for the ARM game as well as the emulator.
-
-#	DEFINES : C defines, will be added as -Dxxx to GAME_C_OPTS, you can use either
-#       VGA_MODE=xxx : define a vga mode.
-#		  they can be used to define specific kernel resolution. Usable values are
-#         320x240, 384x271, 400x300, 640x480, 800x600 (see kconf.h) 
-#         See also PAL_MODE for specific 15kHz modes in kconf_pal.h
-#       VGA_BPP=8 or 16 (default) : use a 8bpp mode (for micro, emulated on kernel)
-#       PROFILE		- enable profiling in kernel (red line / pixels onscreen)
-
-# Other Makefile flags :
-#  Those flags include a number of support C files to the build. They also export the flags as C defines
-#		NO_USB,       - when you don't want to use USB input related function)
-#		NO_AUDIO      - disable sound support
-#		USE_SDCARD,   - when you want to use SDcard+fatfs support 
-#
-
-# More arcane options :
-#     USE_SD_SENSE  - enabling this will disable being used on rev2 !
-#     DISABLE_ESC_EXIT - for the emulator only, disable quit when pressing ESC
-#     KEYB_FR       - enable AZERTY keybard mapping
-
+#   TYPE= sdl | test
+#   BITBOX NAME GAME_C_FILES DEFINES (VGA_MODE, VGA_BPP, ...)
+#   GAME_C_OPTS DEFINES NO_USB NO_AUDIO USE_SDCARD
+# More arcane defines :
+#   USE_SD_SENSE DISABLE_ESC_EXIT KEYB_FR
 
 ifndef BOARD
 	$(error "gotta define BOARD")
@@ -63,8 +42,8 @@ LD_FLAGS = -Wl,--gc-sections
 
 AUTODEPENDENCY_CFLAGS=-MMD -MF$(@:.o=.d) -MT$@
 
-# -- Target-specifics
-DEFINES += BOARD_$(BOARD)
+# -- Target-specifics (uppercase)
+DEFINES += BOARD_$(shell echo ${BOARD} | tr '[:lower:]' '[:upper:]')
 
 CORTEXM4F=-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16\
      -march=armv7e-m -mlittle-endian -nostartfiles
@@ -93,7 +72,7 @@ LIBS = -lm
 
 KERNEL += board_$(BOARD).c \
     startup.c \
-    bitbox.main.c \
+    bitbox_main.c \
     vga_$(BOARD).c \
     micro_palette.c
 
@@ -124,13 +103,14 @@ endif
 ifdef NO_AUDIO
 DEFINES+=NO_AUDIO
 else
-KERNEL_BITBOX += audio_$(BOARD).c
+KERNEL += audio_$(BOARD).c
 endif
 
 # -- C compilation
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(DEFINES:%=-D%) $(C_OPTS) $(INCLUDES) $(GAME_C_OPTS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+	@$(CC) $(DEFINES:%=-D%) $(C_OPTS) $(INCLUDES) $(GAME_C_OPTS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
+	@echo CC-ARM $< 
 
 %.bin: %.elf
 	arm-none-eabi-objcopy -O binary $^ $@
@@ -140,7 +120,7 @@ $(BUILD_DIR)/%.o: %.c
 -include $(BUILD_DIR)/*.d
 
 # -- linking 
-$(NAME)_$(BOARD).elf : $(GAME_C_FILES:%.c=$(BUILD_DIR)/%.o) $(KERNEL_BITBOX:%.c=$(BUILD_DIR)/%.o)
+$(NAME)_$(BOARD).elf : $(GAME_C_FILES:%.c=$(BUILD_DIR)/%.o) $(KERNEL:%.c=$(BUILD_DIR)/%.o)
 	$(CC) $(LD_FLAGS) $^ -o $@ $(LIBS)
 	chmod -x $@
 
