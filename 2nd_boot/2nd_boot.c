@@ -40,31 +40,8 @@ FATFS fs32;
 // load from sd to RAM
 // flash LED, boot
 
-#ifdef EMULATOR
-	#define ROOT_DIR "."
-	// flash stubs
-	int frame_started; // simulate a flash delay
-	void flash_init() {frame_started=0;}
-	int flash_done() {
-		return !frame_started || vga_frame-frame_started > 3*60;
-	}
 
-	char flash_message[32];
-	int flash_start_write(FIL *file) {
-		frame_started = vga_frame;
-		strcpy(flash_message,"Faking flashing.");
-		return 0;
-	}
-
-	void flash_frame() {
-		if (frame_started && vga_frame-frame_started>3*60)
-			strcpy(flash_message,"** Done! Please press reset **");
-	}
-#else
-
-#define ROOT_DIR ""
-
-/*
+#if 0
 #include "stm32f4xx.h"
 // Code stolen from "matis"
 // http://forum.chibios.org/phpbb/viewtopic.php?f=2&t=338
@@ -99,9 +76,7 @@ void jump(uint32_t address)
     __set_MSP((u32)(ApplicationAddress[0]));
     Jump_To_Application();
 }
-*/
-#endif
-
+#endif 
 
 extern const uint8_t font_data [256][16];
 char vram_char[SCR_LINES][80];

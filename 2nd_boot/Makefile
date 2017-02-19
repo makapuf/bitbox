@@ -1,13 +1,10 @@
 NAME = 2nd_boot
-GAME_C_FILES = $(NAME).c font.c bg.c 
+GAME_C_FILES = $(NAME).c font.c bg.c flashit.c
 GAME_BINARY_FILES = bitbox.pbm
 DEFINES = VGA_MODE=640 PAL_MODE=672
 USE_SDCARD = 1
 NO_AUDIO=1
 
-# will only be used when not in emulator
-KERNEL_BITBOX = flashit.c
-KERNEL_PAL = flashit.c
 # comment to build to flash. This will load boot2 as a normal program in flash 
 # BUT obviously cannot program flash anymore
 LINKER_RAM=1

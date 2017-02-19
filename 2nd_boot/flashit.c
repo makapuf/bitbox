@@ -4,11 +4,33 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "stm32f4xx.h" // CMSIS
 #include "bitbox.h" // vga_line, frame
-
 #include "flashit.h"
 
+#ifdef EMULATOR
+
+// flash stubs
+int frame_started; // simulate a flash delay
+void flash_init() {frame_started=0;}
+int flash_done() {
+	return !frame_started || vga_frame-frame_started > 3*60;
+}
+
+char flash_message[32];
+int flash_start_write(FIL *file) {
+	frame_started = vga_frame;
+	strcpy(flash_message,"Faking flashing.");
+	return 0;
+}
+
+void flash_frame() {
+	if (frame_started && vga_frame-frame_started>3*60)
+		strcpy(flash_message,"** Done! Please press reset **");
+}
+
+#else
+
+#include "stm32f4xx.h" // CMSIS
 #define PROGSIZE uint32_t
 #define FLASH_PSIZE_WORD 0x200
 #define CR_PSIZE_MASK ((uint32_t)0xFFFFFCFF)
@@ -239,3 +261,4 @@ void flash_frame()
  	see also "stm32f4xx_flash.h"  + .c ! 
 
 */
+#endif // emulator

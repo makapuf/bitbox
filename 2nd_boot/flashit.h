@@ -30,3 +30,9 @@ int flash_done();
 void flash_frame();
 
 extern char flash_message[32];
+
+#ifdef EMULATOR
+#define ROOT_DIR "."
+#else
+#define ROOT_DIR ""
+#endif
