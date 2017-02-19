@@ -36,7 +36,7 @@ INCLUDES=-I$(BITBOX)/kernel/ \
 # language specific (not specific to target)
 C_OPTS = -std=c99 -g -Wall -ffast-math -fsingle-precision-constant \
     -fsigned-char -ffunction-sections -fdata-sections -funroll-loops \
-    -fomit-frame-pointer
+    -fomit-frame-pointer -flto
 
 LD_FLAGS = -Wl,--gc-sections
 
@@ -143,3 +143,4 @@ clean::
 	rm -rf $(NAME)_$(BOARD).elf $(NAME)_$(BOARD).bin build/
 
 .PHONY: clean stlink dfu debug
+
