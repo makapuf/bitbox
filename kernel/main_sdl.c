@@ -251,19 +251,18 @@ void audio_init(void)
     desired.userdata = NULL;
 
     if (!quiet) {
-       printf("sndbuflen : %d\n",BITBOX_SNDBUF_LEN);
-       printf("Paramètres audio desired (before): format %d,%d canaux, fs=%d, %d samples.\n",
+       printf("Bitbox sndbuflen : %d\n",BITBOX_SNDBUF_LEN);
+       printf("Audio parameters wanted (before): format=%d, %d channels, fs=%d, %d samples.\n",
             desired.format , desired.channels, desired.freq, desired.samples);
     }
 
-    //if (SDL_OpenAudio(&desired, &obtained) != 0) {
     if (SDL_OpenAudio(&desired, NULL) != 0) {
         printf("Error in opening audio peripheral: %s\n", SDL_GetError());
         return ; // return anyways even with no sound
     }
 
     if (!quiet)
-        printf("Audio parameters desired (after): format %d,%d canaux, fs=%d, %d samples.\n",
+        printf("Audio parameters obtained (after): format=%d, %d channels, fs=%d, %d samples.\n",
         desired.format , desired.channels, desired.freq, desired.samples);
 
 }
