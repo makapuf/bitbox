@@ -8,11 +8,6 @@ mode as defined in kconf.h values
 
 
 /*
-  TODO : audio, exclude headers, ...
-  soft reflash doesnt enable output
-*/
-
-/*
 	PA1 (HSYNC) output is driven by Timer5 with CC 2 (see Table9 of datasheet, p60) using pwm mode
 	Timer 1 (PIXEL DMA) is started as a slave of Timer5 CC1 via ITR1 (see config options table 76, p463 of refman)
    	TIM1_UP drives the DMA2 on stream 5 channel 6 (ref manual p164)
@@ -42,6 +37,12 @@ mode as defined in kconf.h values
 #define BACKPORCH_END ((VGA_H_SYNC+VGA_H_BACKPORCH)*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
 
 // simulates MICRO interface through palette expansion
+#if VGA_BPP==8
+	typedef uint8_t pixel_t;
+#else
+	typedef uint16_t pixel_t;
+#endif
+
 extern const uint16_t palette_flash[256]; // microX palette in bitbox pixels
 
 #ifdef PROFILE
@@ -83,8 +84,8 @@ that is not reported by the DMA registers.
 uint16_t LineBuffer1[1024] __attribute__((aligned (1024))); // not in CCM : DMA !
 uint16_t LineBuffer2[1024] __attribute__((aligned (1024)));
 
-uint16_t *display_buffer = LineBuffer1; // will be sent to display
-uint16_t *draw_buffer = LineBuffer2; // will be drawn (bg already drawn)
+pixel_t *display_buffer = (pixel_t*) LineBuffer1; // will be sent to display
+pixel_t *draw_buffer = (pixel_t*) LineBuffer2; // will be drawn (bg already drawn)
 
 static inline void vga_output_black()
 {
@@ -106,8 +107,8 @@ void vga_setup()
 	// initialize software state.
 	vga_line=0;	vga_frame=0;
 
-	display_buffer=LineBuffer1;
-	draw_buffer=LineBuffer2;
+	display_buffer= (pixel_t*) LineBuffer1;
+	draw_buffer = (pixel_t*) LineBuffer2;
 
 
 	// --- GPIO ---------------------------------------------------------------------------------------
@@ -316,7 +317,7 @@ void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
 		#endif
 		// swap display & draw buffers, effectively draws line-1
 		{
-			uint16_t *t;
+			pixel_t *t;
 			t=display_buffer;
 			display_buffer = draw_buffer;
 			draw_buffer = t;
