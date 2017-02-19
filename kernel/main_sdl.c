@@ -219,21 +219,22 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen (SDL_Surface *scr)
 
 
 #ifndef NO_AUDIO
-uint16_t sdl_sound_buffer[512];
-int sdl_sound_ptr = 512;
-static void mixaudio(void * userdata, uint8_t * stream, int len)
+static uint16_t bitbox_sound_buffer[BITBOX_SNDBUF_LEN];
+int bitbox_sound_idx = BITBOX_SNDBUF_LEN;
+
+static void __attribute__ ((optimize("-O3"))) mixaudio(void * userdata, uint8_t * stream, int len)
 // this callback is called each time we need to fill the buffer
 {
     int i=0;
     uint16_t *dst = (uint16_t *)stream;
     len /= 2;
     while (i < len) {
-        if (sdl_sound_ptr == 512) {
-            sdl_sound_ptr = 0;
-            game_snd_buffer(sdl_sound_buffer, 512);
+        if (bitbox_sound_idx == BITBOX_SNDBUF_LEN) {
+            bitbox_sound_idx = 0;
+            game_snd_buffer(bitbox_sound_buffer, BITBOX_SNDBUF_LEN);
         }
-        while (sdl_sound_ptr < 512 && i < len)
-            dst[i++] = sdl_sound_buffer[sdl_sound_ptr++];
+        while (bitbox_sound_idx < BITBOX_SNDBUF_LEN && i < len)
+            dst[i++] = bitbox_sound_buffer[bitbox_sound_idx++];
     }
 #ifdef __HAIKU__
 	// On Haiku, U8 audio format is broken so we convert to signed
