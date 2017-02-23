@@ -25,21 +25,24 @@
 
 
 """TODO :
-DOC
-export a,b,c custom object data (or even change name)
+- Tsx or tmx, same thing : export from tset, not object name. Will not export '_'. Frames exported as is, just cut. all animations are _local_. no rewrite of ids.
 
-export as a unique .h
+DOC
+    export a,b,c custom object data (or even change name)
+    mettre sprite ds le state diect et reel export state
+    faire type==file 
+
 
 sprites :
-    hidden groups / layers positions are not exported
-    hitbox (as 4bytes ?)
     options to set number of colors of sprites ?
     multilayer ?
-    external tilesheets for shared sprites between tmx ?
+    external tile
+    
+
 tilemap :
     export properties from terrains (handle blocking as 4 bits ?)
 
-    handle H?V symmetry ?
+    handle H?V symmetry ? (in display)
     allow change export order horizontally / vertically / bottom/up or top/down ex : xY yX ...  ?
     allow reordering tiles / not including unused ones in tileset ? (optional, data could be organized by lines)
         at least, dont output last unused tiles
@@ -77,6 +80,7 @@ parser.add_argument('-x','--export-objects', default=False, help='exports object
 parser.add_argument('-s','--export-sprites', default=False, help='exports object data in c file and sprites as 16c spr files. Honors micro palette.',action="store_true")
 parser.add_argument('-i','--export-images', default=False, help='exports images layer as spr pbc files. Honors micro palette.',action="store_true")
 
+
 #parser.add_argument('-g','--group-anims', default=False, help='exports animations groups - by object type. animations will be a u8** instead of u8',action="store_true")
 
 args = parser.parse_args()
@@ -97,29 +101,9 @@ dirname=base_path.replace('/','_')+'_' if base_path else ''
 
 print '#include <stdint.h>'
 
-
-# tileset properties : name is a unique property - export for all tilesets allowing item-only names
-# TODO : relative to tileset firstGID ? rewrite skipping ununsed tid.
-tilesets = root.findall('tileset')
-tilenames = set()
-tilebools = defaultdict(list) # property_name : list of tile_ids
-print '\n// -- Tilesets '
-print '// Tile ids'
-for ts in tilesets :
-    for tile in ts.findall('tile') :
-        tid = int(tile.get('id'))+int(ts.get('firstgid'))
-        for prop in tile.findall('./properties/property') :
-            prop_name=prop.get('name')
-            prop_value = prop.get('value')
-
-            if prop_name=='name' :
-                if prop_value in tilenames :
-                    print "// warning duplicate name %s of tile id %d"%(prop_value,tid)
-                print "#define %s_%s %d"%(base_name,prop_value,tid)
-                tilenames.add(prop_value)
-            elif prop_name.startswith('is_') : 
-                k=prop_name.split('is_')[1]
-                tilebools[k].append(tid)
+def relpath(path) : 
+    "transform relative path from tmx file to absolute"
+    return os.path.join(os.path.dirname(os.path.abspath(args.file)),path)
 
 def ts_from_gid(gid) :
     # find first tileset that has a greater TID, takes the one before.
@@ -135,11 +119,10 @@ def export_sprite(outfile,tiles,tileset_elt) :
 
     ts_w = int(tileset_elt.get('tilewidth'))
     ts_h = int(tileset_elt.get('tileheight'))
-    firstgid = int(tileset_elt.get('firstgid'))
+    firstgid = int(tileset_elt.get('firstgid',0))
 
     imgsrc = tileset_elt.find('image').get('source')
-
-    tileset=Image.open(os.path.join(os.path.dirname(os.path.abspath(args.file)),imgsrc)).convert('RGBA')
+    tileset=Image.open(relpath(imgsrc)).convert('RGBA')
 
     # build a picture list from tile list
     tiles_local = [tid-firstgid for tid in tiles]
@@ -160,7 +143,7 @@ def export_sprite(outfile,tiles,tileset_elt) :
     # src.save(outfile.name+'.png')  # make it an option ?
 
     # export data as spr XXX to pb8
-    print "/* Sprite data : ",imgsrc,len(srcs),' frames, in file:',sprfile
+    print "/* Sprite data : ",imgsrc,len(srcs),' frames, in file:',outfile.name
     if args.micro :
         sprite_encode8.image_encode(src,outfile,ts_h,'u8')
     else :
@@ -168,9 +151,66 @@ def export_sprite(outfile,tiles,tileset_elt) :
     print '*/'
 
 
-# export first tileset - IIF there is a tilemap defined
-# XXX get all used tiles from tilemaps and make a tileset, remap 
+def tileset_export(tileset) : 
+    """exports sprites animations of a tsx file to spr file and outputs states / animation data """
+    name=tileset.get('name')
+    states = {}
+    # find tile properties 
+    used_tiles = []
+    for tile in tsx.findall('tile') : 
+        tid = int(tile.get('id')) # no firstID
+        props = { p.get('name'):p.get('value') for p in tile.findall('properties/property')}
+        if 'state' in props : 
+            # found a state
+            # get animation tiles
 
+            # find animation gids. if no animation, animation is made from only one tile : the tile id itself
+            anim_elt = tile.find('animation')
+            if anim_elt != None :
+                frames = [ int(frame_elt.get('tileid')) for frame_elt in anim_elt.findall('frame')]
+            else :
+                frames = [ tid ]
+            used_tiles += [x for x in frames if x not in used_tiles] # aded at the end so that order is not changed
+
+            states[props['state']]=[used_tiles.index(i) for i in frames]
+    print states
+    print used_tiles
+    sprfile='%s.spr'%name
+    with open(os.path.join(base_path,sprfile),'w+') as f :
+        export_sprite(f,used_tiles,tileset)
+
+
+# tileset properties : name is a unique property - export for all tilesets allowing item-only names
+# TODO : relative to tileset firstGID ? rewrite skipping ununsed tid.
+tilesets = root.findall('tileset')
+tilenames = set()
+tilebools = defaultdict(list) # property_name : list of tile_ids
+
+print '\n// -- Tilesets '
+print '// Tile ids'
+for ts in tilesets :
+    if ts.get('source') != None : # this is a tsx link with sprites. process it.
+        tsx = ET.parse(relpath (ts.get('source'))).getroot()
+        tileset_export(tsx)
+    else : 
+        for tile in ts.findall('tile') :
+            tid = int(tile.get('id'))+int(ts.get('firstgid'))
+            for prop in tile.findall('./properties/property') :
+                prop_name=prop.get('name')
+                prop_value = prop.get('value')
+
+                if prop_name=='name' :
+                    if prop_value in tilenames :
+                        print "// warning duplicate name %s of tile id %d"%(prop_value,tid)
+                    print "#define %s_%s %d"%(base_name,prop_value,tid)
+                    tilenames.add(prop_value)
+                elif prop_name.startswith('is_') : 
+                    k=prop_name.split('is_')[1]
+                    tilebools[k].append(tid)
+
+    
+
+# export first tileset - IIF there is a tilemap defined
 if root.findall('layer') : 
 
     ts = tilesets[0]
@@ -189,7 +229,7 @@ if root.findall('layer') :
     def reduce(c) :
         return (1<<15 | (c[0]>>3)<<10 | (c[1]>>3)<<5 | c[2]>>3) if c[3]>127 else 0
 
-    src = Image.open(os.path.join(os.path.dirname(os.path.abspath(args.file)),img)).convert('RGBA')
+    src = Image.open(relpath(img)).convert('RGBA')
     if args.micro :
         src = src.convert('RGB').quantize(palette=Image.open(PALETTE)) # XXX allow 8-bit adaptive palette ?
         pixdata = array.array('B',src.getdata()) # direct output bytes
@@ -271,7 +311,7 @@ print '// max indices : ',max_idx
 if args.export_objects or args.export_sprites :
     print '\n// -- Objects '
 
-    print 'struct MapObjectRef {\n    int16_t x,y;\n    uint8_t state_id; // or sprite_id\n    uint8_t a,b,c; // extra values  \n};'
+    print '#ifndef __MOR_DEFINED__\n#define __MOR_DEFINED__\nstruct MapObjectRef {\n    int16_t x,y;\n    uint8_t state_id; // or sprite_id\n    uint8_t a,b,c; // extra values  \n};\n#endif'
     all_types = set() # typename : list of names(states for this type)
     all_states = {} # type, name index --> gid
 
@@ -329,14 +369,14 @@ if args.export_objects or args.export_sprites :
     # export sprites themselves and reference them in a table
     if args.export_sprites :
         print "\n// sprites"
-        print "extern void *%s_sprites[%s_t_nb]; // pointers to spr files, one per type (non-const since they are ints to be loaded dynamically)"%(base_name,base_name)
+        print "extern uint8_t %s_sprites[%s_t_nb]; // pointers to spr files, one per type (non-const since they are ints to be loaded dynamically)"%(base_name,base_name)
         print "extern uint8_t *%s_anims[%s_st_nb]; // pointers to array of u8 animation data, one per state"%(base_name,base_name)
         print "extern uint8_t %s_hitbox[%s_st_nb][4]; // hitbox for a state (x1,y1,x2,y2) "%(base_name,base_name)
 
         print
 
         print >>c_file, "\n// sprites (see refs from data_h)"
-        print >>c_file, "void * %s_sprites[%s_t_nb] = { // sprites[type_id] -> sprite data (ref, will be ptr)"%(base_name,base_name)
+        print >>c_file, "uint8_t %s_sprites[%s_t_nb] = { // sprites[type_id] -> sprite data (ref, will be ptr)"%(base_name,base_name)
 
         # Build a list of unique GID for each type
         typ_tiles = defaultdict(set) # dict typ : set of animation tiles
@@ -389,13 +429,13 @@ if args.export_objects or args.export_sprites :
 
             # list name as ext file
             sprname = dirname+sprfile.replace('.','_')
-            print >>c_file,"   (void*)%s, "%sprname
+            print >>c_file,"   uint8_t %s, "%sprname
         print >>c_file,'};'
 
         # animation data as remapped indexes in type tiles
         print >>c_file,"uint8_t *%s_anims[] = {"%base_name
         for (t,s),anim in zip(all_states_sorted, state_anims) :
-            print >>c_file,'    (uint8_t []){'+','.join(str(typ_tiles_sorted[t].index(tid)) for tid in anim)+', 255 }, // %s_%s'%(t,s)
+            print >>c_file,'    (uint8_t []){ %d, '%len(anim)+','.join(str(typ_tiles_sorted[t].index(tid)) for tid in anim)+' }, // %s_%s'%(t,s)
         print >>c_file,'};'
 
         # animations hitboxes
