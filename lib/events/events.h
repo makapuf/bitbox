@@ -12,10 +12,18 @@ void events_poll();
 
 enum keycodes {
 	KEY_ERR = 0xff,
-	KEY_RIGHT = 128,
-	KEY_LEFT = 129,
-	KEY_DOWN = 130,
-	KEY_UP = 131
+
+	KEY_INSER = 0x49,
+	KEY_HOME =  0x4a,
+	KEY_PAGEUP= 0x4b,
+	KEY_DEL =   0x4c,
+	KEY_END =   0x4d,
+	KEY_PAGEDOWN= 0x4e,
+
+	KEY_RIGHT = 0x4f,
+	KEY_LEFT  = 0x50,
+	KEY_DOWN  = 0x51,
+	KEY_UP    = 0x52,
 };
 
 enum kbd_modifier {
