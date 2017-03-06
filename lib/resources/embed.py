@@ -32,7 +32,7 @@ PREFIX = args.prefix.upper()
 
 def printable(c) : 
     n=ord(c)
-    return n>=32 and n<=127 and c not in "\\\"0123456789*" # 0-9 to avoid octal clash, * to avoid /*
+    return n>=32 and n<127 and c not in "\\\"0123456789*" # 0-9 to avoid octal clash, * to avoid /*
 
 def gen_lines(data) :   
     "generator of quoted lines from big string"
