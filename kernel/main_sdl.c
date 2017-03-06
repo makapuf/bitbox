@@ -722,7 +722,7 @@ FRESULT f_readdir ( DIR* dp, FILINFO* fno )
         fno->fattrib = 0;
 
         // check attributes of found file
-        strncpy(buffer,dp->dir,260);
+        strncpy(buffer,(char *)dp->dir,260); // BYTE->char
         strcat(buffer,"/");
         strcat(buffer,fno->fname);
 
