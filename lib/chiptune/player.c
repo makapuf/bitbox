@@ -18,6 +18,7 @@
 
 #include "bitbox.h"
 #include "player.h"
+#include "player_internals.h"
 
 #include <stdint.h>
 #include <stdlib.h>
