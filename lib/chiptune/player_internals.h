@@ -18,7 +18,7 @@ struct channel {
 	uint8_t			vpos;
 	int16_t			inertia;
 	uint16_t		slur;
-} channel[MAX_CHANNELS];
+};
 
 const uint16_t chip_freqtable[];
 const int8_t chip_sinetable[];
