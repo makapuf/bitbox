@@ -20,5 +20,5 @@ struct channel {
 	uint16_t		slur;
 };
 
-const uint16_t chip_freqtable[];
-const int8_t chip_sinetable[];
+extern const uint16_t chip_freqtable[];
+extern const int8_t chip_sinetable[];
