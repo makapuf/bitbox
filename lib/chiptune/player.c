@@ -30,7 +30,7 @@ static uint8_t playsong;
 static uint8_t nchan; // number of active channels
 static uint16_t songpos;
 
-static const uint16_t freqtable[] = {
+const uint16_t chip_freqtable[] = {
 	0x010b, 0x011b, 0x012c, 0x013e, 0x0151, 0x0165, 0x017a, 0x0191, 0x01a9,
 	0x01c2, 0x01dd, 0x01f9, 0x0217, 0x0237, 0x0259, 0x027d, 0x02a3, 0x02cb,
 	0x02f5, 0x0322, 0x0352, 0x0385, 0x03ba, 0x03f3, 0x042f, 0x046f, 0x04b2,
@@ -43,7 +43,7 @@ static const uint16_t freqtable[] = {
 	0x70a3, 0x7756, 0x7e6f
 };
 
-static const int8_t sinetable[] = {
+const int8_t chip_sinetable[] = {
 	0, 12, 25, 37, 49, 60, 71, 81, 90, 98, 106, 112, 117, 122, 125, 126,
 	127, 126, 125, 122, 117, 112, 106, 98, 90, 81, 71, 60, 49, 37, 25, 12,
 	0, -12, -25, -37, -49, -60, -71, -81, -90, -98, -106, -112, -117, -122,
@@ -52,25 +52,6 @@ static const int8_t sinetable[] = {
 };
 
 
-struct channel {
-	uint8_t			tnum;
-	int8_t			transp;
-	uint8_t			tnote;
-	uint8_t			lastinstr;
-	uint8_t			inum;
-	uint16_t		iptr;
-	uint8_t			iwait;
-	uint8_t			inote;
-	int8_t			bendd;
-	int16_t			bend;
-	int8_t			volumed;
-	int16_t			dutyd;
-	uint8_t			vdepth;
-	uint8_t			vrate;
-	uint8_t			vpos;
-	int16_t			inertia;
-	uint16_t		slur;
-} channel[MAX_CHANNELS];
 
 
 struct ChipSong *current_song;
@@ -259,7 +240,7 @@ static void chip_osc_update()
 			int16_t diff;
 
 			slur = channel[ch].slur;
-			diff = freqtable[channel[ch].inote] - slur;
+			diff = chip_freqtable[channel[ch].inote] - slur;
 			//diff >>= channel[ch].inertia;
 			if(diff > 0) {
 				if(diff > channel[ch].inertia) diff = channel[ch].inertia;
@@ -269,12 +250,12 @@ static void chip_osc_update()
 			slur += diff;
 			channel[ch].slur = slur;
 		} else {
-			slur = freqtable[channel[ch].inote];
+			slur = chip_freqtable[channel[ch].inote];
 		}
 		osc[ch].freq =
 			slur +
 			channel[ch].bend +
-			((channel[ch].vdepth * sinetable[channel[ch].vpos & 63]) >> 2);
+			((channel[ch].vdepth * chip_sinetable[channel[ch].vpos & 63]) >> 2);
 		channel[ch].bend += channel[ch].bendd;
 		vol = osc[ch].volume + channel[ch].volumed;
 		if(vol < 0) vol = 0;
