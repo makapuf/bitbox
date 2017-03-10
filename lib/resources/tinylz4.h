@@ -7,8 +7,8 @@ this library needs tinymalloc to be implmented somewhere
 
 #include <stdint.h>
 
-void lz4_block_decompress (const uint8_t * restrict src, int src_len, uint8_t * restrict dst);
-void lz4_stream_decompress (const uint8_t *src_data, int src_size, uint8_t *dst_data);
+void lz4_block_decompress  (const uint8_t * restrict src, uint32_t src_size, uint8_t * restrict dst);
+void lz4_stream_decompress (const uint8_t * restrict src, uint32_t src_size, uint8_t * restrict dst);
 
 
 #ifdef TINYLZ4_IMPLEMENTATION // -----------------------------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ static unsigned lz4_extlen(unsigned len, const uint8_t * restrict *src)
 }
 
 // lz4 block decoder
-void lz4_block_decompress (const uint8_t * restrict src, int src_len, uint8_t * restrict dst)
+void lz4_block_decompress (const uint8_t * restrict src, uint32_t src_len, uint8_t * restrict dst)
 {
     const uint8_t *end = src + src_len;
     do { 
@@ -63,7 +63,7 @@ void lz4_block_decompress (const uint8_t * restrict src, int src_len, uint8_t * 
 // LZ4 file format to RAM decoder
 // note that lz4 encoded files MUST use --content-size encoding option. 
 
-void lz4_stream_decompress (const uint8_t *src_data, int src_size, uint8_t *dst_data)
+void lz4_stream_decompress (const uint8_t * restrict src_data, uint32_t src_size, uint8_t *dst_data)
 {
 	// unsigned int decomp_size;
 
