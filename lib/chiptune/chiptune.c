@@ -15,7 +15,7 @@
  */
 #include "chiptune.h"
 
-struct oscillator osc[MAX_CHANNELS];
+volatile struct  oscillator osc[MAX_CHANNELS];
 
 // This function generates one audio sample for all 8 oscillators. The returned
 // value is a 2*8bit stereo audio sample ready for putting in the audio buffer.

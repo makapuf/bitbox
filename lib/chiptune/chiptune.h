@@ -47,6 +47,6 @@ struct oscillator {
 // the parameters more often than that.
 
 
-extern struct oscillator osc[MAX_CHANNELS];
+extern volatile struct oscillator osc[MAX_CHANNELS];
 
 uint16_t gen_sample();
