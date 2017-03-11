@@ -18,7 +18,7 @@ uint8_t font_data_cached[256][FONT_H] CCM_MEMORY;
 uint8_t font_cached=0; 
 
 char vram[SCREEN_H][SCREEN_W];
-char vram_attr[SCREEN_H][SCREEN_W];
+uint8_t vram_attr[SCREEN_H][SCREEN_W];
 
 uint32_t palette[64][4]; // cache of BG<<16 | FG couples - AA,AB,BA,BB 
 

@@ -17,7 +17,7 @@
 // Utilities ------------------------------------------------
 
 extern char vram[SCREEN_H][SCREEN_W];
-extern char vram_attr[SCREEN_H][SCREEN_W]; // 0-63 and loops
+extern uint8_t vram_attr[SCREEN_H][SCREEN_W]; // 0-63 and loops
 
 void clear();
 void set_palette(uint8_t pen, uint16_t color, uint16_t background); // for 8bit, use values <256
