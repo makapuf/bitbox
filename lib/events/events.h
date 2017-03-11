@@ -4,7 +4,7 @@
  *
  * NOTE : you will need to call events_poll each frame !
  */
-
+#pragma once
 #include "bitbox.h"
 
 // Call this every frame to check what changed and emit events
@@ -13,17 +13,17 @@ void events_poll();
 enum keycodes {
 	KEY_ERR = 0xff,
 
-	KEY_INSER = 0x49,
-	KEY_HOME =  0x4a,
-	KEY_PAGEUP= 0x4b,
-	KEY_DEL =   0x4c,
-	KEY_END =   0x4d,
-	KEY_PAGEDOWN= 0x4e,
+	KEY_INSER = 200,
+	KEY_HOME =  201,
+	KEY_PAGEUP= 202,
+	KEY_DEL =   203,
+	KEY_END =   204,
+	KEY_PAGEDOWN= 205,
 
-	KEY_RIGHT = 0x4f,
-	KEY_LEFT  = 0x50,
-	KEY_DOWN  = 0x51,
-	KEY_UP    = 0x52,
+	KEY_RIGHT = 206,
+	KEY_LEFT  = 207,
+	KEY_DOWN  = 208,
+	KEY_UP    = 209,
 };
 
 enum kbd_modifier {
