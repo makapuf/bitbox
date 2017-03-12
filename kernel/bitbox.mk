@@ -91,7 +91,7 @@ dfu-micro: micro
 
 # double colon to allow extra cleaning
 clean::
-	rm -rf $(BUILD_DIR) $(NAME)_*.bin $(NAME).bin $(NAME)_*.elf $(NAME)_sdl $(NAME)_test
+	rm -rf $(BUILD_DIR) $(NAME)_*.bin $(NAME).bin $(NAME)_*.elf $(NAME)_sdl $(NAME)_test output.map
 
 .PHONY: clean stlink-pal dfu-micro stlink-micro debug-micro stlink dfu emu micro bitbox pal debug test
 
