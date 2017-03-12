@@ -1,85 +1,37 @@
 #!/usr/bin/python2
-"""outputs a tileset file, a tilemap file binaries from a tmx file
-
-    tileset file has the name of the input tmx tileset (only one).tset
-    tilemap file has all layers in order of appearance, its name is tmxfile.tmap
+"""outputs a tileset file, a tilemap file binaries and objects from a tmx file
     header file is output on the standard output, includes
         tile names (property "name" of the tile)
         objects layers
     TMX layer data can be either csv or zlib+base64 encodings
-    also exports tile names
 
     skip layers beginning with '_'
 
-    only one image tileset will be encoded, however other tilesets can be used for items (objects, ...)
-      they must not be referenced in tilemap and should be used AFTER the main one.
-
-    option export-objects : objects position are optionnally encoded MapObjectRef structs. exports raw tile_ids
-    option export-sprites : export 16color sprites in spr files. replaces tile_ids with a reference to a sprite array. also supports tile animations.
-
-    option export-tile-attributes : up to 8 binary attributes are added to tileset data. defined in tmx files by attaching is_xxx attributes to tiles (example : is_walkable, is ...).
-
     if data to export are more involved, define your own special script to export special attributes
 
+    only the first tileset is output
+    for sprites, internal sprite tilesets will not be output, only use external tilesets
+
 """
 
-
-"""TODO :
-- Tsx or tmx, same thing : export from tset, not object name. Will not export '_'. Frames exported as is, just cut. all animations are _local_. no rewrite of ids.
-
-DOC
-    export a,b,c custom object data (or even change name)
-    mettre sprite ds le state diect et reel export state
-    faire type==file 
-
-
-sprites :
-    options to set number of colors of sprites ?
-    multilayer ?
-    external tile
-    
-
-tilemap :
-    export properties from terrains (handle blocking as 4 bits ?)
-
-    handle H?V symmetry ? (in display)
-    allow change export order horizontally / vertically / bottom/up or top/down ex : xY yX ...  ?
-    allow reordering tiles / not including unused ones in tileset ? (optional, data could be organized by lines)
-        at least, dont output last unused tiles
-        reorder tiles ? (unused, then rewrite map to check for similar tiles) => no, external tmx->tmx optimizer ?
-
-    semi-transp, signed integers
-    other stats ?
-
-tilesets :
-    allow multiple tilesets
-
-
-paths (avec un nom) : 1 i16 layername_pathname[][2]=x,y points ?
-"""
-
-out_code='B' # unsigned bytes by default for tilemap
-typename = {'B':'uint8_t', 'b':'int8_t','H':'uint16_t'}
-codes = {'B':'TMAP_U8', 'H':'TMAP_U16' }#0,'b':1,'H':2,'h':3}
-tilesizes = {16:'TSET_16',32:'TSET_32', 8:'TSET_8'}
+import sys
+import argparse
+from argparse import Namespace
+import xml.etree.ElementTree as ET
+import os.path
+from collections import defaultdict
+import StringIO # for output to C file
+import array
 
 from PIL import Image # using the PIL library, maybe you'll need to install it. python should come with t.
-import sys, argparse
-import xml.etree.ElementTree as ET
-import array, os.path, argparse
-from collections import defaultdict
-import sprite_encode2, sprite_encode8, couples_encode2
-import StringIO # for output to C file
+
+import couples_encode2
 
 parser = argparse.ArgumentParser(description='Process TMX files to tset/tmap/.h files')
-parser.add_argument('file',help='input .tmx filename')
-parser.add_argument('-o','--output-dir', help='target directory, default: tmx file source')
+parser.add_argument('file',help='input .tmx filename', nargs='+')
+parser.add_argument('-o','--output-dir', help='target directory', default='.')
 parser.add_argument('-m','--micro', default=False, help='outputs a 8-bit data tileset from a palette.', action="store_true")
-parser.add_argument('-a','--export-tile-attributes', default=False, help='exports a bitfield property from tiles from is_xxx boolean tile attributes as an u8 bin array, after tileset data.',action="store_true")
-parser.add_argument('-x','--export-objects', default=False, help='exports object data directly to c file.', action="store_true")
-parser.add_argument('-s','--export-sprites', default=False, help='exports object data in c file and sprites as 16c spr files. Honors micro palette.',action="store_true")
-parser.add_argument('-i','--export-images', default=False, help='exports images layer as spr pbc files. Honors micro palette.',action="store_true")
-
+parser.add_argument('-p','--prefix_files', help='Prefix for files',default='data_')
 
 #parser.add_argument('-g','--group-anims', default=False, help='exports animations groups - by object type. animations will be a u8** instead of u8',action="store_true")
 
@@ -87,378 +39,292 @@ args = parser.parse_args()
 
 PALETTE = os.path.dirname(__file__)+'/pal_micro.png'
 
-tree = ET.parse(args.file)
-root = tree.getroot()
 def error(msg) :
     print msg
     sys.exit(1)
 
-base_path,base_name = os.path.split(args.file.rsplit('.',1)[0])
-if args.output_dir :
-    base_path = args.output_dir
-dirname=base_path.replace('/','_')+'_' if base_path else ''
+class Sprite : 
+    """A sprite comes from a tileset (Only one per tileset)
+
+    For each state, a list of animations and a .
+    it comes from a sprite-related tileset element.
+
+    If a tsx sprite is found in several, it will be re-exported. However it will be the same tsx source file
+    so it will generate the same spr file. 
+    """
+
+    def __init__(self,tileset_elt,prefix, ref) : 
+
+        self.ts = tileset_elt
+        self.ref = ref # reference of file from which source images path are taken
+
+        # prefix to generate names. none for global tsx or tmx file name if local 
+        self.name = prefix+tileset_elt.get('name')
+        self.tilecount = int(tileset_elt.get('tilecount'))
+        self.states = [] # state name, tid, list of indices in self.tiles, hitbox
+        self.Layers=[] # has any layers
+        self.read_states()
+
+    def state_bytid(self,tid) : 
+        "return a state from its tid"
+        return next(st for st in self.states if st.tid==tid)
+
+    def read_states(self) : 
+        """read sprite animations, states and list used tiles"""
+        for tile in self.ts.findall('tile') : 
+            tid = int(tile.get('id')) # local id
+
+            # read properties of this tile
+            props = { p.get('name'):p.get('value') for p in tile.findall('properties/property')}
+            if 'state' in props : 
+                self.states.append(Namespace(tid=tid,state= props['state']))
 
 
-print '#include <stdint.h>'
+    def __str__(self) : 
+        return 'Sprite %s (states:%s)\n'%(self.name, self.states)
 
-def relpath(path) : 
-    "transform relative path from tmx file to absolute"
-    return os.path.join(os.path.dirname(os.path.abspath(args.file)),path)
+class Map :
+    def __init__(self, tmxfile, dir=None) : 
+        self.file = tmxfile
+        self.name = os.path.basename(tmxfile.rsplit('.',1)[0])
 
-def ts_from_gid(gid) :
-    # find first tileset that has a greater TID, takes the one before.
-    for ts in root.findall('tileset') :
-        if int(ts.get('firstgid'))>gid:
-            break
-        else :
-            last_ts=ts
-    return last_ts
+        self.root = ET.parse(tmxfile).getroot()
 
-def export_sprite(outfile,tiles,tileset_elt) :
-    "exports and encode a sprite info outfile from a list of gid in the tileset"
+        self.objects = [] 
+        self.spritesheets = {} # actually loaded / used as sprites tilesets. first_gid : tileset/spritesheet
 
-    ts_w = int(tileset_elt.get('tilewidth'))
-    ts_h = int(tileset_elt.get('tileheight'))
-    firstgid = int(tileset_elt.get('firstgid',0))
+        self.load_spritesheets()
+        self.load_objects()
+        self.load_map()
 
-    imgsrc = tileset_elt.find('image').get('source')
-    tileset=Image.open(relpath(imgsrc)).convert('RGBA')
+    def load_spritesheets(self) : 
+        "unconditionnally load all tilesets as spritesheets, discarding if no states found"
+        for ts_elt in self.root.findall('tileset') : 
+            if 'source' in ts_elt.attrib : # indirect one in tsx file
+                tsx_file = abspath (self.file, ts_elt.get('source'))
+                tsx= ET.parse(tsx_file).getroot()
+                sprite = Sprite(tsx,'',tsx_file) # no prefix, it's global
+            else  : 
+                # this is a local tilemap
+                sprite = Sprite(ts_elt,self.name+'_',self.file)
 
-    # build a picture list from tile list
-    tiles_local = [tid-firstgid for tid in tiles]
-    tile_per_line = (tileset.size[0]/ts_w)
-    srcs = [tileset.crop((
-        (tid % tile_per_line)*ts_w,
-        (tid //tile_per_line)*ts_h,
-        (tid % tile_per_line)*ts_w+ts_w,
-        (tid //tile_per_line)*ts_h+ts_h
-    )) for tid in tiles_local]
+            if sprite.states : # discard no-state spritesheets ?
+                self.spritesheets[int(ts_elt.get('firstgid'))] = sprite
+            else : 
+                print "// Tilemap %s was not included since it has no states defined"%sprite.name
 
-    # build vertical stripe from list of srcs tiles.
-    src = Image.new("RGBA", (ts_w,ts_h*len(srcs)))
-    for i,im in enumerate(srcs) :
-        src.paste(im,(0,i*ts_h))
+    def load_objects(self) :
+        for objectgroup_elt in self.root.findall('objectgroup') :
+            groupname=objectgroup_elt.get('name')
+            if groupname[0]=='_' : continue # skip
+            
+            # only get GID ones ie tile objects
+            for o_elt in objectgroup_elt.findall('object[@gid]') : 
+                obj = Namespace (
+                    x=int(float(o_elt.get('x'))),
+                    y=int(float(o_elt.get('y')))-int(float(o_elt.get('height'))),
+                    gid=int(o_elt.get('gid')),
 
-    # SAVE_SPRITES ?
-    # src.save(outfile.name+'.png')  # make it an option ?
+                    name=o_elt.get('name',None), # object name 
+                    type=o_elt.get('type',None), # type
+                    group=groupname,  # group
+                    )
 
-    # export data as spr XXX to pb8
-    print "/* Sprite data : ",imgsrc,len(srcs),' frames, in file:',outfile.name
-    if args.micro :
-        sprite_encode8.image_encode(src,outfile,ts_h,'u8')
-    else :
-        sprite_encode2.image_encode(src,outfile,ts_h,'p4')
-    print '*/'
+                # find tilesheet
+                obj.sprite=self.find_spritesheet(obj.gid)
+                obj.tid=obj.gid-obj.sprite
 
+                # check that the gid of this object one of a state
+                if obj.tid not in set(st.tid for st in self.spritesheets[obj.sprite].states) : 
+                    error("Tile ID of object %s is not a state of sprite sheet %s"%(obj,self.spritesheets[obj.sprite]))
+                
+                self.objects.append(obj)
 
-def tileset_export(tileset) : 
-    """exports sprites animations of a tsx file to spr file and outputs states / animation data """
-    name=tileset.get('name')
-    states = {}
-    # find tile properties 
-    used_tiles = []
-    for tile in tsx.findall('tile') : 
-        tid = int(tile.get('id')) # no firstID
-        props = { p.get('name'):p.get('value') for p in tile.findall('properties/property')}
-        if 'state' in props : 
-            # found a state
-            # get animation tiles
+            # now group by spritesheet
+            self.objects.sort(key=lambda x:x.tid)
 
-            # find animation gids. if no animation, animation is made from only one tile : the tile id itself
-            anim_elt = tile.find('animation')
-            if anim_elt != None :
-                frames = [ int(frame_elt.get('tileid')) for frame_elt in anim_elt.findall('frame')]
+    def load_map(self) : 
+        self.tilebools={}
+        self.layers = self.root.findall("layer")
+
+    # export first tileset as the tileset
+    # XXX define from external tileset
+    # XXX export tile properties (name at least)
+    def export_tileset(self,output_dir) :
+        ts = self.root.find('tileset')
+
+        # export terrain types 
+        for n,t in enumerate(ts.findall('terraintypes/terraintype')) : 
+            print "#define terrain_%s_%s %d"%(self.name, t.get('name'),n+1)
+
+        tilesize = int(ts.get("tilewidth"))
+        assert tilesize == int(self.root.get("tileheight")) and tilesize in [8,16,32], "only square tiles of 8,16 or 32 supported"
+
+        img = ts.find("image").get("source")
+        # output as raw tileset
+        # XXX if RGBA -> int, else : uint. Here, assume uint
+        def reduce(c) :
+            return (1<<15 | (c[0]>>3)<<10 | (c[1]>>3)<<5 | c[2]>>3) if c[3]>127 else 0
+
+        src = Image.open(abspath(self.file,img)).convert('RGBA')
+        if args.micro :
+            src = src.convert('RGB').quantize(palette=Image.open(PALETTE)) # XXX allow 8-bit adaptive palette ?
+            pixdata = array.array('B',src.getdata()) # direct output bytes
+        else:
+            pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples.
+
+        w,h = src.size
+
+        with open(os.path.join(output_dir,self.name+'.tset'),'wb') as of:
+            for tile_y in range(h/tilesize) :
+                for tile_x in range(w/tilesize) :
+                    for row in range(tilesize) :
+                        idx = (tile_y*tilesize+row)*w + tile_x*tilesize
+                        pixdata[idx:idx+tilesize].tofile(of)
+            
+            # export terrains as 4 4bit numbers per tile
+            terrains = array.array('H',(0 for i in range(int(ts.get('tilecount')))))
+            for t in ts.findall('tile') : 
+                ter = [(int(x)+1 if x else 0) for x in t.get('terrain',',,,').split(',')]
+                terrains[int(t.get('id'))] = ter[0]<<12 | ter[1]<<8 | ter[2]<<4 | ter[3]
+            terrains.tofile(of)
+
+            # tile properties output
+            if self.tilebools :
+                pos_attrs=of.tell()
+                assert len(self.tilebools)<8, "max 8 properties per tmx file"
+                props = sorted(self.tilebools) # keys
+                max_tid = max(max(tiles) for tiles in self.tilebools.values()) # actually used ?
+
+                # should be put as a _resource_
+                print '\n// Tile properties'
+                for n,p in enumerate(props):
+                    print "#define %s_prop_%s %d"%(base_name,p,1<<n)
+
+                for tid in range(1,w*h/tilesize/tilesize+1) :
+                    prop = sum(1<<n for n,k in enumerate(props) if tid in self.tilebools[k])
+                    of.write(chr(prop))
+                print "#define %s_tset_attrs_offset %s"%(self.name, pos_attrs-1),'// offset in bytes in tset file of tiles attibutes.'
+
+    def export_tilemap(self,out_dir) :
+        index=0
+        of = open(os.path.join(out_dir,self.name+'.tmap'),'wb')
+        mw, mh = self.root.get('width'), self.root.get('height')
+
+        print '\n// Tilemap layers'
+        max_idx = 0
+        for layer in self.layers :
+            lw = int(layer.get("width"))
+            lh = int(layer.get("height"))
+            name=layer.get("name")
+            if name[0]=='_' : continue # skip
+
+            data = layer.find("data")
+            if data.get('encoding')=='csv' :
+                indices = [int(s) for s in data.text.replace("\n",'').split(',')]
+            elif data.get('encoding')=='base64' and data.get('compression')=='zlib' :
+                indices = array.array('I',data.text.decode('base64').decode('zlib'))
             else :
-                frames = [ tid ]
-            used_tiles += [x for x in frames if x not in used_tiles] # aded at the end so that order is not changed
+                raise ValueError,'Unsupported layer encoding :'+data.get('encoding')
 
-            states[props['state']]=[used_tiles.index(i) for i in frames]
-    print states
-    print used_tiles
-    sprfile='%s.spr'%name
-    with open(os.path.join(base_path,sprfile),'w+') as f :
-        export_sprite(f,used_tiles,tileset)
+            out_code='H' if max(indices)>=256 else 'B' # will set to u16 if just one level has those indices
 
+            tidx = array.array(out_code,indices)
+            assert len(tidx) == lw*lh, "not enough or too much data"
 
-# tileset properties : name is a unique property - export for all tilesets allowing item-only names
-# TODO : relative to tileset firstGID ? rewrite skipping ununsed tid.
-tilesets = root.findall('tileset')
-tilenames = set()
-tilebools = defaultdict(list) # property_name : list of tile_ids
+            print "#define layer_%s_%s %d"%(self.name, name, index)
+            # output data to binary
+            tidx.tofile(of)
+            index += 1
+            max_idx = max(max_idx,max(indices))
 
-print '\n// -- Tilesets '
-print '// Tile ids'
-for ts in tilesets :
-    if ts.get('source') != None : # this is a tsx link with sprites. process it.
-        tsx = ET.parse(relpath (ts.get('source'))).getroot()
-        tileset_export(tsx)
-    else : 
-        for tile in ts.findall('tile') :
-            tid = int(tile.get('id'))+int(ts.get('firstgid'))
-            for prop in tile.findall('./properties/property') :
-                prop_name=prop.get('name')
-                prop_value = prop.get('value')
+    def find_spritesheet(self, gid) : 
+        "returns firstgid of spritesheet tileset in which the given gid is located"              
+        for firstgid,ts in self.spritesheets.items() : 
+            if firstgid<=gid and gid<firstgid+ts.tilecount : 
+                return firstgid       
+        raise ValueError,'gid %d not found in %d spritesheets'%(gid, len(self.spritesheets))
 
-                if prop_name=='name' :
-                    if prop_value in tilenames :
-                        print "// warning duplicate name %s of tile id %d"%(prop_value,tid)
-                    print "#define %s_%s %d"%(base_name,prop_value,tid)
-                    tilenames.add(prop_value)
-                elif prop_name.startswith('is_') : 
-                    k=prop_name.split('is_')[1]
-                    tilebools[k].append(tid)
-
+    def __str__(self) : 
+        s = '-- map %s\n'%(self.name)
+        s += ' - Objects \n'
+        for o in self.objects : 
+            s += '  %s\n'%o
+        s += ' - Sprites \n'
+        for spi,sp in self.spritesheets.items() : 
+            s += '  %s : %s\n'%(spi,sp)
+        return s
     
-
-# export first tileset - IIF there is a tilemap defined
-if root.findall('layer') : 
-
-    ts = tilesets[0]
-    # checks
-    firstgid=int(ts.get('firstgid'))
-
-    # assert len(tilesets)==1 and firstgid==1 , "Just one tileset starting at 1"
-
-    tilesize = int(ts.get("tilewidth"))
-    assert tilesize == int(root.get("tileheight")) and tilesize in tilesizes, "only square tiles of 8,16 or 32 supported"
-
-
-    img = ts.find("image").get("source")
-    # output as raw tileset
-    # XXX if RGBA -> int, else : uint. Here, assume uint
-    def reduce(c) :
-        return (1<<15 | (c[0]>>3)<<10 | (c[1]>>3)<<5 | c[2]>>3) if c[3]>127 else 0
-
-    src = Image.open(relpath(img)).convert('RGBA')
-    if args.micro :
-        src = src.convert('RGB').quantize(palette=Image.open(PALETTE)) # XXX allow 8-bit adaptive palette ?
-        pixdata = array.array('B',src.getdata()) # direct output bytes
-    else:
-        pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples.
-
-    print "// extern const uint%d_t %s%s_tset[]; // from %s"%(8 if args.micro else 16,dirname, base_name,img)
-    w,h = src.size
-
-    with open(os.path.join(base_path,base_name+'.tset'),'wb') as of:
-        for tile_y in range(h/tilesize) :
-            for tile_x in range(w/tilesize) :
-                for row in range(tilesize) :
-                    idx = (tile_y*tilesize+row)*w + tile_x*tilesize
-                    pixdata[idx:idx+tilesize].tofile(of)
-
-        # tile properties output
-        if args.export_tile_attributes and tilebools :
-            pos_attrs=of.tell()
-            assert len(tilebools)<8, "max 8 properties per tmx file"
-            props = sorted(tilebools) # keys
-            max_tid = max(max(tiles) for tiles in tilebools.values()) # actually used ?
-
-            # should be put as a _resource_
-            print '\n// Tile properties'
-            for n,p in enumerate(props):
-                print "#define %s_prop_%s %d"%(base_name,p,1<<n)
-
-            for tid in range(1,w*h/tilesize/tilesize+1) :
-                prop = sum(1<<n for n,k in enumerate(props) if tid in tilebools[k])
-                of.write(chr(prop))
-            print "#define %s_tset_attrs_offset %s"%(base_name, pos_attrs-1),'// offset in bytes in tset file of tiles attibutes.'
-
-
-print '\n // -- Tilemaps'
-index=0
-of = open(os.path.join(base_path,base_name+'.tmap'),'wb')
-mw, mh = root.get('width'), root.get('height')
-
-print '\n// Layers'
-max_idx = 0
-for layer in root.findall("layer") :
-    lw = int(layer.get("width"))
-    lh = int(layer.get("height"))
-    name=layer.get("name")
-    if name[0]=='_' : continue # skip
-
-    data = layer.find("data")
-    if data.get('encoding')=='csv' :
-        indices = [int(s) for s in data.text.replace("\n",'').split(',')]
-    elif data.get('encoding')=='base64' and data.get('compression')=='zlib' :
-        indices = array.array('I',data.text.decode('base64').decode('zlib'))
-    else :
-        raise ValueError,'Unsupported layer encoding :'+data.get('encoding')
-
-    if max(indices)>=256 : out_code='H' # will set to u16 if just one level has those indices
-    tidx = array.array(out_code,indices)
-    assert len(tidx) == lw*lh, "not enough or too much data"
-
-    print "#define %s_%s %d"%(base_name, name, index)
-    # output data to binary
-    tidx.tofile(of)
-    index += 1
-    max_idx = max(max_idx,max(indices))
-
-# if there is a layer, export the global header 
-if root.findall("layer") : 
-    if args.micro :
-        print "#define %s_header (TMAP_HEADER(%d,%d,%s,%s) | TSET_8bit)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
-    else :
-        print "#define %s_header TMAP_HEADER(%d,%d,%s,%s)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
-
-    print "// extern const %s %s%s_tmap[][%d*%d];"%(typename[out_code],dirname, base_name,lw,lh)
-
-# output all layers in a big array of arrays
-print '// max indices : ',max_idx
-
-# output object layers to C file.
-if args.export_objects or args.export_sprites :
-    print '\n// -- Objects '
-
-    print '#ifndef __MOR_DEFINED__\n#define __MOR_DEFINED__\nstruct MapObjectRef {\n    int16_t x,y;\n    uint8_t state_id; // or sprite_id\n    uint8_t a,b,c; // extra values  \n};\n#endif'
-    all_types = set() # typename : list of names(states for this type)
-    all_states = {} # type, name index --> gid
-
-    all_sprites = [] # tile_id of all sprites if export sprite
-
-    c_file = StringIO.StringIO()
-
-    for objectgroup in root.findall('objectgroup') :
-        name=objectgroup.get('name')
-        if name[0]=='_' : continue # skip
-
-        # XXX also finds a,b,c bytes / only output shown in a shown layer
-        pos = [(int(float(o.get('x'))),int(float(o.get('y')))-int(float(o.get('height'))), int(o.get('gid')), o.get('name',''), o.get('type','')) for o in objectgroup.findall('object')]
-        for x,y,gid,nm,typ in pos :
-            all_types.add(typ)
-
-            if (typ,nm) in all_states  :
-                if all_states[(typ,nm)]!=gid :
-                    print >>sys.stdout,"Error : state %s_%s has multiple sprite definitions (tile_ids)."%(typ,nm)
-                    sys.exit(1)
-            else :
-                all_states[(typ,nm)]=gid
-
-        print "\n#define %s_%s_nb %d"%(base_name,name,len(pos))
-        print "extern const struct MapObjectRef %s_%s[%s_%s_nb];"%(base_name,name,base_name,name)
-
-        print >>c_file,"const struct MapObjectRef %s_%s[%s_%s_nb] = { // x,y,state_id "%(base_name,name,base_name,name)
-        for x,y,gid,nm,typ in pos :
-            print >>c_file, "    {%d,%d,%s,0,0,0},"%(x,y,'%s_st_%s_%s'%(base_name, typ,nm))
-        print >>c_file, "};\n"
-
-
-    all_states_sorted = sorted(all_states)
-    all_types_sorted = sorted(all_types)
-
-    # export global names and types
-    print "// types and states"
-    print "enum %s_type {"%base_name
-    print ',\n'.join('    %s_t_%s'%(base_name,nm) for nm in all_types_sorted)
-    print '};'
-    print '#define %s_t_nb %d'%(base_name, len(all_types_sorted))
-
-    current_type = None
-    print '\nenum %s_states {'%base_name
-    print ', \n'.join('    %s_st_%s_%s'%(base_name, t,n) for t,n in all_states_sorted)
-    print '};'
-
-    print "\n#define %s_st_nb %d"%(base_name,len(all_states_sorted))
-    print "extern const uint8_t %s_types[%s_st_nb]; // lookup table state -> type"%(base_name,base_name)
-    print >>c_file,"const uint8_t %s_types[%s_st_nb] = {  "%(base_name,base_name)
-    for t,n in all_states_sorted :
-        print >>c_file, "    %d, // %s"%(all_types_sorted.index(t), '%s_%s'%(t,n))
-    print >>c_file, "};\n"
-
-    # export sprites themselves and reference them in a table
-    if args.export_sprites :
-        print "\n// sprites"
-        print "extern uint8_t %s_sprites[%s_t_nb]; // pointers to spr files, one per type (non-const since they are ints to be loaded dynamically)"%(base_name,base_name)
-        print "extern uint8_t *%s_anims[%s_st_nb]; // pointers to array of u8 animation data, one per state"%(base_name,base_name)
-        print "extern uint8_t %s_hitbox[%s_st_nb][4]; // hitbox for a state (x1,y1,x2,y2) "%(base_name,base_name)
-
+    def print_header(self) : 
+        print 'extern const struct MapDef map_%s;'%self.name
         print
 
-        print >>c_file, "\n// sprites (see refs from data_h)"
-        print >>c_file, "uint8_t %s_sprites[%s_t_nb] = { // sprites[type_id] -> sprite data (ref, will be ptr)"%(base_name,base_name)
+    def print_implementation(self) : 
+        print 'const struct MapDef map_%s = {'%self.name
+        if self.layers : 
+            print '  .tileset=res_%s_tset,'%self.name
+            print '  .tilemap_w=%d,'%int(self.root.get('width'))
+            print '  .tilemap_h=%d,'%int(self.root.get('height'))
+            print '  .tilesize=%d,'%int(self.root.get('tilewidth'))
+            print '  .tilemap=res_%s_tmap,'%self.name
 
-        # Build a list of unique GID for each type
-        typ_tiles = defaultdict(set) # dict typ : set of animation tiles
-        typ_tileset = {} # typ:ts as xml element
-        state_anims = [] # list of tid animations per state
-        state_hitbox = [] # list of hitbox per state
+        print '  .nb_objects=%d,'%len(self.objects)
 
-        prev_type=None
-        for (t,s) in all_states_sorted :
-            tid = all_states[(t,s)]
-            ts = ts_from_gid(tid)
-            firstgid = int(ts.get('firstgid')) # first GID of this tileset
-            typ_tileset[t]=ts
-
-            # find animation gids. if no animation, animation is made from only one tile : the tile id
-            animtile = ts.find("tile[@id='%s']"%(tid-firstgid)) # id within tileset
-
-            anim_elt = animtile.find('animation') if animtile != None else None
-            if anim_elt != None :
-                animation_tid = [ int(frame_elt.get('tileid'))+firstgid for frame_elt in anim_elt.findall('frame')]
-            else :
-                animation_tid = [ tid ]
-
-            # append to current types' set of unique tile GID
-            typ_tiles[t] |= set(animation_tid)
-            state_anims.append(animation_tid) # keep all animations
-
-            # find hitbox or set it empty
-            try : 
-                hit = animtile.find('objectgroup').find('object') # take first one  <object id="1" x="10.75" y="15.125" width="10.375" height="11.375"/>
-                state_hitbox.append((
-                    int(float(hit.get('x'))),
-                    int(float(hit.get('y'))),
-                    int(float(hit.get('x'))+float(hit.get('width'))),
-                    int(float(hit.get('y'))+float(hit.get('height')))
-                ))
-            except AttributeError,e : 
-                state_hitbox.append((0,0,0,0))
-
-        # freeze tile anims
-        typ_tiles_sorted = { k:sorted(v) for k,v in typ_tiles.items() }
-
-        # export animations as id of tiles for each sprite
-        # export sprites themselves
-        for t in sorted(typ_tiles_sorted) :
-            # export data as spr
-            sprfile='%s_%s.spr'%(base_name,t)
-            with open(os.path.join(base_path,sprfile),'w+') as f :
-                export_sprite(f,typ_tiles_sorted[t],typ_tileset[t])
-
-            # list name as ext file
-            sprname = dirname+sprfile.replace('.','_')
-            print >>c_file,"   uint8_t %s, "%sprname
-        print >>c_file,'};'
-
-        # animation data as remapped indexes in type tiles
-        print >>c_file,"uint8_t *%s_anims[] = {"%base_name
-        for (t,s),anim in zip(all_states_sorted, state_anims) :
-            print >>c_file,'    (uint8_t []){ %d, '%len(anim)+','.join(str(typ_tiles_sorted[t].index(tid)) for tid in anim)+' }, // %s_%s'%(t,s)
-        print >>c_file,'};'
-
-        # animations hitboxes
-        print >>c_file,'uint8_t %s_hitbox[][4] = {'%base_name
-        for (t,s),box in zip(all_states_sorted, state_hitbox):
-            print >>c_file, '    {%d,%d,%d,%d}, // %s_%s'%(box[0],box[1],box[2],box[3],t,s)
-        print >>c_file,'};'
+        print '  .objects={'
+        for obj in self.objects:  
+            spr = self.spritesheets[obj.sprite]
+            print '    { .x=%4d, .y=%4d, .sprite=&sprite_%s, .state=state_%s_%s },'%(
+                obj.x, obj.y,
+                spr.name, 
+                spr.name,spr.state_bytid(obj.tid).state,
+                )
+        print '  }'
+        print '};\n'
 
 
-    # export images as spr files in pbc format
-    if args.export_images : 
+    def export_image_layers(self, path) : 
+        # export image layers as spr files in pbc format
         print "\n// Image Layers, exported as big pbc sprites"
-        for imagelayer in root.findall('imagelayer') :
+        for imagelayer in self.root.findall('imagelayer') :
             imgname=imagelayer.find('image').get('source')
             src = Image.open(imgname).convert('RGBA')
-            sprfile=base_name+'_'+imagelayer.get('name')+'.spr'
-            with open(os.path.join(base_path,sprfile),'w+') as f :
+            sprfile=self.name+'_'+imagelayer.get('name')+'.spr'
+            with open(os.path.join(path,sprfile),'w+') as f :
                 print '/* Image : ',imgname,'to file:',sprfile
                 couples_encode2.couples_encode(src,f,src.size[1],'pbc',args.micro)
                 print '*/'
 
+def abspath(ref, path) : 
+    "transform relative path from ref file to absolute"
+    return os.path.join(os.path.dirname(os.path.abspath(ref)),path)
 
-    print "// "+'-'*80
-    print "#ifdef TILEMAPS_IMPLEMENTATION"
-    print c_file.getvalue()
-    print "#endif"
+maps=[Map(f) for f in args.file]
+
+print '#include <stdint.h>'
+print '#include "lib/blitter/mapdefs.h"'
+print '#include "data.h" // for resource ids'
+
+print
+
+# + objgroup,type ; name,in mor + defines
+
+# include ts headers  
+for map in maps : 
+    for sprite in map.spritesheets.values(): 
+        print '#include "sprite_%s.h"'%sprite.name
+
+for map in maps: 
+    if map.layers : 
+        map.export_tileset(args.output_dir)
+        map.export_tilemap(args.output_dir)
+    print
+    map.print_header()
+
+    map.export_image_layers(args.output_dir)
+
+print "#ifdef MAPS_IMPLEMENTATION // "+'-'*50+'\n'
+
+for map in maps: 
+    map.print_implementation()
+
+print "\n#endif // MAPS_IMPLEMENTATION"
