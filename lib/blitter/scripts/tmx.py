@@ -63,7 +63,7 @@ import sys, argparse
 import xml.etree.ElementTree as ET
 import array, os.path, argparse
 from collections import defaultdict
-import sprite_encode2, sprite_encode8
+import sprite_encode2, sprite_encode8, couples_encode2
 
 
 parser = argparse.ArgumentParser(description='Process TMX files to tset/tmap/.h files')
@@ -164,99 +164,118 @@ def export_sprite(outfile,tiles,tileset_elt) :
         sprite_encode2.image_encode(src,f,ts_h,'p4')
     print '*/'
 
+def export_tileset(ts) : 
+    # checks
+    firstgid=int(ts.get('firstgid'))
+
+    # assert len(tilesets)==1 and firstgid==1 , "Just one tileset starting at 1"
+
+    tilesize = int(ts.get("tilewidth"))
+
+    assert tilesize == int(ts.get("tileheight")) and tilesize in tilesizes, "only square tiles of 32x32 or 16x16 supported"
+
+    img = ts.find("image").get("source")
+    # output as raw tileset
+    # XXX if RGBA -> int, else : uint. Here, assume uint
+    def reduce(c) :
+        return (1<<15 | (c[0]>>3)<<10 | (c[1]>>3)<<5 | c[2]>>3) if c[3]>127 else 0
+
+    src = Image.open(os.path.join(os.path.dirname(os.path.abspath(args.file)),img)).convert('RGBA')
+    if args.micro :
+        src = src.convert('RGB').quantize(palette=Image.open(PALETTE)) # XXX allow 8-bit adaptive palette ?
+        pixdata = array.array('B',src.getdata()) # direct output bytes
+    else:
+        pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples.
+
+    print "extern const uint%d_t %s%s_tset[]; // from %s"%(8 if args.micro else 16,dirname, base_name,img)
+    w,h = src.size
+
+    with open(os.path.join(base_path,base_name+'.tset'),'wb') as of:
+        for tile_y in range(h/tilesize) :
+            for tile_x in range(w/tilesize) :
+                for row in range(tilesize) :
+                    idx = (tile_y*tilesize+row)*w + tile_x*tilesize
+                    pixdata[idx:idx+tilesize].tofile(of)
+
+        # tile properties output
+        if args.export_tile_attributes and tilebools :
+            pos_attrs=of.tell()
+            assert len(tilebools)<8, "max 8 properties per tmx file"
+            props = sorted(tilebools) # keys
+            max_tid = max(max(tiles) for tiles in tilebools.values()) # actually used ?
+
+            # should be put as a _resource_
+            print '\n// Tile properties'
+            for n,p in enumerate(props):
+                print "#define %s_prop_%s %d"%(base_name,p,1<<n)
+
+            for tid in range(1,w*h/tilesize/tilesize+1) :
+                prop = sum(1<<n for n,k in enumerate(props) if tid in tilebools[k])
+                of.write(chr(prop))
+            print "#define %s_tset_attrs_offset %s"%(base_name, pos_attrs-1),'// offset in bytes in tset file of tiles attibutes.'
 
 
-ts = tilesets[0]
-# checks
-firstgid=int(ts.get('firstgid'))
+def export_tilemaps() : 
+    print '\n // -- Tilemaps'
+    index=0
+    of = open(os.path.join(base_path,base_name+'.tmap'),'wb')
+    mw, mh = root.get('width'), root.get('height')
 
-# assert len(tilesets)==1 and firstgid==1 , "Just one tileset starting at 1"
+    print '\n// Layers'
+    max_idx = 0
+    for layer in root.findall("layer") :
+        lw = int(layer.get("width"))
+        lh = int(layer.get("height"))
+        name=layer.get("name")
+        if name[0]=='_' : continue # skip
 
-tilesize = int(ts.get("tilewidth"))
+        data = layer.find("data")
+        if data.get('encoding')=='csv' :
+            indices = [int(s) for s in data.text.replace("\n",'').split(',')]
+        elif data.get('encoding')=='base64' and data.get('compression')=='zlib' :
+            indices = array.array('I',data.text.decode('base64').decode('zlib'))
+        else :
+            raise ValueError,'Unsupported layer encoding :'+data.get('encoding')
 
-assert tilesize == int(ts.get("tileheight")) and tilesize in tilesizes, "only square tiles of 32x32 or 16x16 supported"
+        if max(indices)>=256 : out_code='H' # will set to u16 if just one level has those indices
+        tidx = array.array(out_code,indices)
+        assert len(tidx) == lw*lh, "not enough or too much data"
 
-img = ts.find("image").get("source")
-# output as raw tileset
-# XXX if RGBA -> int, else : uint. Here, assume uint
-def reduce(c) :
-    return (1<<15 | (c[0]>>3)<<10 | (c[1]>>3)<<5 | c[2]>>3) if c[3]>127 else 0
+        print "#define %s_%s %d"%(base_name, name, index)
+        # output data to binary
+        tidx.tofile(of)
+        index += 1
+        max_idx = max(max_idx,max(indices))
 
-src = Image.open(os.path.join(os.path.dirname(os.path.abspath(args.file)),img)).convert('RGBA')
-if args.micro :
-    src = src.convert('RGB').quantize(palette=Image.open(PALETTE)) # XXX allow 8-bit adaptive palette ?
-    pixdata = array.array('B',src.getdata()) # direct output bytes
-else:
-    pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples.
-
-print "extern const uint%d_t %s%s_tset[]; // from %s"%(8 if args.micro else 16,dirname, base_name,img)
-w,h = src.size
-
-with open(os.path.join(base_path,base_name+'.tset'),'wb') as of:
-    for tile_y in range(h/tilesize) :
-        for tile_x in range(w/tilesize) :
-            for row in range(tilesize) :
-                idx = (tile_y*tilesize+row)*w + tile_x*tilesize
-                pixdata[idx:idx+tilesize].tofile(of)
-
-    # tile properties output
-    if args.export_tile_attributes and tilebools :
-        pos_attrs=of.tell()
-        assert len(tilebools)<8, "max 8 properties per tmx file"
-        props = sorted(tilebools) # keys
-        max_tid = max(max(tiles) for tiles in tilebools.values()) # actually used ?
-
-        # should be put as a _resource_
-        print '\n// Tile properties'
-        for n,p in enumerate(props):
-            print "#define %s_prop_%s %d"%(base_name,p,1<<n)
-
-        for tid in range(1,w*h/tilesize/tilesize+1) :
-            prop = sum(1<<n for n,k in enumerate(props) if tid in tilebools[k])
-            of.write(chr(prop))
-        print "#define %s_tset_attrs_offset %s"%(base_name, pos_attrs-1),'// offset in bytes in tset file of tiles attibutes.'
-
-
-print '\n // -- Tilemaps'
-index=0
-of = open(os.path.join(base_path,base_name+'.tmap'),'wb')
-mw, mh = root.get('width'), root.get('height')
-
-print '\n// Layers'
-max_idx = 0
-for layer in root.findall("layer") :
-    lw = int(layer.get("width"))
-    lh = int(layer.get("height"))
-    name=layer.get("name")
-    if name[0]=='_' : continue # skip
-
-    data = layer.find("data")
-    if data.get('encoding')=='csv' :
-        indices = [int(s) for s in data.text.replace("\n",'').split(',')]
-    elif data.get('encoding')=='base64' and data.get('compression')=='zlib' :
-        indices = array.array('I',data.text.decode('base64').decode('zlib'))
+    if args.micro :
+        print "#define %s_header (TMAP_HEADER(%d,%d,%s,%s) | TSET_8bit)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
     else :
-        raise ValueError,'Unsupported layer encoding :'+data.get('encoding')
+        print "#define %s_header TMAP_HEADER(%d,%d,%s,%s)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
 
-    if max(indices)>=256 : out_code='H' # will set to u16 if just one level has those indices
-    tidx = array.array(out_code,indices)
-    assert len(tidx) == lw*lh, "not enough or too much data"
+    print "extern const %s %s%s_tmap[][%d*%d];"%(typename[out_code],dirname, base_name,lw,lh)
 
-    print "#define %s_%s %d"%(base_name, name, index)
-    # output data to binary
-    tidx.tofile(of)
-    index += 1
-    max_idx = max(max_idx,max(indices))
+    # output all layers in a big array of arrays
+    print '// max indices : ',max_idx
 
-if args.micro :
-    print "#define %s_header (TMAP_HEADER(%d,%d,%s,%s) | TSET_8bit)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
-else :
-    print "#define %s_header TMAP_HEADER(%d,%d,%s,%s)"%(base_name,lw,lh,tilesizes[tilesize],codes[out_code])
 
-print "extern const %s %s%s_tmap[][%d*%d];"%(typename[out_code],dirname, base_name,lw,lh)
+# export image layers
 
-# output all layers in a big array of arrays
-print '// max indices : ',max_idx
+def export_image_layers(imglayer, path) : 
+    # export image layers as spr files in pbc format
+    imgname=imagelayer.find('image').get('source')
+    src = Image.open(imgname).convert('RGBA')
+    sprfile=base_name+'_'+imagelayer.get('name')+'.spr'
+    with open(os.path.join(path,sprfile),'w+') as f :
+        print '/* Image : ',imgname,'to file:',sprfile
+        couples_encode2.couples_encode(src,f,src.size[1],'pbc',args.micro)
+        print '*/'
+
+
+# export tileset, if there is a tilemap
+if root.find("layer") : 
+    export_tileset(tilesets[0])
+    export_tilemaps()
+
 
 # output object layers to C file.
 if args.export_objects or args.export_sprites :
@@ -373,3 +392,6 @@ if args.export_objects or args.export_sprites :
                 print >>c_file,'    (uint8_t []){'+','.join(str(typ_tiles_sorted[t].index(tid)) for tid in anim)+', 255 }, // %s_%s'%(t,s)
             print >>c_file,'};'
 
+print "\n// Image Layers, exported as big pbc sprites"
+for imagelayer in root.findall('imagelayer') :
+    export_image_layers(imagelayer, args.output_dir)
