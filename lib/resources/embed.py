@@ -11,10 +11,9 @@ import argparse
 
 LINELEN = 120 # line len in the file
 
-parser = argparse.ArgumentParser(description=__doc__, epilog="example: embed.py "+EXAMPLE)
+parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('files', nargs='+', metavar='file',help='binary files to embed')
 parser.add_argument('--prefix', default="data_", help='prefix for file names in C')
-
 args=parser.parse_args()
 
 # known extensions types ? 
@@ -50,12 +49,18 @@ for file in args.files :
     s = open(f).read()
     all_files.append(dict(file=f,quoted=quoted,encoding=encoding,data=s,decoded=decoded_size))
 
-    for f in all_files :
-        print "extern const char %s%s[];"%(args.prefix, f['quoted'])
-    print "\n#ifdef %sIMPLEMENTATION"%PREFIX + "  // "+"-"*80+"\n"
+print "#ifndef %sDECLARATION"%PREFIX
+print "#define %sDECLARATION"%PREFIX
+print
+for f in all_files :
+    print "extern const char %s%s[];"%(args.prefix, f['quoted'])
+print
 
-    for f in all_files : 
-        print "const char %s%s[] = " % (args.prefix,f['quoted'])  
-        print "\n".join(" \"%s\""%line for line in gen_lines(f['data']))+";\n"
+print "\n#endif // %sDECLARATION"%PREFIX
+print "\n#ifdef %sIMPLEMENTATION"%PREFIX + "  // "+"-"*80+"\n"
 
-    print "\n#endif // %sIMPLEMENTATION"%PREFIX
+for f in all_files :
+    print "const char %s%s[] = " % (args.prefix,f['quoted'])
+    print "\n".join(" \"%s\""%line for line in gen_lines(f['data']))+";\n"
+
+print "\n#endif // %sIMPLEMENTATION"%PREFIX
