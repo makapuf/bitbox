@@ -205,7 +205,7 @@ object * sprite_new(const void *p, int x, int y, int z)
 
 
             default :
-                message("Unknown record loading sprite : %d at offset %d \n",t,sprite_data-(uint32_t*)p);
+                message("Unknown record loading sprite : %d at offset %d (maybe a bad encoding)\n",t,sprite_data-(uint32_t*)p);
                 die(7,7); // error : unknown record !
                 break;
         }
