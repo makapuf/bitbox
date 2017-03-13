@@ -165,6 +165,7 @@ def export_sprite(outfile,tiles,tileset_elt) :
     print '*/'
 
 def export_tileset(ts) : 
+    global tilesize
     # checks
     firstgid=int(ts.get('firstgid'))
 
@@ -216,6 +217,7 @@ def export_tileset(ts) :
 
 
 def export_tilemaps() : 
+    global out_code, tilesize
     print '\n // -- Tilemaps'
     index=0
     of = open(os.path.join(base_path,base_name+'.tmap'),'wb')
@@ -272,10 +274,9 @@ def export_image_layers(imglayer, path) :
 
 
 # export tileset, if there is a tilemap
-if root.find("layer") : 
+if root.find("layer") is not None : 
     export_tileset(tilesets[0])
     export_tilemaps()
-
 
 # output object layers to C file.
 if args.export_objects or args.export_sprites :
