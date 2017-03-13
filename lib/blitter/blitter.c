@@ -58,8 +58,9 @@ object* blitter_new()
     if (blt.nb_objects<MAX_OBJECTS) {
         return blt.objects[blt.nb_objects++]; // index of free object IN !
     } else {
-        message ("Object memory full, too many objects ! Increase MAX_OBJECTS in lib/blitter.h");
-        return 0;
+        message ("Object memory full, too many objects ! Increase MAX_OBJECTS in lib/blitter.h\n");
+        die(1,3); // die immediately
+        return 0; // never reached
     }
 }
 
