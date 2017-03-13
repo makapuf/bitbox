@@ -44,12 +44,9 @@ and provide bitbox API stubs
 
 // ticks in ms
 
-int screen_width;
-int screen_height;
 
 #define TICK_INTERVAL 1000/60
 #define LINE_BUFFER 1024
-#define VSYNC_LINES 10
 
 #define EMU_FRAMES 10*60*60 // 1 minute
 
@@ -90,7 +87,7 @@ static void refresh_screen()
 
     draw_buffer = mybuffer1;
 
-    for (vga_line=0;vga_line<screen_height;vga_line++) {
+    for (vga_line=0;vga_line<VGA_V_PIXELS;vga_line++) {
         #ifdef VGA_SKIPLINE
         vga_odd=0;
         graph_line(); // using line, updating draw_buffer ...
@@ -104,7 +101,7 @@ static void refresh_screen()
         draw_buffer = (draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
     }
 
-    for (;vga_line<screen_height+VSYNC_LINES;vga_line++) {
+    for (;vga_line<VGA_V_PIXELS+VGA_V_SYNC;vga_line++) {
         #ifdef VGA_SKIPLINE
             vga_odd=0;
             graph_vsync(); // using line, updating draw_buffer ...

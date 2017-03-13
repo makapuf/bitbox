@@ -13,6 +13,8 @@
 #define VGA_FPS 60
 #define CCM_MEMORY
 
+#define VGA_V_SYNC 16 // simulates 16 lines of vsync
+
 #if VGA_MODE==800 || VGA_MODE==OVERCLOCK_800
 
 // 800 600 non VESA on lightly O/C core (180MHz) - ~ 30kHz, 56fps

@@ -21,7 +21,6 @@
 
 #include "fatfs/ff.h"
 
-#define VSYNC_LINES 16 // simulates 16 lines of vsync
 #define KBR_MAX_NBR_PRESSED 6
 
 #define WM_TITLE_LED_ON  "Bitbox emulator (*)"
@@ -204,7 +203,7 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen (SDL_Surface *scr)
         draw_buffer = ( draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
 
     }
-    for (;vga_line<screen_height+VSYNC_LINES;vga_line++) {
+    for (;vga_line<screen_height+VGA_V_SYNC;vga_line++) {
         #ifdef VGA_SKIPLINE
             vga_odd=0;
             graph_vsync(); // using line, updating draw_buffer ...
