@@ -14,7 +14,7 @@ before_script:
   - python -c "from PIL import Image"
   
 script:
-  - "make && make alltest"
+  - "make && make test"
 
 after_script:
 
