@@ -19,8 +19,8 @@ $(PROJECTS):
 	$(info "")
 	$(MAKE) -C $@ # can fail
 
-allclean: $(ALLCLEAN)
-alltest: $(ALLTEST)
+clean: $(ALLCLEAN)
+test: $(ALLTEST)
 
 $(ALLCLEAN): 
 	$(MAKE) -C $(patsubst %-clean,%,$@) clean
