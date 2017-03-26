@@ -12,6 +12,7 @@
     only the first tileset is output
     for sprites, internal sprite tilesets will not be output, only use external tilesets
 
+TODO : terrains, tile names, zones (=sprites without a spr file ? )
 """
 
 import sys
@@ -147,15 +148,19 @@ class Map :
         self.tilebools={}
         self.layers = self.root.findall("layer")
 
-    # export first tileset as the tileset
-    # XXX define from external tileset
+    # export first tileset as _the_ tileset
+    # XXX define from external (or internal) tileset (reuse)
     # XXX export tile properties (name at least)
     def export_tileset(self,output_dir) :
         ts = self.root.find('tileset')
 
         # export terrain types 
-        for n,t in enumerate(ts.findall('terraintypes/terraintype')) : 
+        print "// terrains"
+        for n,t in enumerate(ts.findall('terraintypes/terrain')) : 
             print "#define terrain_%s_%s %d"%(self.name, t.get('name'),n+1)
+            if n>15 : 
+                print "ERROR : must have less than 16 terrains"
+                sys.exit(1)
 
         tilesize = int(ts.get("tilewidth"))
         assert tilesize == int(self.root.get("tileheight")) and tilesize in [8,16,32], "only square tiles of 8,16 or 32 supported"
@@ -187,24 +192,7 @@ class Map :
             for t in ts.findall('tile') : 
                 ter = [(int(x)+1 if x else 0) for x in t.get('terrain',',,,').split(',')]
                 terrains[int(t.get('id'))] = ter[0]<<12 | ter[1]<<8 | ter[2]<<4 | ter[3]
-            terrains.tofile(of)
-
-            # tile properties output
-            if self.tilebools :
-                pos_attrs=of.tell()
-                assert len(self.tilebools)<8, "max 8 properties per tmx file"
-                props = sorted(self.tilebools) # keys
-                max_tid = max(max(tiles) for tiles in self.tilebools.values()) # actually used ?
-
-                # should be put as a _resource_
-                print '\n// Tile properties'
-                for n,p in enumerate(props):
-                    print "#define %s_prop_%s %d"%(base_name,p,1<<n)
-
-                for tid in range(1,w*h/tilesize/tilesize+1) :
-                    prop = sum(1<<n for n,k in enumerate(props) if tid in self.tilebools[k])
-                    of.write(chr(prop))
-                print "#define %s_tset_attrs_offset %s"%(self.name, pos_attrs-1),'// offset in bytes in tset file of tiles attibutes.'
+        self.terrains=terrains,w/tilesize
 
     def export_tilemap(self,out_dir) :
         index=0
@@ -262,18 +250,25 @@ class Map :
     def print_implementation(self) : 
         print 'const struct MapDef map_%s = {'%self.name
         if self.layers : 
-            print '  .tileset=res_%s_tset,'%self.name
+            print '  .tileset=data_%s_tset,'%self.name
             print '  .tilemap_w=%d,'%int(self.root.get('width'))
             print '  .tilemap_h=%d,'%int(self.root.get('height'))
             print '  .tilesize=%d,'%int(self.root.get('tilewidth'))
-            print '  .tilemap=res_%s_tmap,'%self.name
+            print '  .tilemap=data_%s_tmap,'%self.name
+
+            print '  .terrains=(uint16_t[]){\n   ',
+            terr,tw = self.terrains
+            for i,t in enumerate(terr): 
+                print "0x%04x,"%t,
+                if i%tw==tw-1 : print "\n   ",
+            print '  },'
 
         print '  .nb_objects=%d,'%len(self.objects)
 
         print '  .objects={'
         for obj in self.objects:  
             spr = self.spritesheets[obj.sprite]
-            print '    { .x=%4d, .y=%4d, .sprite=&sprite_%s, .state=state_%s_%s },'%(
+            print '    { .x=%4d, .y=%4d, .sprite=&sprite_%s, .state_id=state_%s_%s },'%(
                 obj.x, obj.y,
                 spr.name, 
                 spr.name,spr.state_bytid(obj.tid).state,

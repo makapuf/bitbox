@@ -152,7 +152,7 @@ class Sprite :
     def print_implementation(self) : 
         print 'const struct SpriteDef sprite_%s= {'%self.name
         print '  .file= data_%s_spr,'%self.name
-        print '  .states={'
+        print '  .states= (const struct StateDef []){'
         maxstatelen = max(len(st.state) for st in self.states)
         for st in self.states:  
             print  '    [state_%s_%s]={.nb_frames=%2d, .frames=(uint8_t []) {%s},.x1=%d,.y1=%d,.x2=%d,.y2=%d},'%( 
