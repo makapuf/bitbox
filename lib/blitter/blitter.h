@@ -56,7 +56,7 @@ object *btc4_2x_new (const uint32_t *btc, int16_t x, int16_t y, int16_t z) __att
 
 #define TSET_8bit (1<<7)
 
-#define TMAP_HEADER(w,h,tilesize,tmaptype) (w<<20 | h<<8 | tilesize<<4 | tmaptype)
+#define TMAP_HEADER(w,h,tilesize,tmaptype) (w<<20 | h<<8 | (tilesize)<<4 | (tmaptype))
 #define TMAP_WIDTH(header) (header>>20)
 
 #define TILEMAP_6464u8 TMAP_HEADER(64,64,TSET_16, TMAP_U8)
