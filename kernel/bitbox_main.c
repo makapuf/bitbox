@@ -1,6 +1,6 @@
 #include "bitbox.h"
 
-__attribute__((weak)) int main(void)
+__attribute__((weak)) int bitbox_main(void)
 {
 	game_init();
 
@@ -8,11 +8,19 @@ __attribute__((weak)) int main(void)
 
 		// wait next frame.
 		#if VGA_MODE!=NONE
-		int oframe=vga_frame;
-		while (oframe==vga_frame);
+		wait_vsync(1);
 		#endif
 
 		game_frame();
 		//set_led(button_state());
 	}
+}
+
+
+// redefined in emu 
+__attribute__((weak)) void wait_vsync(const unsigned int n)
+{
+    uint32_t nframe = vga_frame+n;
+    while (vga_frame < nframe) {
+    }
 }

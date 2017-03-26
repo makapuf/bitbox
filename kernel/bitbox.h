@@ -46,6 +46,7 @@ extern void graph_vsync(void); // user provided, called during vsync lines
 // 0x0rrrrrgggggbbbbb pixels or 0xrrrggbbl 
 extern pixel_t *draw_buffer;  // drawing next line, 8 or 16bpp
 
+extern void wait_vsync(const unsigned int n); // wait for n frames
 
 // --- SD reader -------------------------------------------------------------------------
 // use fatfs/ff.h api directly, separately.

@@ -22,7 +22,7 @@ void vga_setup(); // in new_vga.c
 void setup_usb(); // in usb.c
 void audio_init(); // in audio.c
 void board_init(); // in board.c
-int main(); // user supplied or, by default, in bitbox_main
+int bitbox_main(); // user supplied or, by default, in bitbox_main
 
 
 void Reset_Handler()
@@ -61,7 +61,7 @@ void Reset_Handler()
 
 
 	// Call the application's entry point.
-    main();
+    bitbox_main();
 
 	// If main ever exits, lock up.
 	for(;;);

@@ -8,10 +8,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
- #include <errno.h>
+#include <errno.h>
 
 // emulated interfaces
-#define draw_buffer __draw_buffer // prevents defining draw buffers to pixel t 
+#define draw_buffer __draw_buffer // prevents defining draw buffers to pixel_t 
 #include "bitbox.h"
 #undef draw_buffer
 
@@ -21,46 +21,33 @@
 
 #include "fatfs/ff.h"
 
+// ticks in ms
+#define TICK_INTERVAL 1000/60
+#define USER_BUTTON_KEY SDLK_F12
+
 #define KBR_MAX_NBR_PRESSED 6
+#define RESYNC_TIME_MS 2000 // dont try to sync back if delay if more than 
 
 #define WM_TITLE_LED_ON  "Bitbox emulator (*)"
 #define WM_TITLE_LED_OFF "Bitbox emulator"
+
 /*
    TODO
 
- handle SLOW + PAUSE + FULLSCREEN (alt-enter) as keyboard handles
- handle mouse,
- keyboard (treat keyboard gamepads as config for quick saves)
+ handle FULLSCREEN (alt-enter) as keyboard handles
  handling other events (plugged, ...)
 
- really handle set_led (as window title)
+ game recordings
 
 */
 
 
-
-// ----------------------------- kernel ----------------------------------
-/* The only function of the kernel is
-- calling game_init and game_frame
-- calling update draw_buffer (which calls object_blitX)
-
-- displaying other buffer updating line, frame
-- read user input and update gamepad
-
-*/
-
-// ticks in ms
-
-
-int screen_width;
+// emulated screen size, possibly displayed larger
+int screen_width; 
 int screen_height;
 
-#define TICK_INTERVAL 1000/60
 #define LINE_BUFFER 1024
 
-#define USER_BUTTON_KEY SDLK_F12
-
-static uint32_t next_time;
 
 // options
 static int slow; // parameter : run slower ?
@@ -100,16 +87,6 @@ volatile uint8_t keyboard_mod[2]; // LCtrl =1, LShift=2, LAlt=4, LWin - Rctrl, .
 volatile uint8_t keyboard_key[2][KBR_MAX_NBR_PRESSED]; // using raw USB key codes
 
 
-uint32_t time_left(void)
-{
-    uint32_t now;
-
-    now = SDL_GetTicks();
-    if(next_time <= now)
-        return 0;
-    else
-        return next_time - now;
-}
 
 #if VGA_MODE != NONE
 extern uint16_t palette_flash[256];
@@ -214,6 +191,8 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen (SDL_Surface *scr)
         #endif
     }
 }
+#else
+#warning VGA_MODE SET TO NONE
 #endif
 
 
@@ -293,10 +272,11 @@ void set_mode(int width, int height)
         printf("%s\n",SDL_GetError());
         die(-1,0);
     }
-    SDL_WM_SetCaption(WM_TITLE_LED_OFF, "game");
 
-    if (!quiet)
+    if (!quiet) {
         printf("%d bpp, flags:%x pitch %d\n", screen->format->BitsPerPixel, screen->flags, screen->pitch/2);
+        printf("Screen is now %dx%d with a scale of %d\n",screen_width,screen_height,scale);
+    }
 
 }
 
@@ -324,39 +304,6 @@ static void joy_init()
 
     /* make sure that Joystick sdl_event polling is a go */
     SDL_JoystickEventState(SDL_ENABLE);
-}
-
-
-int init(void)
-{
-    // initialize SDL video
-    if ( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO ) < 0 )
-    {
-        printf( "Unable to init SDL: %s\n", SDL_GetError() );
-        return 1;
-    }
-    set_led(0); // off by default
-
-    // make sure SDL cleans up before exit
-    atexit(SDL_Quit);
-
-    // create a default new window
-    set_mode(VGA_H_PIXELS,VGA_V_PIXELS);
-
-    #ifndef NO_AUDIO
-    audio_init();
-    #endif
-
-    joy_init();
-
-    next_time = SDL_GetTicks();
-
-    if (!quiet)
-        printf("Screen is now %dx%d with a scale of %d\n",screen_width,screen_height,scale);
-    
-    SDL_ShowCursor(SDL_DISABLE);
-    
-    return 0;
 }
 
 
@@ -753,6 +700,7 @@ FRESULT f_closedir (DIR* dp)
     }
 }
 
+// -- misc bitbox functions 
 
 // user button
 int button_state() {
@@ -766,9 +714,25 @@ void set_led(int x) {
     SDL_WM_SetCaption(x?WM_TITLE_LED_ON:WM_TITLE_LED_OFF, "game");
 }
 
-int main ( int argc, char** argv )
+void message (const char *fmt, ...)
 {
+    va_list argptr;
+    va_start(argptr, fmt);
+    vprintf(fmt, argptr);
+    va_end(argptr);
+}
 
+void die(int where, int cause)
+{
+    printf("ERROR : dying doing %d at  %d.\n",cause, where);
+    exit(0);
+}
+
+
+// --- main
+
+static void process_commandline( int argc, char** argv)
+{
     for (int i=1;i<argc;i++) {
         if (!strcmp(argv[i],"--fullscreen"))
             fullscreen = 1;
@@ -790,56 +754,98 @@ int main ( int argc, char** argv )
         instructions();
         printf(" - Starting\n");
     }
+}
 
-    gamepad_buttons[0] = 0; // all up
-    gamepad_buttons[1] = 0;
+static void init_all(void)
+{
+    // initialize SDL video
+    if ( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO ) < 0 ) {
+        printf( "Unable to init SDL: %s\n", SDL_GetError() );
+        exit(1);
+    }
+    atexit(SDL_Quit); // make sure SDL cleans up before exit
 
-    if (init()) return 1;
-    game_init();
 
-    // now start sound
-    SDL_PauseAudio(0);
+    set_led(0); // off by default
+    set_mode(VGA_H_PIXELS,VGA_V_PIXELS); // create a default new window
+    SDL_ShowCursor(SDL_DISABLE);    
 
-    // program main loop
-    bool done = false;
-    while (!done)
-    {
+    #ifndef NO_AUDIO
+    audio_init();
+    SDL_PauseAudio(0); // now start sound
+    #endif
 
+    joy_init();
+}
+
+SDL_sem *frame_sem;
+
+void wait_vsync(const unsigned int n)
+{
+    uint32_t nframe = vga_frame+n;
+    while (vga_frame < nframe) {
+        // wait other thread to wake me up
+        SDL_SemWait(frame_sem);
+    }
+}
+
+/* this loop handles asynchronous emulation : screen refresh, user inputs.. */
+int emu_loop (void *_)
+{
+    uint32_t now, next_time;
+    next_time = SDL_GetTicks();
+    bool done=false;
+
+    while (!done) {
         // message processing loop
         done = handle_events();
         kbd_emulate_gamepad();
-        // update game
-        game_frame();
 
-        // update time
-        vga_frame++;
+
+
+        // 60 Hz loop delay
+        now = SDL_GetTicks();        
+        if (next_time > now)
+            SDL_Delay(next_time - now);
+
+        if (((int)now-(int)next_time) > RESYNC_TIME_MS)  { // if too much delay, resync
+            printf("- lost sync : %d, resyncing\n",now-next_time);
+            next_time = now;
+        } else {
+            next_time += slow ? TICK_INTERVAL*10:TICK_INTERVAL;
+        }
         
         #if VGA_MODE!=NONE
         refresh_screen(screen);
         #endif
-
-        SDL_Delay(time_left());
-        next_time += slow ? TICK_INTERVAL*10:TICK_INTERVAL;
-
         SDL_Flip(screen);
-    } // end main loop
+        vga_frame++;
 
-    // all is well ;)
-    if (!quiet)
-        printf(" - Exited cleanly\n");
+        // if locked, unlock it
+        if (!SDL_SemValue(frame_sem)) {
+            SDL_SemPost(frame_sem);
+        }
+    }
+    exit(0);
     return 0;
 }
 
-void message (const char *fmt, ...)
+int bitbox_main(void); // main bitbox code.
+
+int main ( int argc, char** argv )
 {
-    va_list argptr;
-    va_start(argptr, fmt);
-    vprintf(fmt, argptr);
-    va_end(argptr);
+    process_commandline(argc,argv);
+    init_all();
+
+    frame_sem=SDL_CreateSemaphore(0);
+    SDL_Thread * thread=SDL_CreateThread(emu_loop,0);  
+
+    bitbox_main();
+
+    SDL_KillThread(thread);
+    SDL_DestroySemaphore(frame_sem);
+
+    return 0;
 }
 
-void die(int where, int cause)
-{
-    printf("ERROR : dying doing %d at  %d.\n",cause, where);
-    exit(0);
-}
+

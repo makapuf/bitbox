@@ -56,7 +56,7 @@ else
   $(error unknown type $(TYPE) defined, please use sdl or test)
 endif
 
-KERNEL := main_$(TYPE).c micro_palette.c
+KERNEL := bitbox_main.c main_$(TYPE).c micro_palette.c
 
 # -- Optional features 
 
