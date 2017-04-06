@@ -100,9 +100,7 @@ KERNEL += $(USB_FILES)
 endif
 
 # Audio
-ifdef NO_AUDIO
-DEFINES+=NO_AUDIO
-else
+ifeq ($(filter NO_AUDIO,$(DEFINES)),)  
 KERNEL += audio_$(BOARD).c
 endif
 
