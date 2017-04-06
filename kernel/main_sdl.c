@@ -47,7 +47,9 @@ int screen_width;
 int screen_height;
 
 #define LINE_BUFFER 1024
-
+#ifndef LINE_MARGIN
+#define LINE_MARGIN 32 
+#endif
 
 // options
 static int slow; // parameter : run slower ?
@@ -59,9 +61,13 @@ static int scale=1; // scale display by this in pixels
 SDL_Surface* screen;
 uint16_t mybuffer1[LINE_BUFFER];
 uint16_t mybuffer2[LINE_BUFFER];
-uint16_t *draw_buffer = mybuffer1; // volatile ?
+uint16_t *draw_buffer = mybuffer1+LINE_MARGIN; // volatile ?
 
 volatile uint16_t gamepad_buttons[2];
+uint16_t kbd_gamepad_buttons;
+uint16_t sdl_gamepad_buttons[2]; // real gamepad read from SDL
+
+
 uint32_t vga_line;
 volatile uint32_t vga_frame;
 #ifdef VGA_SKIPLINE
@@ -73,9 +79,6 @@ volatile int8_t mouse_x, mouse_y;
 volatile uint8_t mouse_buttons;
  
 int user_button=0;
-
-// sound
-// pixel_t audio_buffer[BITBOX_SNDBUF_LEN]; // stereo, 31khz 1frame
 
 // joystick handling.
 static const int gamepad_max_buttons = 12;
@@ -131,7 +134,7 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen (SDL_Surface *scr)
 
     uint32_t * restrict dst = (uint32_t*)scr->pixels; // will render 2 pixels at a time horizontally
 
-    draw_buffer = mybuffer1; // currently 16bit data
+    draw_buffer = mybuffer1+LINE_MARGIN; // currently 16bit data
 
     for (vga_line=0;vga_line<screen_height;vga_line++) {
         #ifdef VGA_SKIPLINE
@@ -177,7 +180,7 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen (SDL_Surface *scr)
 
 
         // swap lines buffers to simulate double line buffering
-        draw_buffer = ( draw_buffer == &mybuffer1[0] ) ? &mybuffer2[0] : &mybuffer1[0];
+        draw_buffer = ( draw_buffer == &mybuffer1[LINE_MARGIN] ) ? &mybuffer2[LINE_MARGIN] : &mybuffer1[LINE_MARGIN];
 
     }
     for (;vga_line<screen_height+VGA_V_SYNC;vga_line++) {
@@ -392,17 +395,17 @@ void kbd_emulate_gamepad (void)
         0x07, 0x09, 0x08, 0x15, 0xe0, 0xe4, 0x2c, 0x28, 0x52, 0x51, 0x50, 0x4f
     };
 
-    gamepad_buttons[0]=0;
+    kbd_gamepad_buttons = 0;
     for (int i=0;i<sizeof(kbd_gamepad);i++) {
         if (memchr((char *)keyboard_key[0],kbd_gamepad[i],KBR_MAX_NBR_PRESSED))
-            gamepad_buttons[0]|= (1<<i);
+            kbd_gamepad_buttons |= (1<<i);
     }
 
     // special : mods
     if (keyboard_mod[0] & 1) 
-        gamepad_buttons[0] |= gamepad_L;
+        kbd_gamepad_buttons |= gamepad_L;
     if (keyboard_mod[0] & 16) 
-        gamepad_buttons[0] |= gamepad_R;
+        kbd_gamepad_buttons |= gamepad_R;
 
 }
 
@@ -530,24 +533,23 @@ static bool handle_events()
         case SDL_JOYBUTTONUP: // buttons
             if (sdl_event.jbutton.button>=gamepad_max_buttons || sdl_event.jbutton.which>=gamepad_max_pads)
                 break;
-            gamepad_buttons[sdl_event.jbutton.which] &= ~(1<<sdl_event.jbutton.button);
+            sdl_gamepad_buttons[sdl_event.jbutton.which] &= ~(1<<sdl_event.jbutton.button);
             break;
 
         case SDL_JOYBUTTONDOWN:
             if (sdl_event.jbutton.button>=gamepad_max_buttons || sdl_event.jbutton.which>=gamepad_max_pads)
                 break;
-            gamepad_buttons[sdl_event.jbutton.which] |= 1<<sdl_event.jbutton.button;
-
+            sdl_gamepad_buttons[sdl_event.jbutton.which] |= 1<<sdl_event.jbutton.button;
             break;
 
         case SDL_JOYHATMOTION: // HAT
             if (sdl_event.jbutton.which>=gamepad_max_pads)
                 break;
-            gamepad_buttons[sdl_event.jbutton.which] &= ~(gamepad_up|gamepad_down|gamepad_left|gamepad_right);
-            if (sdl_event.jhat.value & SDL_HAT_UP)      gamepad_buttons[sdl_event.jbutton.which] |= gamepad_up;
-            if (sdl_event.jhat.value & SDL_HAT_DOWN)    gamepad_buttons[sdl_event.jbutton.which] |= gamepad_down;
-            if (sdl_event.jhat.value & SDL_HAT_LEFT)    gamepad_buttons[sdl_event.jbutton.which] |= gamepad_left;
-            if (sdl_event.jhat.value & SDL_HAT_RIGHT)   gamepad_buttons[sdl_event.jbutton.which] |= gamepad_right;
+            sdl_gamepad_buttons[sdl_event.jbutton.which] &= ~(gamepad_up|gamepad_down|gamepad_left|gamepad_right);
+            if (sdl_event.jhat.value & SDL_HAT_UP)      sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_up;
+            if (sdl_event.jhat.value & SDL_HAT_DOWN)    sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_down;
+            if (sdl_event.jhat.value & SDL_HAT_LEFT)    sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_left;
+            if (sdl_event.jhat.value & SDL_HAT_RIGHT)   sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_right;
             break;
 
         // mouse
@@ -800,6 +802,8 @@ int emu_loop (void *_)
         // message processing loop
         done = handle_events();
         kbd_emulate_gamepad();
+        gamepad_buttons[0] = kbd_gamepad_buttons|sdl_gamepad_buttons[0];
+        gamepad_buttons[1] = sdl_gamepad_buttons[1];
 
 
 
