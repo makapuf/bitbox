@@ -25,7 +25,7 @@ struct MapObjectDef {
     int16_t x,y;
     const struct SpriteDef * sprite; // id of spritedef in mapdef->sprites
     uint8_t state_id;
-    uint8_t type,group; 
+    uint8_t type; 
 };
 
 struct MapDef {
