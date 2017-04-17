@@ -245,6 +245,9 @@ class Map :
     
     def print_header(self) : 
         print 'extern const struct MapDef map_%s;'%self.name
+        for n,t in enumerate(sorted(set(o.type for o in self.objects))) : 
+            print '#define type_%s_%s %d'%(self.name,t,n)
+
         print
 
     def print_implementation(self) : 
@@ -268,10 +271,11 @@ class Map :
         print '  .objects={'
         for obj in self.objects:  
             spr = self.spritesheets[obj.sprite]
-            print '    { .x=%4d, .y=%4d, .sprite=&sprite_%s, .state_id=state_%s_%s },'%(
+            print '    { .x=%4d, .y=%4d, .sprite=&sprite_%s, .state_id=state_%s_%s, .type=type_%s_%s },'%(
                 obj.x, obj.y,
                 spr.name, 
                 spr.name,spr.state_bytid(obj.tid).state,
+                self.name,obj.type
                 )
         print '  }'
         print '};\n'
