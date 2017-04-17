@@ -36,6 +36,8 @@ int t_available();                           // get available mem (but not nec. 
 
 #ifdef TINYMALLOC_IMPLEMENTATION
 
+#define debug(...) 
+
 typedef union header_u {                        // block header
 	struct {
         union header_u *next;                   // next block if on free list
@@ -56,18 +58,18 @@ void *t_malloc(unsigned int nbytes)
 
     nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1; // nb of 8bytes blocks
 
-    message( "malloc %d bytes, %d units, %d real bytes\n",nbytes, nunits, nunits*sizeof(Header) );
+    debug( "malloc %d bytes, %d units, %d real bytes\n",nbytes, nunits, nunits*sizeof(Header) );
 
     prevp=freep;
 
     for (p = prevp->s.next;; prevp = p, p = p->s.next) {
-    	message("  checking %p (sz=%d))...",p,p->s.size);
+    	debug("  checking %p (sz=%d))...",p,p->s.size);
         if (p->s.size >= nunits) {     // big enough
             if (p->s.size == nunits) { // exactly
-            	message("size just ok");
+            	debug("size just ok");
             	prevp->s.next = p->s.next;
             } else {                   // allocate tail end
-            	message("ok more than nec.\n");
+            	debug("ok more than nec.\n");
             	p->s.size -= nunits;
             	p += p->s.size;
             	p->s.size = nunits;
@@ -75,12 +77,12 @@ void *t_malloc(unsigned int nbytes)
             freep = prevp;
             return (void *)(p+1);
         } else
-        message("too small");
-        message("\n");
+        debug("too small");
+        debug("\n");
 
 
         if (p == freep) { // wrapped around free list : out of memory
-        	message("Out of memory.\n");
+        	debug("Out of memory.\n");
         	die (3,3);
         }
     }
