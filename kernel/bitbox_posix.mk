@@ -78,12 +78,13 @@ $(BUILD_DIR)/%.o: %.c
 	@$(CC) $(ALL_CFLAGS) $(AUTODEPENDENCY_CFLAGS) -c $< -o $@
 	@echo CC $<
 
-# --- Autodependecies (headers...)
--include $(BUILD_DIR)/$(TYPE)/*.d
 
 # --- link
 $(NAME)_$(TYPE): $(GAME_C_FILES:%.c=$(BUILD_DIR)/%.o) $(KERNEL:%.c=$(BUILD_DIR)/%.o)
 	$(CC) $(LD_FLAGS) $^ -o $@ $(HOSTLIBS)
+
+# --- Autodependecies (headers...)
+-include $(BUILD_DIR)/*.d
 
 # --- Helpers
 
