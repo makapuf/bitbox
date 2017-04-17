@@ -84,7 +84,7 @@ class Sprite :
                 frames = [ tid ]
             self.tiles += [ x for x in frames if x not in self.tiles ] # new ones are added at the end so that order is not changed
 
-            # find hitbox or set it empty
+            # find hitbox or set it full
             try : 
                 hit_elt = tile.find('objectgroup').find('object') # take first hit object  <object id="1" x="10.75" y="15.125" width="10.375" height="11.375"/>
                 hitbox=(
@@ -94,7 +94,7 @@ class Sprite :
                     int(float(hit_elt.get('y'))+float(hit_elt.get('height')))
                 )
             except AttributeError,e : 
-                hitbox=(0,0,0,0)
+                hitbox=(0,0,self.ts_w,self.ts_h)
 
             # create the state with its frames as references in used_tiles + hitbox
             state = props['state']
