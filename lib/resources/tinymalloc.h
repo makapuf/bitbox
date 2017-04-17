@@ -131,7 +131,8 @@ int t_available()
 	int nb;
 	Header *p;
 	for (nb=0,p=freep->s.next; p!=freep; p=p->s.next)
-		nb += p->s.size;
+        nb += p->s.size;
+	nb += p->s.size;
 	return nb*sizeof(Header);
 }
 
