@@ -142,12 +142,15 @@ class Sprite :
     
     def print_header(self) : 
         'prints a header with all data from map'
+        print '#ifndef _%s_DEFINE'%self.name
+        print '#define _%s_DEFINE'%self.name
         print 'enum states_%s {'%self.name
         for st in self.states : 
             print '    state_%s_%s,'%(self.name,st.state)
         print '\n    %s_nbstates'%self.name
         print '};'
         print 'extern const struct SpriteDef sprite_'+self.name+';'
+        print '#endif  // _%s_DEFINE'%self.name
 
     def print_implementation(self) : 
         print 'const struct SpriteDef sprite_%s= {'%self.name
@@ -172,7 +175,6 @@ def abspath(ref, path) :
     "transform relative path from ref file to absolute"
     return os.path.join(os.path.dirname(os.path.abspath(ref)),path)
 
-
 print '#include <stdint.h>'
 print '#include "lib/blitter/mapdefs.h"'
 print '#include "data.h" // for resource ids'
@@ -190,7 +192,6 @@ sprites = [
 for sp in sprites : 
     sp.print_header()
     print
-
 print "\n#ifdef SPRITE_IMPLEMENTATION // "+'-'*50+'\n'
 
 for sp in sprites : 
