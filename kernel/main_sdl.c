@@ -55,7 +55,7 @@ int screen_height;
 static int slow; // parameter : run slower ?
 static int fullscreen; // shall run fullscreen
 static int quiet=1; // quiet by default now
-static int scale=1; // scale display by this in pixels
+static int scale=2; // scale display by this in pixels
 
 // Video
 SDL_Surface* screen;
@@ -742,8 +742,8 @@ static void process_commandline( int argc, char** argv)
             slow = 1;
         else if (!strcmp(argv[i],"--verbose"))
             quiet = 0;
-        else if (!strcmp(argv[i],"--scale2x"))
-            scale = 2;
+        else if (!strcmp(argv[i],"--scale1x"))
+            scale = 1;
         else {
             instructions();
             exit(0);
