@@ -191,15 +191,12 @@ void tilemap_u16_line_16(object *o) {
 
 void tilemap_u8_line8(object *o)
 {
-    // simplified a bit
-    const uint8_t *buffer8 = (uint8_t*) draw_buffer;
-
     // use current frame, line, buffer
-    unsigned int tilesize = tilesizes[((o->b)>>4)&3];
+    int tilesize = tilesizes[((o->b)>>4)&3];
     unsigned int tilemap_w = o->b>>20;
     unsigned int tilemap_h = (o->b >>8) & 0xfff;
 
-    o->x &= ~3; // force addresses mod4
+    //o->x &= ~3; // force addresses mod4
 
     // --- line related
     // line inside tilemap (pixel), looped.
@@ -215,10 +212,11 @@ void tilemap_u8_line8(object *o)
     int tile_x = ((o->x<0?-o->x:0)/tilesize)&(tilemap_w-1);  // positive modulo
     // positive modulo : i&(tilemap_w-1) if tilemap size is a power of two
 
-    uint8_t * restrict dst = (uint8_t*) &buffer8[o->x<0?0:o->x];
-
+    const int ofs = o->x<0? o->x%tilesize  :o->x; 
+    
+    uint8_t * restrict dst = (uint8_t*) &draw_buffer[ofs];
     // pixel addr of the last pixel
-    const uint8_t *dst_max = (uint8_t*) &buffer8[min(o->x+o->w, VGA_H_PIXELS)];
+    const uint8_t *dst_max = (uint8_t*) &draw_buffer[min(o->x+o->w, VGA_H_PIXELS)];
 
     uint8_t *tiledata = (uint8_t *)o->a; // nope : read 4 indices at once.
     uint8_t *restrict src;  // __builtin_assume_aligned
