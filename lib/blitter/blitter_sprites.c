@@ -73,7 +73,9 @@ enum sprite_recordID {
 typedef uint16_t couple_t;
 
 static void sprite_frame8(object *o, int start_line);
-static void sprite_u8_line(object *o);
+static void sprite_u8_line_clip(object *o);
+static void sprite_u8_line_noclip(object *o);
+
 #else
 typedef uint32_t couple_t;
 
@@ -184,7 +186,7 @@ object * sprite_new(const void *p, int x, int y, int z)
                 break;
 
             case sprite_recordID__u8 :
-                o->line = sprite_u8_line;
+                o->line = sprite_u8_line_clip;
                 o->frame = sprite_frame8;
                 o->data = sprite_data;
                 o->d=0;
@@ -250,6 +252,7 @@ static void sprite_frame (object *o, int start_line)
 
 // - 8Bpp 
 
+
 static void sprite_frame8 (object *o, int start_line)
 {
     // start line is how much we need to crop to handle out of screen data
@@ -260,11 +263,11 @@ static void sprite_frame8 (object *o, int start_line)
     start_line += o->fr*o->h;
     o->c = (intptr_t)o->data;
 
-    o->c += ((uint16_t*)o->b)[start_line/16]; // skip bytes
-    start_line %= 16; // remainder
 
 
     // Skip first lines as needed
+    o->c += ((uint16_t*)o->b)[start_line/16]; // skip bytes
+    start_line %= 16; // remainder
     while (start_line) {
         uint8_t *p = (uint8_t *)o->c; // just a shortcut
         if (*p&1) start_line--;
@@ -273,6 +276,13 @@ static void sprite_frame8 (object *o, int start_line)
         o->c += 1; // header
         o->c += *p>>1 & 0x7; // data
     }
+
+    // select if clip or noclip
+    if ( o->x < 0 || o->x - o->w >= VGA_H_PIXELS )
+        o->line = sprite_u8_line_clip;
+    else 
+        o->line = sprite_u8_line_noclip;
+
 }
 
 #endif
@@ -340,7 +350,7 @@ static void sprite_pbc_frame(object *o, int start_line)
 
 #if VGA_BPP==8
 
-static void sprite_u8_line (object *o)
+static void sprite_u8_line_noclip (object *o)
 {
     int x=o->x;
     uint8_t *p; // see blit as bytes. p is always the start of the blit
@@ -354,6 +364,33 @@ static void sprite_u8_line (object *o)
         uint32_t data_len = *p>>1 & 0x7; // LEN but for 8bit
 
         memcpy(&draw_buffer[x], p+1, data_len);
+
+        // advance x
+        x += data_len;
+
+        // advances pointer to next blit
+        o->c += 1; // header
+        o->c += data_len;
+
+        // skip a line. gets to the next blit & check eol
+    } while (!(*p & 1)); // stop if it was an eol
+}
+
+static void sprite_u8_line_clip (object *o)
+{
+    int x=o->x;
+    uint8_t *p; // see blit as bytes. p is always the start of the blit
+    do {
+        p = (uint8_t *)o->c; // (shortcut) start/current position of the blit
+        // header : nb skip:4, nb blit: 3, eol:1
+
+        x += (*p)>>4; // skip : advance x
+
+        // now, directly copy blit it
+        uint32_t data_len = *p>>1 & 0x7; // LEN but for 8bit
+        // TODO partial blit
+        if (x>=0)
+            memcpy(&draw_buffer[x], p+1, data_len);
 
         // advance x
         x += data_len;
