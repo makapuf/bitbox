@@ -8,10 +8,10 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "bitbox.h"
 
 #define MOD_ENABLE_LINEAR_INTERPOLATION
 
-#define BITDEPTH BITBOX_SAMPLE_BITDEPTH // tyically 8
 #define DIVIDER 10                      // Fixed-point mantissa used for integer arithmetic
 
 #define MOD_STEREOSEPARATION 64                       // 0 (max) to 64 (mono) 
@@ -106,46 +106,14 @@ struct Mixer {
     uint8_t channelPanning[CHANNELS];
 };
 
-extern struct Player player;
-extern struct Mod *mod;
-extern struct Mixer mixer;
+// External prototype
+// load and play song. use NULL to stop.
+// this is the only function to call
+void load_mod(const void* modfile); 
 
-
-// External prototypes
-void load_mod(struct Mod *mod);
+// defined but called internally by game_snd_buffer. no need to use it for standard uses.
+extern struct Player mod32_player;
+extern struct Mod *mod32_mod;
+extern struct Mixer mod32_mixer;
 void update_player(void);
 uint16_t gen_sample (uint16_t *buffer);
-
-// Effects
-#define ARPEGGIO              0x0
-#define PORTAMENTOUP          0x1
-#define PORTAMENTODOWN        0x2
-#define TONEPORTAMENTO        0x3
-#define VIBRATO               0x4
-#define PORTAMENTOVOLUMESLIDE 0x5
-#define VIBRATOVOLUMESLIDE    0x6
-#define TREMOLO               0x7
-#define SETCHANNELPANNING     0x8
-#define SETSAMPLEOFFSET       0x9
-#define VOLUMESLIDE           0xA
-#define JUMPTOORDER           0xB
-#define SETVOLUME             0xC
-#define BREAKPATTERNTOROW     0xD
-#define SETSPEED              0xF
-
-// 0xE subset
-#define SETFILTER             0x0
-#define FINEPORTAMENTOUP      0x1
-#define FINEPORTAMENTODOWN    0x2
-#define GLISSANDOCONTROL      0x3
-#define SETVIBRATOWAVEFORM    0x4
-#define SETFINETUNE           0x5
-#define PATTERNLOOP           0x6
-#define SETTREMOLOWAVEFORM    0x7
-#define RETRIGGERNOTE         0x9
-#define FINEVOLUMESLIDEUP     0xA
-#define FINEVOLUMESLIDEDOWN   0xB
-#define NOTECUT               0xC
-#define NOTEDELAY             0xD
-#define PATTERNDELAY          0xE
-#define INVERTLOOP            0xF

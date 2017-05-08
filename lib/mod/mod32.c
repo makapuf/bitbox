@@ -13,9 +13,9 @@
 #include <bitbox.h>
 #include <stdlib.h> // rand
 
-struct Player player;
+struct Player mod32_player;
 
-struct Mod *mod;
+const struct Mod *mod;
 
 // struct soundBuffer SoundBuffer;
 struct Mixer mixer;
@@ -23,6 +23,41 @@ struct Mixer mixer;
 extern FIL file;
 
 #define min(X,Y) ( (X) < (Y) ? (X) : (Y) )
+
+
+// Effects
+#define ARPEGGIO              0x0
+#define PORTAMENTOUP          0x1
+#define PORTAMENTODOWN        0x2
+#define TONEPORTAMENTO        0x3
+#define VIBRATO               0x4
+#define PORTAMENTOVOLUMESLIDE 0x5
+#define VIBRATOVOLUMESLIDE    0x6
+#define TREMOLO               0x7
+#define SETCHANNELPANNING     0x8
+#define SETSAMPLEOFFSET       0x9
+#define VOLUMESLIDE           0xA
+#define JUMPTOORDER           0xB
+#define SETVOLUME             0xC
+#define BREAKPATTERNTOROW     0xD
+#define SETSPEED              0xF
+
+// 0xE subset
+#define SETFILTER             0x0
+#define FINEPORTAMENTOUP      0x1
+#define FINEPORTAMENTODOWN    0x2
+#define GLISSANDOCONTROL      0x3
+#define SETVIBRATOWAVEFORM    0x4
+#define SETFINETUNE           0x5
+#define PATTERNLOOP           0x6
+#define SETTREMOLOWAVEFORM    0x7
+#define RETRIGGERNOTE         0x9
+#define FINEVOLUMESLIDEUP     0xA
+#define FINEVOLUMESLIDEDOWN   0xB
+#define NOTECUT               0xC
+#define NOTEDELAY             0xD
+#define PATTERNDELAY          0xE
+#define INVERTLOOP            0xF
 
 
 // Sorted Amiga periods
@@ -76,33 +111,33 @@ const uint8_t sine[64] = {
 // loads a header
 void loadHeader() {
     // get number of patterns
-    player.numberOfPatterns = 0;
+    mod32_player.numberOfPatterns = 0;
     for (int i = 0; i < 128; i++) {
-        if (mod->order[i] > player.numberOfPatterns)
-            player.numberOfPatterns = mod->order[i];
+        if (mod->order[i] > mod32_player.numberOfPatterns)
+            mod32_player.numberOfPatterns = mod->order[i];
     }
-    player.numberOfPatterns++;
+    mod32_player.numberOfPatterns++;
 
     // get nb of channels : CHNx or CHyy or else 4
     if (mod->tag[1] == 'C' && mod->tag[2]=='H') {
         if (mod->tag[3]=='N') {
-            player.numberOfChannels = mod->tag[0] - '0';
+            mod32_player.numberOfChannels = mod->tag[0] - '0';
         } else {
-            player.numberOfChannels = (mod->tag[0] - '0') * 10 + mod->tag[1] - '0';
+            mod32_player.numberOfChannels = (mod->tag[0] - '0') * 10 + mod->tag[1] - '0';
         }
     } else {
-        player.numberOfChannels = 4;
+        mod32_player.numberOfChannels = 4;
     }
     
     // check if enough channels to be played
-    if (player.numberOfChannels > CHANNELS) {
-        player.numberOfChannels=0; // stop playing
+    if (mod32_player.numberOfChannels > CHANNELS) {
+        mod32_player.numberOfChannels=0; // stop playing
         message("Not enough channels to play this song ! Will respectfully crash here.\n");
         die (1,1);
     }
 
     message("loading %s\n",mod->name);
-    message(" * %d patterns %d channels\n",player.numberOfPatterns, player.numberOfChannels );
+    message(" * %d patterns %d channels\n",mod32_player.numberOfPatterns, mod32_player.numberOfChannels );
 }
 
 // conversions from word to len (swap bytes and *2)
@@ -110,7 +145,7 @@ uint16_t h2len(uint16_t n) {return (n&0xff)<<9 | (n>>8)*2;}
 
 // loads the sample definitions
 void loadSamples() {
-    uint32_t fileOffset = sizeof(struct Mod) + player.numberOfPatterns * ROWS * player.numberOfChannels * 4 -1;
+    uint32_t fileOffset = sizeof(struct Mod) + mod32_player.numberOfPatterns * ROWS * mod32_player.numberOfChannels * 4 -1;
 
     for (int i=0; i<SAMPLES; i++) {
         
@@ -142,70 +177,72 @@ void loadSamples() {
 void loadPattern(uint8_t pattern) {
 
     message("loading pattern %d\n",pattern);
-    message("loading at pos %d + %d\n", sizeof(struct Mod),pattern * ROWS  * player.numberOfChannels * 4 );
+    message("loading at pos %d + %d\n", sizeof(struct Mod),pattern * ROWS  * mod32_player.numberOfChannels * 4 );
 
     uint8_t *temp =  (uint8_t *) mod + \
-        sizeof(struct Mod) + pattern * ROWS * player.numberOfChannels * 4;
+        sizeof(struct Mod) + pattern * ROWS * mod32_player.numberOfChannels * 4;
 
     for (int row = 0; row < ROWS; row++) {
-        for (int channel = 0; channel < player.numberOfChannels; channel++) {
-            player.currentPattern.sampleNumber[row][channel] = (temp[0] & 0xF0) + (temp[2] >> 4);
+        for (int channel = 0; channel < mod32_player.numberOfChannels; channel++) {
+            mod32_player.currentPattern.sampleNumber[row][channel] = (temp[0] & 0xF0) + (temp[2] >> 4);
 
             uint16_t amigaPeriod = ( (temp[0] & 0xF) << 8 ) + temp[1];
-            player.currentPattern.note[row][channel] = NONOTE;
+            mod32_player.currentPattern.note[row][channel] = NONOTE;
             // wat is this ? why not keep amigaperiods ? 
             for (int i = 1; i < 37; i++)
                 if (amigaPeriod > amigaPeriods[i * 8] - 3 &&
                     amigaPeriod < amigaPeriods[i * 8] + 3) {
-                    player.currentPattern.note[row][channel] = i * 8;
+                    mod32_player.currentPattern.note[row][channel] = i * 8;
                     break;
                 }
 
             #if 0 // display pattern
-                int note = player.currentPattern.note[row][channel];
-                int sample = player.currentPattern.sampleNumber[row][channel];
+                int note = mod32_player.currentPattern.note[row][channel];
+                int sample = mod32_player.currentPattern.sampleNumber[row][channel];
                 if (note==NONOTE)
                     message ("--    ");
                 else
                     message("%2x[%x] ", note, sample );
             #endif 
 
-            player.currentPattern.effectNumber[row][channel] = temp[2] & 0xF;
-            player.currentPattern.effectParameter[row][channel] = temp[3];
+            mod32_player.currentPattern.effectNumber[row][channel] = temp[2] & 0xF;
+            mod32_player.currentPattern.effectParameter[row][channel] = temp[3];
 
             temp += 4; 
         }
-        // message("\n");
+        #if 0
+        message("\n");
+        #endif 
     }
     message("end pattern\n");
 }
 void portamento(uint8_t channel) {
-    if (player.lastAmigaPeriod[channel] < player.portamentoNote[channel]) {
-        player.lastAmigaPeriod[channel] += player.portamentoSpeed[channel];
-        if (player.lastAmigaPeriod[channel] > player.portamentoNote[channel])
-            player.lastAmigaPeriod[channel] = player.portamentoNote[channel];
+    if (mod32_player.lastAmigaPeriod[channel] < mod32_player.portamentoNote[channel]) {
+        mod32_player.lastAmigaPeriod[channel] += mod32_player.portamentoSpeed[channel];
+        if (mod32_player.lastAmigaPeriod[channel] > mod32_player.portamentoNote[channel])
+            mod32_player.lastAmigaPeriod[channel] = mod32_player.portamentoNote[channel];
     }
-    if (player.lastAmigaPeriod[channel] > player.portamentoNote[channel]) {
-        player.lastAmigaPeriod[channel] -= player.portamentoSpeed[channel];
-        if (player.lastAmigaPeriod[channel] < player.portamentoNote[channel])
-            player.lastAmigaPeriod[channel] = player.portamentoNote[channel];
+    if (mod32_player.lastAmigaPeriod[channel] > mod32_player.portamentoNote[channel]) {
+        mod32_player.lastAmigaPeriod[channel] -= mod32_player.portamentoSpeed[channel];
+        if (mod32_player.lastAmigaPeriod[channel] < mod32_player.portamentoNote[channel])
+            mod32_player.lastAmigaPeriod[channel] = mod32_player.portamentoNote[channel];
     }
-    mixer.channelFrequency[channel] = player.amiga / player.lastAmigaPeriod[channel];
+    mixer.channelFrequency[channel] = mod32_player.amiga / mod32_player.lastAmigaPeriod[channel];
 }
 
 void vibrato(uint8_t channel) {
     uint16_t delta;
     uint16_t temp;
 
-    temp = player.vibratoPos[channel] & 31;
+    temp = mod32_player.vibratoPos[channel] & 31;
 
-    switch(player.waveControl[channel] & 3) {
+    switch(mod32_player.waveControl[channel] & 3) {
         case 0:
             delta = sine[temp];
             break;
         case 1:
             temp <<= 3;
-            if (player.vibratoPos[channel] < 0)
+            if (mod32_player.vibratoPos[channel] < 0)
                 temp = 255 - temp;
             delta = temp;
             break;
@@ -218,31 +255,31 @@ void vibrato(uint8_t channel) {
             break;
     }
 
-    delta *= player.vibratoDepth[channel];
+    delta *= mod32_player.vibratoDepth[channel];
     delta >>= 7;
 
-    if (player.vibratoPos[channel] >= 0)
-        mixer.channelFrequency[channel] = player.amiga / (player.lastAmigaPeriod[channel] + delta);
+    if (mod32_player.vibratoPos[channel] >= 0)
+        mixer.channelFrequency[channel] = mod32_player.amiga / (mod32_player.lastAmigaPeriod[channel] + delta);
     else
-        mixer.channelFrequency[channel] = player.amiga / (player.lastAmigaPeriod[channel] - delta);
+        mixer.channelFrequency[channel] = mod32_player.amiga / (mod32_player.lastAmigaPeriod[channel] - delta);
 
-    player.vibratoPos[channel] += player.vibratoSpeed[channel];
-    if (player.vibratoPos[channel] > 31) player.vibratoPos[channel] -= 64;
+    mod32_player.vibratoPos[channel] += mod32_player.vibratoSpeed[channel];
+    if (mod32_player.vibratoPos[channel] > 31) mod32_player.vibratoPos[channel] -= 64;
 }
 
 void tremolo(uint8_t channel) {
     uint16_t delta;
     uint16_t temp;
 
-    temp = player.tremoloPos[channel] & 31;
+    temp = mod32_player.tremoloPos[channel] & 31;
 
-    switch(player.waveControl[channel] & 3) {
+    switch(mod32_player.waveControl[channel] & 3) {
         case 0:
             delta = sine[temp];
             break;
         case 1:
             temp <<= 3;
-            if (player.tremoloPos[channel] < 0)
+            if (mod32_player.tremoloPos[channel] < 0)
                 temp = 255 - temp;
             delta = temp;
             break;
@@ -255,76 +292,76 @@ void tremolo(uint8_t channel) {
             break;
     }
 
-    delta *= player.tremoloDepth[channel];
+    delta *= mod32_player.tremoloDepth[channel];
     delta >>= 6;
 
-    if (player.tremoloPos[channel] >= 0) {
-        if (player.volume[channel] + delta > 64) delta = 64 - player.volume[channel];
-        mixer.channelVolume[channel] = player.volume[channel] + delta;
+    if (mod32_player.tremoloPos[channel] >= 0) {
+        if (mod32_player.volume[channel] + delta > 64) delta = 64 - mod32_player.volume[channel];
+        mixer.channelVolume[channel] = mod32_player.volume[channel] + delta;
     } else {
-        if (player.volume[channel] - delta < 0) delta = player.volume[channel];
-        mixer.channelVolume[channel] = player.volume[channel] - delta;
+        if (mod32_player.volume[channel] - delta < 0) delta = mod32_player.volume[channel];
+        mixer.channelVolume[channel] = mod32_player.volume[channel] - delta;
     }
 
-    player.tremoloPos[channel] += player.tremoloSpeed[channel];
-    if (player.tremoloPos[channel] > 31) player.tremoloPos[channel] -= 64;
+    mod32_player.tremoloPos[channel] += mod32_player.tremoloSpeed[channel];
+    if (mod32_player.tremoloPos[channel] > 31) mod32_player.tremoloPos[channel] -= 64;
 }
 
 void processRow() 
 {
-    player.lastRow = player.row++;
+    mod32_player.lastRow = mod32_player.row++;
     bool jumpFlag = false;
     bool breakFlag = false;
-    for (int channel = 0; channel < player.numberOfChannels; channel++) {
+    for (int channel = 0; channel < mod32_player.numberOfChannels; channel++) {
 
-        uint8_t sampleNumber = player.currentPattern.sampleNumber[player.lastRow][channel];
-        uint16_t note = player.currentPattern.note[player.lastRow][channel];
+        uint8_t sampleNumber = mod32_player.currentPattern.sampleNumber[mod32_player.lastRow][channel];
+        uint16_t note = mod32_player.currentPattern.note[mod32_player.lastRow][channel];
 
-        uint8_t effectNumber = player.currentPattern.effectNumber[player.lastRow][channel];
-        uint8_t effectParameter = player.currentPattern.effectParameter[player.lastRow][channel];
+        uint8_t effectNumber = mod32_player.currentPattern.effectNumber[mod32_player.lastRow][channel];
+        uint8_t effectParameter = mod32_player.currentPattern.effectParameter[mod32_player.lastRow][channel];
         uint8_t effectParameterX = effectParameter >> 4;
         uint8_t effectParameterY = effectParameter & 0xF;
 
         uint16_t sampleOffset = 0;
 
         if (sampleNumber) {
-            player.lastSampleNumber[channel] = sampleNumber - 1; // FIXME FIXME
+            mod32_player.lastSampleNumber[channel] = sampleNumber - 1; 
             if ( !(effectParameter == 0xE && effectParameterX == NOTEDELAY) )
-                player.volume[channel] = mod->samples[player.lastSampleNumber[channel]].volume;
+                mod32_player.volume[channel] = mod->samples[mod32_player.lastSampleNumber[channel]].volume;
         }
 
         if (note != NONOTE) {
-            player.lastNote[channel] = note;
-            player.amigaPeriod[channel] = amigaPeriods[note + mod->samples[player.lastSampleNumber[channel]].fineTune];
+            mod32_player.lastNote[channel] = note;
+            mod32_player.amigaPeriod[channel] = amigaPeriods[note + mod->samples[mod32_player.lastSampleNumber[channel]].fineTune];
             // DEBUG
-            // message("channel:%d note : %x sample %d finetune : %d note period: %d\n",channel, note, player.lastSampleNumber[channel], mod->samples[player.lastSampleNumber[channel]].fineTune,amigaPeriods[note] );
+            // message("channel:%d note : %x sample %d finetune : %d note period: %d\n",channel, note, mod32_player.lastSampleNumber[channel], mod->samples[mod32_player.lastSampleNumber[channel]].fineTune,amigaPeriods[note] );
 
             if (effectNumber != TONEPORTAMENTO && effectNumber != PORTAMENTOVOLUMESLIDE)
-                player.lastAmigaPeriod[channel] = player.amigaPeriod[channel];
+                mod32_player.lastAmigaPeriod[channel] = mod32_player.amigaPeriod[channel];
 
-            if ( !(player.waveControl[channel] & 0x80) ) player.vibratoPos[channel] = 0;
-            if ( !(player.waveControl[channel] & 0x08) ) player.tremoloPos[channel] = 0;
+            if ( !(mod32_player.waveControl[channel] & 0x80) ) mod32_player.vibratoPos[channel] = 0;
+            if ( !(mod32_player.waveControl[channel] & 0x08) ) mod32_player.tremoloPos[channel] = 0;
         }
         switch(effectNumber) {
             case TONEPORTAMENTO:
-                if (effectParameter) player.portamentoSpeed[channel] = effectParameter;
-                player.portamentoNote[channel] = player.amigaPeriod[channel];
+                if (effectParameter) mod32_player.portamentoSpeed[channel] = effectParameter;
+                mod32_player.portamentoNote[channel] = mod32_player.amigaPeriod[channel];
                 note = NONOTE;
                 break;
 
             case VIBRATO:
-                if (effectParameterX) player.vibratoSpeed[channel] = effectParameterX;
-                if (effectParameterY) player.vibratoDepth[channel] = effectParameterY;
+                if (effectParameterX) mod32_player.vibratoSpeed[channel] = effectParameterX;
+                if (effectParameterY) mod32_player.vibratoDepth[channel] = effectParameterY;
                 break;
 
             case PORTAMENTOVOLUMESLIDE:
-                player.portamentoNote[channel] = player.amigaPeriod[channel];
+                mod32_player.portamentoNote[channel] = mod32_player.amigaPeriod[channel];
                 note = NONOTE;
                 break;
 
             case TREMOLO:
-                if (effectParameterX) player.tremoloSpeed[channel] = effectParameterX;
-                if (effectParameterY) player.tremoloDepth[channel] = effectParameterY;
+                if (effectParameterX) mod32_player.tremoloSpeed[channel] = effectParameterX;
+                if (effectParameterY) mod32_player.tremoloDepth[channel] = effectParameterY;
                 break;
 
             case SETCHANNELPANNING:
@@ -333,32 +370,32 @@ void processRow()
 
             case SETSAMPLEOFFSET:
                 sampleOffset = effectParameter << 8;
-                int samplelen = h2len(mod->samples[player.lastSampleNumber[channel]].length);
+                int samplelen = h2len(mod->samples[mod32_player.lastSampleNumber[channel]].length);
                 if (sampleOffset > samplelen) 
                     sampleOffset = samplelen;
                 break;
 
             case JUMPTOORDER:
-                player.orderIndex = effectParameter;
-                if (player.orderIndex >= mod->songLength)
-                    player.orderIndex = 0;
-                player.row = 0;
+                mod32_player.orderIndex = effectParameter;
+                if (mod32_player.orderIndex >= mod->songLength)
+                    mod32_player.orderIndex = 0;
+                mod32_player.row = 0;
                 jumpFlag = true;
                 break;
 
             case SETVOLUME:
-                if (effectParameter > 64) player.volume[channel] = 64;
-                else player.volume[channel] = effectParameter;
+                if (effectParameter > 64) mod32_player.volume[channel] = 64;
+                else mod32_player.volume[channel] = effectParameter;
                 break;
 
             case BREAKPATTERNTOROW:
-                player.row = effectParameterX * 10 + effectParameterY;
-                if (player.row >= ROWS)
-                    player.row = 0;
+                mod32_player.row = effectParameterX * 10 + effectParameterY;
+                if (mod32_player.row >= ROWS)
+                    mod32_player.row = 0;
                 if (!jumpFlag && !breakFlag) {
-                    player.orderIndex++;
-                    if (player.orderIndex >= mod->songLength)
-                        player.orderIndex = 0;
+                    mod32_player.orderIndex++;
+                    if (mod32_player.orderIndex >= mod->songLength)
+                        mod32_player.orderIndex = 0;
                 }
                 breakFlag = true;
                 break;
@@ -366,49 +403,49 @@ void processRow()
             case 0xE:
                 switch(effectParameterX) {
                     case FINEPORTAMENTOUP:
-                        player.lastAmigaPeriod[channel] -= effectParameterY;
+                        mod32_player.lastAmigaPeriod[channel] -= effectParameterY;
                         break;
 
                     case FINEPORTAMENTODOWN:
-                        player.lastAmigaPeriod[channel] += effectParameterY;
+                        mod32_player.lastAmigaPeriod[channel] += effectParameterY;
                         break;
 
                     case SETVIBRATOWAVEFORM:
-                        player.waveControl[channel] &= 0xF0;
-                        player.waveControl[channel] |= effectParameterY;
+                        mod32_player.waveControl[channel] &= 0xF0;
+                        mod32_player.waveControl[channel] |= effectParameterY;
                         break;
-
+/* // Disabled finetune so that mod can be a const
                     case SETFINETUNE:
-                        mod->samples[player.lastSampleNumber[channel]].fineTune = effectParameterY;
-                        if (mod->samples[player.lastSampleNumber[channel]].fineTune > 7)
-                            mod->samples[player.lastSampleNumber[channel]].fineTune -= 16;
+                        mod->samples[mod32_player.lastSampleNumber[channel]].fineTune = effectParameterY;
+                        if (mod->samples[mod32_player.lastSampleNumber[channel]].fineTune > 7)
+                            mod->samples[mod32_player.lastSampleNumber[channel]].fineTune -= 16;
                         break;
-
+*/
                     case PATTERNLOOP:
                         if (effectParameterY) {
-                            if (player.patternLoopCount[channel])
-                                player.patternLoopCount[channel]--;
+                            if (mod32_player.patternLoopCount[channel])
+                                mod32_player.patternLoopCount[channel]--;
                             else
-                                player.patternLoopCount[channel] = effectParameterY;
-                            if (player.patternLoopCount[channel])
-                                player.row = player.patternLoopRow[channel] - 1;
+                                mod32_player.patternLoopCount[channel] = effectParameterY;
+                            if (mod32_player.patternLoopCount[channel])
+                                mod32_player.row = mod32_player.patternLoopRow[channel] - 1;
                         } else
-                            player.patternLoopRow[channel] = player.row;
+                            mod32_player.patternLoopRow[channel] = mod32_player.row;
                         break;
 
                     case SETTREMOLOWAVEFORM:
-                        player.waveControl[channel] &= 0xF;
-                        player.waveControl[channel] |= effectParameterY << 4;
+                        mod32_player.waveControl[channel] &= 0xF;
+                        mod32_player.waveControl[channel] |= effectParameterY << 4;
                         break;
 
                     case FINEVOLUMESLIDEUP:
-                        player.volume[channel] += effectParameterY;
-                        if (player.volume[channel] > 64) player.volume[channel] = 64;
+                        mod32_player.volume[channel] += effectParameterY;
+                        if (mod32_player.volume[channel] > 64) mod32_player.volume[channel] = 64;
                         break;
 
                     case FINEVOLUMESLIDEDOWN:
-                        player.volume[channel] -= effectParameterY;
-                        if (player.volume[channel] < 0) player.volume[channel] = 0;
+                        mod32_player.volume[channel] -= effectParameterY;
+                        if (mod32_player.volume[channel] < 0) mod32_player.volume[channel] = 0;
                         break;
 
                     case NOTECUT:
@@ -416,7 +453,7 @@ void processRow()
                         break;
 
                     case PATTERNDELAY:
-                        player.patternDelay = effectParameterY;
+                        mod32_player.patternDelay = effectParameterY;
                         break;
 
                     case INVERTLOOP:
@@ -427,29 +464,29 @@ void processRow()
 
             case SETSPEED:
                 if (effectParameter < 0x20)
-                    player.speed = effectParameter;
+                    mod32_player.speed = effectParameter;
                 else
-                    player.samplesPerTick = BITBOX_SAMPLERATE / (2 * effectParameter / 5);
+                    mod32_player.samplesPerTick = BITBOX_SAMPLERATE / (2 * effectParameter / 5);
                 break;
         }
 
         // must recalculate channelfrequency ?
         if ( note != NONOTE || ( 
-            player.lastAmigaPeriod[channel] &&
+            mod32_player.lastAmigaPeriod[channel] &&
             effectNumber != VIBRATO && 
             effectNumber != VIBRATOVOLUMESLIDE &&
             !(effectNumber == 0xE && effectParameterX == NOTEDELAY) ) 
             )
-            mixer.channelFrequency[channel] = player.amiga / player.lastAmigaPeriod[channel];
+            mixer.channelFrequency[channel] = mod32_player.amiga / mod32_player.lastAmigaPeriod[channel];
 
         if (note != NONOTE)
             mixer.channelSampleOffset[channel] = sampleOffset << DIVIDER;
 
         if (sampleNumber)
-            mixer.channelSampleNumber[channel] = player.lastSampleNumber[channel];
+            mixer.channelSampleNumber[channel] = mod32_player.lastSampleNumber[channel];
 
         if (effectNumber != TREMOLO)
-            mixer.channelVolume[channel] = player.volume[channel];
+            mixer.channelVolume[channel] = mod32_player.volume[channel];
 
     }
 }
@@ -458,45 +495,45 @@ void processRow()
 void processTick() {
     uint16_t tempNote;
 
-    for (uint8_t channel = 0; channel < player.numberOfChannels; channel++) {
+    for (uint8_t channel = 0; channel < mod32_player.numberOfChannels; channel++) {
 
-        if (player.lastAmigaPeriod[channel]) {
+        if (mod32_player.lastAmigaPeriod[channel]) {
 
-            uint8_t sampleNumber = player.currentPattern.sampleNumber[player.lastRow][channel];
-            uint16_t note = player.currentPattern.note[player.lastRow][channel];
-            uint8_t effectNumber = player.currentPattern.effectNumber[player.lastRow][channel];
-            uint8_t effectParameter = player.currentPattern.effectParameter[player.lastRow][channel];
+            uint8_t sampleNumber = mod32_player.currentPattern.sampleNumber[mod32_player.lastRow][channel];
+            uint16_t note = mod32_player.currentPattern.note[mod32_player.lastRow][channel];
+            uint8_t effectNumber = mod32_player.currentPattern.effectNumber[mod32_player.lastRow][channel];
+            uint8_t effectParameter = mod32_player.currentPattern.effectParameter[mod32_player.lastRow][channel];
             uint8_t effectParameterX = effectParameter >> 4;
             uint8_t effectParameterY = effectParameter & 0xF;
             
             switch(effectNumber) {
                 case ARPEGGIO:
                     if (effectParameter)
-                        switch(player.tick % 3) {
+                        switch(mod32_player.tick % 3) {
                             case 0:
-                                mixer.channelFrequency[channel] = player.amiga / player.lastAmigaPeriod[channel];
+                                mixer.channelFrequency[channel] = mod32_player.amiga / mod32_player.lastAmigaPeriod[channel];
                                 break;
                             case 1:
-                                tempNote = player.lastNote[channel] + effectParameterX * 8 + mod->samples[player.lastSampleNumber[channel]].fineTune;
-                                if (tempNote < 296) mixer.channelFrequency[channel] = player.amiga / amigaPeriods[tempNote];
+                                tempNote = mod32_player.lastNote[channel] + effectParameterX * 8 + mod->samples[mod32_player.lastSampleNumber[channel]].fineTune;
+                                if (tempNote < 296) mixer.channelFrequency[channel] = mod32_player.amiga / amigaPeriods[tempNote];
                                 break;
                             case 2:
-                                tempNote = player.lastNote[channel] + effectParameterY * 8 + mod->samples[player.lastSampleNumber[channel]].fineTune;
-                                if (tempNote < 296) mixer.channelFrequency[channel] = player.amiga / amigaPeriods[tempNote];
+                                tempNote = mod32_player.lastNote[channel] + effectParameterY * 8 + mod->samples[mod32_player.lastSampleNumber[channel]].fineTune;
+                                if (tempNote < 296) mixer.channelFrequency[channel] = mod32_player.amiga / amigaPeriods[tempNote];
                                 break;
                         }
                     break;
 
                 case PORTAMENTOUP:
-                    player.lastAmigaPeriod[channel] -= effectParameter;
-                    if (player.lastAmigaPeriod[channel] < 113) player.lastAmigaPeriod[channel] = 113;
-                    mixer.channelFrequency[channel] = player.amiga / player.lastAmigaPeriod[channel];
+                    mod32_player.lastAmigaPeriod[channel] -= effectParameter;
+                    if (mod32_player.lastAmigaPeriod[channel] < 113) mod32_player.lastAmigaPeriod[channel] = 113;
+                    mixer.channelFrequency[channel] = mod32_player.amiga / mod32_player.lastAmigaPeriod[channel];
                     break;
 
                 case PORTAMENTODOWN:
-                    player.lastAmigaPeriod[channel] += effectParameter;
-                    if (player.lastAmigaPeriod[channel] > 856) player.lastAmigaPeriod[channel] = 856;
-                    mixer.channelFrequency[channel] = player.amiga / player.lastAmigaPeriod[channel];
+                    mod32_player.lastAmigaPeriod[channel] += effectParameter;
+                    if (mod32_player.lastAmigaPeriod[channel] > 856) mod32_player.lastAmigaPeriod[channel] = 856;
+                    mixer.channelFrequency[channel] = mod32_player.amiga / mod32_player.lastAmigaPeriod[channel];
                     break;
 
                 case TONEPORTAMENTO:
@@ -509,18 +546,18 @@ void processTick() {
 
                 case PORTAMENTOVOLUMESLIDE:
                     portamento(channel);
-                    player.volume[channel] += effectParameterX - effectParameterY;
-                    if (player.volume[channel] < 0) player.volume[channel] = 0;
-                    else if (player.volume[channel] > 64) player.volume[channel] = 64;
-                    mixer.channelVolume[channel] = player.volume[channel];
+                    mod32_player.volume[channel] += effectParameterX - effectParameterY;
+                    if (mod32_player.volume[channel] < 0) mod32_player.volume[channel] = 0;
+                    else if (mod32_player.volume[channel] > 64) mod32_player.volume[channel] = 64;
+                    mixer.channelVolume[channel] = mod32_player.volume[channel];
                     break;
 
                 case VIBRATOVOLUMESLIDE:
                     vibrato(channel);
-                    player.volume[channel] += effectParameterX - effectParameterY;
-                    if (player.volume[channel] < 0) player.volume[channel] = 0;
-                    else if (player.volume[channel] > 64) player.volume[channel] = 64;
-                    mixer.channelVolume[channel] = player.volume[channel];
+                    mod32_player.volume[channel] += effectParameterX - effectParameterY;
+                    if (mod32_player.volume[channel] < 0) mod32_player.volume[channel] = 0;
+                    else if (mod32_player.volume[channel] > 64) mod32_player.volume[channel] = 64;
+                    mixer.channelVolume[channel] = mod32_player.volume[channel];
                     break;
 
                 case TREMOLO:
@@ -528,32 +565,32 @@ void processTick() {
                     break;
 
                 case VOLUMESLIDE:
-                    player.volume[channel] += effectParameterX - effectParameterY;
-                    if (player.volume[channel] < 0) player.volume[channel] = 0;
-                    else if (player.volume[channel] > 64) player.volume[channel] = 64;
-                    mixer.channelVolume[channel] = player.volume[channel];
+                    mod32_player.volume[channel] += effectParameterX - effectParameterY;
+                    if (mod32_player.volume[channel] < 0) mod32_player.volume[channel] = 0;
+                    else if (mod32_player.volume[channel] > 64) mod32_player.volume[channel] = 64;
+                    mixer.channelVolume[channel] = mod32_player.volume[channel];
                     break;
 
                 case 0xE:
                     switch(effectParameterX) {
                         case RETRIGGERNOTE:
                             if (!effectParameterY) break;
-                            if ( !(player.tick % effectParameterY) ) {
+                            if ( !(mod32_player.tick % effectParameterY) ) {
                                 mixer.channelSampleOffset[channel] = 0;
                             }
                             break;
 
                         case NOTECUT:
-                            if (player.tick == effectParameterY)
-                                mixer.channelVolume[channel] = player.volume[channel] = 0;
+                            if (mod32_player.tick == effectParameterY)
+                                mixer.channelVolume[channel] = mod32_player.volume[channel] = 0;
                             break;
 
                         case NOTEDELAY:
-                            if (player.tick == effectParameterY) {
-                                if (sampleNumber) player.volume[channel] = mod->samples[player.lastSampleNumber[channel]].volume;
+                            if (mod32_player.tick == effectParameterY) {
+                                if (sampleNumber) mod32_player.volume[channel] = mod->samples[mod32_player.lastSampleNumber[channel]].volume;
                                 if (note != NONOTE) mixer.channelSampleOffset[channel] = 0;
-                                mixer.channelFrequency[channel] = player.amiga / player.lastAmigaPeriod[channel];
-                                mixer.channelVolume[channel] = player.volume[channel];
+                                mixer.channelFrequency[channel] = mod32_player.amiga / mod32_player.lastAmigaPeriod[channel];
+                                mixer.channelVolume[channel] = mod32_player.volume[channel];
                             }
                             break;
                     }
@@ -565,35 +602,35 @@ void processTick() {
 }
 
 
-/* updates the player state : tick, rows or patterns */
-void update_player() 
+/* updates the mod32_player state : tick, rows or patterns */
+void update_mod32_player() 
 {
-    if (player.tick == player.speed) {
-        player.tick = 0;
+    if (mod32_player.tick == mod32_player.speed) {
+        mod32_player.tick = 0;
 
-        if (player.row == ROWS) {
-            player.orderIndex++;
-            if (player.orderIndex == mod->songLength)
-                player.orderIndex = 0;
-            player.row = 0;
+        if (mod32_player.row == ROWS) {
+            mod32_player.orderIndex++;
+            if (mod32_player.orderIndex == mod->songLength)
+                mod32_player.orderIndex = 0;
+            mod32_player.row = 0;
         }
 
-        if (player.patternDelay) {
-            player.patternDelay--;
+        if (mod32_player.patternDelay) {
+            mod32_player.patternDelay--;
         } else {
-            if (player.orderIndex != player.oldOrderIndex)
-                loadPattern(mod->order[player.orderIndex]);
-            player.oldOrderIndex = player.orderIndex;
+            if (mod32_player.orderIndex != mod32_player.oldOrderIndex)
+                loadPattern(mod->order[mod32_player.orderIndex]);
+            mod32_player.oldOrderIndex = mod32_player.orderIndex;
             processRow();
         }
 
     } else {
         processTick();
     }
-    player.tick++;
+    mod32_player.tick++;
 }
 
-/* generates a sample from the current player status */
+/* generates a sample from the current mod32_player status */
 uint16_t gen_sample(uint16_t *buffer) 
 {
     int16_t sumL = 0;
@@ -601,7 +638,7 @@ uint16_t gen_sample(uint16_t *buffer)
     int16_t sumR = 0;
     #endif
 
-    for (int channel = 0; channel < player.numberOfChannels; channel++) {
+    for (int channel = 0; channel < mod32_player.numberOfChannels; channel++) {
         // if (channel != 3) continue; // FIXME SOLO TRACK
 
         const int sample_id = mixer.channelSampleNumber[channel]; // shortcut
@@ -649,7 +686,7 @@ uint16_t gen_sample(uint16_t *buffer)
         #endif 
 
         // Upscale to BITDEPTH
-        out <<= BITDEPTH - 8;
+        out <<= BITBOX_SAMPLE_BITDEPTH - 8;
 
         // Channel volume
         out = out * mixer.channelVolume[channel] >> 6;
@@ -667,46 +704,46 @@ uint16_t gen_sample(uint16_t *buffer)
     uint16_t sample; // left<< 8 | right
 
     #if MOD_STEREOSEPARATION!=64
-    sumL /= player.numberOfChannels;
-    sumR /= player.numberOfChannels;
-    sample = ( sumL + (1 << (BITDEPTH-1)) )<<8 | ( ( sumR+ (1 << (BITDEPTH-1)) ) );
+    sumL /= mod32_player.numberOfChannels;
+    sumR /= mod32_player.numberOfChannels;
+    sample = ( sumL + (1 << (BITBOX_SAMPLE_BITDEPTH-1)) )<<8 | ( ( sumR+ (1 << (BITBOX_SAMPLE_BITDEPTH-1)) ) );
     #else // mono take left channel only
-    sample = ((sumL / player.numberOfChannels)+128) * 0x0101;
+    sample = ((sumL / mod32_player.numberOfChannels)+128) * 0x0101;
     #endif 
 
     return sample;
 }
 
 
-void player_reset(void)
+void mod32_player_reset(void)
 {
-    player.amiga = AMIGA;
-    player.samplesPerTick = BITBOX_SAMPLERATE / (2 * 125 / 5); // Hz = 2 * BPM / 5
-    player.speed = 6;
-    player.tick = player.speed;
-    player.row = 0;
+    mod32_player.amiga = AMIGA;
+    mod32_player.samplesPerTick = BITBOX_SAMPLERATE / (2 * 125 / 5); // Hz = 2 * BPM / 5
+    mod32_player.speed = 6;
+    mod32_player.tick = mod32_player.speed;
+    mod32_player.row = 0;
 
-    player.orderIndex = 0;
-    player.oldOrderIndex = 0xFF;
-    player.patternDelay = 0;
+    mod32_player.orderIndex = 0;
+    mod32_player.oldOrderIndex = 0xFF;
+    mod32_player.patternDelay = 0;
 
 
-    // reset player
-    for (uint8_t channel = 0; channel < player.numberOfChannels; channel++) {
-        player.patternLoopCount[channel] = 0;
-        player.patternLoopRow[channel] = 0;
+    // reset mod32_player
+    for (uint8_t channel = 0; channel < mod32_player.numberOfChannels; channel++) {
+        mod32_player.patternLoopCount[channel] = 0;
+        mod32_player.patternLoopRow[channel] = 0;
 
-        player.lastAmigaPeriod[channel] = 0;
+        mod32_player.lastAmigaPeriod[channel] = 0;
 
-        player.waveControl[channel] = 0;
+        mod32_player.waveControl[channel] = 0;
 
-        player.vibratoSpeed[channel] = 0;
-        player.vibratoDepth[channel] = 0;
-        player.vibratoPos[channel] = 0;
+        mod32_player.vibratoSpeed[channel] = 0;
+        mod32_player.vibratoDepth[channel] = 0;
+        mod32_player.vibratoPos[channel] = 0;
 
-        player.tremoloSpeed[channel] = 0;
-        player.tremoloDepth[channel] = 0;
-        player.tremoloPos[channel] = 0;
+        mod32_player.tremoloSpeed[channel] = 0;
+        mod32_player.tremoloDepth[channel] = 0;
+        mod32_player.tremoloPos[channel] = 0;
 
         mixer.channelSampleOffset[channel] = 0;
         mixer.channelFrequency[channel] = 0;
@@ -722,13 +759,32 @@ void player_reset(void)
     }
 }
 
-void load_mod(struct Mod *ldmod) 
+void load_mod(const void* modfile) 
 {
-    mod = ldmod; // global
+    if (modfile) {
+        mod = (const struct Mod*) modfile; // global
+        loadHeader();
+        loadSamples();
+    }
 
-    loadHeader();
-    loadSamples();
-
-    player_reset();
+    mod32_player_reset();
 }
 
+
+void game_snd_buffer (uint16_t *stream, int size)
+{
+    static int sample_in_tick;
+    if (!mod32_player.numberOfChannels)
+        return;
+
+    for (int i=0;i<size; i++) {
+        // song status / change updating        
+        if (sample_in_tick++==mod32_player.samplesPerTick) /// ROW DELETE ME !
+        {
+            update_mod32_player();
+            sample_in_tick=0;
+        }
+        
+        stream[i] = gen_sample(stream); 
+    }
+} 

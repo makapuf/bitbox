@@ -9,16 +9,18 @@
 
 #include "lib/mod/mod32.h"
 
-int sample_in_tick;
 
-void loadNextFile() {
-	if (mod==(struct Mod*) data_sotb1_mod){
-		load_mod((struct Mod*) data_cocopops_mod);
-		set_led(0);
+void loadNextFile() 
+{
+	static int nb=0;
+	if (nb){
+		load_mod(data_cocopops_mod);
 	} else {
-		load_mod((struct Mod*) data_sotb1_mod);
-		set_led(1);
+		load_mod(data_sotb1_mod);	
 	}
+	
+	nb = 1-nb;
+	set_led(nb);
 
 	message("Switched to mod, song name: [%s]\n",mod->name);
 }
@@ -42,20 +44,4 @@ void game_frame() {
 
 void graph_line() {}
 
-void game_snd_buffer(uint16_t *stream, int size)
-{
-	if (!player.numberOfChannels)
-		return;
 
-	for (int i=0;i<size; i++) {
-
-		// song status / change updating		
-		if (sample_in_tick++==player.samplesPerTick) /// ROW DELETE ME !
-		{
-			update_player();
-			sample_in_tick=0;
-		}
-		
-		stream[i] = gen_sample(stream); 
-	}
-} 
