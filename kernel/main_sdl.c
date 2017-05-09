@@ -527,29 +527,21 @@ static bool handle_events()
                 if (sdl_event.jaxis.value >> 8 == 0) {
                     sdl_gamepad_buttons[sdl_event.jbutton.which] &= ~(gamepad_left|gamepad_right);
                 } else if (sdl_event.jaxis.value > 0) {
-                    //sdl_gamepad_buttons[sdl_event.jbutton.which] &= ~gamepad_left;
                     sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_right;
                 } else {
-                    //sdl_gamepad_buttons[sdl_event.jbutton.which] &= ~gamepad_right;
                     sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_left;
                 }
-                /* doesn't do anything:
                 gamepad_x[sdl_event.jbutton.which]=sdl_event.jaxis.value>>8;
-                */
             } else {
                 /* Y axis*/
                 if (sdl_event.jaxis.value >> 8 == 0) {
                     sdl_gamepad_buttons[sdl_event.jbutton.which] &= ~(gamepad_down|gamepad_up);
                 } else if (sdl_event.jaxis.value > 0) {
-                    //sdl_gamepad_buttons[sdl_event.jbutton.which] &= ~gamepad_up;
                     sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_down;
                 } else {
-                    //sdl_gamepad_buttons[sdl_event.jbutton.which] &= ~gamepad_down;
                     sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_up;
                 }
-                /* doesn't do anything:
                 gamepad_y[sdl_event.jbutton.which]=sdl_event.jaxis.value>>8;
-                */
             }
             break;
 
