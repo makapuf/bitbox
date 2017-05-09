@@ -36,7 +36,8 @@ INCLUDES=-I$(BITBOX)/kernel/ \
 # language specific (not specific to target)
 C_OPTS = -std=c99 -g -Wall -ffast-math -fsingle-precision-constant \
     -fsigned-char -ffunction-sections -fdata-sections -funroll-loops \
-    -fomit-frame-pointer -flto
+    -fomit-frame-pointer 
+    #\-flto 
 
 LD_FLAGS = -Wl,--gc-sections
 
