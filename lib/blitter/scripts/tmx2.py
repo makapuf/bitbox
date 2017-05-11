@@ -41,7 +41,7 @@ args = parser.parse_args()
 PALETTE = os.path.dirname(__file__)+'/pal_micro.png'
 
 def error(msg) :
-    print msg
+    print >>sys.stderr,msg
     sys.exit(1)
 
 class Sprite : 
@@ -147,10 +147,12 @@ class Map :
     def load_map(self) : 
         self.tilebools={}
         self.layers = self.root.findall("layer")
+        tileset_src = self.root.find('tileset').find('image').get("source")
+        self.tileset= os.path.splitext(os.path.basename(tileset_src))[0]
 
     # export first tileset as _the_ tileset
-    # XXX define from external (or internal) tileset (reuse)
-    # XXX export tile properties (name at least)
+    # FIXME define from external (or internal) tileset (reuse)
+    # FIXME export tile properties (name at least)
     def export_tileset(self,output_dir) :
         ts = self.root.find('tileset')
 
@@ -173,14 +175,14 @@ class Map :
 
         src = Image.open(abspath(self.file,img)).convert('RGBA')
         if args.micro :
-            src = src.convert('RGB').quantize(palette=Image.open(PALETTE)) # XXX allow 8-bit adaptive palette ?
+            src = src.convert('RGB').quantize(palette=Image.open(PALETTE)) # FIXME allow 8-bit adaptive palette ? custom ?
             pixdata = array.array('B',src.getdata()) # direct output bytes
         else:
             pixdata = array.array('H',(reduce(c) for c in src.getdata())) # keep image in RAM as RGBA tuples.
 
         w,h = src.size
 
-        with open(os.path.join(output_dir,self.name+'.tset'),'wb') as of:
+        with open(os.path.join(output_dir,self.tileset+'.tset'),'wb') as of:
             for tile_y in range(h/tilesize) :
                 for tile_x in range(w/tilesize) :
                     for row in range(tilesize) :
@@ -253,7 +255,7 @@ class Map :
     def print_implementation(self) : 
         print 'const struct MapDef map_%s = {'%self.name
         if self.layers : 
-            print '  .tileset=data_%s_tset,'%self.name
+            print '  .tileset=data_%s_tset,'%self.tileset
             print '  .tilemap_w=%d,'%int(self.root.get('width'))
             print '  .tilemap_h=%d,'%int(self.root.get('height'))
             print '  .tilesize=%d,'%int(self.root.get('tilewidth'))

@@ -41,7 +41,8 @@ for tmxfile in tmxfiles :
 
 	hfile=os.path.join(CPATH,'map_'+basename+'.h')
 	tmapfile = os.path.join(DATAPATH,basename+'.tmap')
-	tsetfile = os.path.join(DATAPATH,basename+'.tset')
+	tset_base =  os.path.splitext(os.path.basename(root.find('tileset').find('image').get("source")))[0]
+	tsetfile = os.path.join(DATAPATH,tset_base+'.tset')
 
 
 	# -- outputs rules
