@@ -31,6 +31,8 @@
 #define WM_TITLE_LED_ON  "Bitbox emulator (*)"
 #define WM_TITLE_LED_OFF "Bitbox emulator"
 
+#define THRESHOLD_HAT 30
+
 /*
    TODO
 
@@ -66,7 +68,7 @@ uint16_t *draw_buffer = mybuffer1+LINE_MARGIN; // volatile ?
 volatile uint16_t gamepad_buttons[2];
 uint16_t kbd_gamepad_buttons;
 uint16_t sdl_gamepad_buttons[2]; // real gamepad read from SDL
-
+bool sdl_gamepad_from_axis[2]; // emulate buttons from gamepad ?
 
 uint32_t vga_line;
 volatile uint32_t vga_frame;
@@ -296,13 +298,23 @@ static void joy_init()
 
     joy_count = SDL_NumJoysticks();
 
-    if (!joy_count)
-        return;
-
     /* Open all joysticks, assignement is in opening order */
     for (i = 0; i < joy_count; i++)
     {
-        SDL_JoystickOpen(i);
+        SDL_Joystick *joy = SDL_JoystickOpen(i);
+
+        if (!quiet) 
+            printf("found Joystick %d : %d axis, %d buttons, %d hats (emu=%d)\n",
+                i,
+                SDL_JoystickNumAxes(joy),
+                SDL_JoystickNumButtons(joy),
+                SDL_JoystickNumHats(joy), 
+                SDL_JoystickNumHats(joy)==0 
+                );
+
+        if (i<2) {
+            sdl_gamepad_from_axis[i]=SDL_JoystickNumHats(joy)==0;
+        }
     }
 
     /* make sure that Joystick sdl_event polling is a go */
@@ -409,7 +421,28 @@ void kbd_emulate_gamepad (void)
 
 }
 
+// emualte hat from axis
+void emulate_joy_hat(void)
+{
+    for (int pad=0;pad<gamepad_max_pads;pad++)
+        if (sdl_gamepad_from_axis[pad]) {
+            // clear movement bits
+            sdl_gamepad_buttons[pad] &= ~(gamepad_up | gamepad_down | gamepad_left | gamepad_right);
 
+            // set according to axis
+            if (gamepad_x[pad]<-THRESHOLD_HAT)
+                sdl_gamepad_buttons[pad] |= gamepad_left;
+            if (gamepad_x[pad]> THRESHOLD_HAT) 
+                sdl_gamepad_buttons[pad] |= gamepad_right;
+
+            if (gamepad_y[pad]<-THRESHOLD_HAT) 
+                    sdl_gamepad_buttons[pad] |= gamepad_up;
+            if (gamepad_y[pad]> THRESHOLD_HAT) 
+                    sdl_gamepad_buttons[pad] |= gamepad_down;
+
+        }
+
+}
 
 
 static bool handle_events()
@@ -802,6 +835,7 @@ int emu_loop (void *_)
         // message processing loop
         done = handle_events();
         kbd_emulate_gamepad();
+        emulate_joy_hat();
         gamepad_buttons[0] = kbd_gamepad_buttons|sdl_gamepad_buttons[0];
         gamepad_buttons[1] = sdl_gamepad_buttons[1];
 
