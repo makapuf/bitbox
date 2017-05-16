@@ -14,6 +14,8 @@ More info on [the development blog](http://bitboxconsole.blogspot.com)
 
 Information can be found on [the project wiki](https://github.com/makapuf/bitbox/wiki)
 
+You can also hop on the mailing list : bitbox-console@googlegroups.com  / https://groups.google.com/forum/#!forum/bitbox-console
+
 Other repos
 =========
 
