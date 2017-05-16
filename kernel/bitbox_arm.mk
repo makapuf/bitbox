@@ -131,7 +131,7 @@ debug: $(NAME)_$(BOARD).bin
 # Build the project for the given target
 
 # using dfu util
-dfu: $(NAME)_$(BOARD).elf
+dfu: $(NAME)_$(BOARD).bin
 	dfu-util -D $< --dfuse-address $(FLASH_START) -a 0
 
 stlink: $(NAME)_$(BOARD).elf
