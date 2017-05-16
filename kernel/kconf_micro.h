@@ -44,7 +44,7 @@
 #define VGA_FPS 55
 #define VGA_PIXELCLOCK 3 // DMA clocks per pixel
 
-#else
+#elif VGA_MODE==320
 
 // Default : 320x240 / 60Hz (default) @ 84MHz
 
@@ -62,8 +62,11 @@
 #define VGA_FPS 60
 #define VGA_PIXELCLOCK 6 // DMA clocks per pixel
 
-#endif
+#else 
 
+#error Incorrect video mode VGA_MODE defined
+
+#endif
 
 // PLL global setup
 // result:84MHz / ahb=84MHz / apb1=42MHz/ USB 48MHz
