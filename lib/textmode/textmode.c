@@ -20,15 +20,21 @@ uint8_t font_cached=0;
 char vram[SCREEN_H][SCREEN_W];
 uint8_t vram_attr[SCREEN_H][SCREEN_W];
 
-uint32_t palette[64][4]; // cache of BG<<16 | FG couples - AA,AB,BA,BB 
+#if VGA_BPP==8
+typedef uint16_t couple_t;
+#else
+typedef uint32_t couple_t;
+#endif
+
+couple_t palette[64][4]; // cache of BG<<16 | FG couples - AA,AB,BA,BB
 
 inline void set_palette(uint8_t pen,uint16_t col, uint16_t bg )
 {
-	uint32_t *lut=&palette[pen&63][0];
-	lut[3] = col<<16|col;
-	lut[2] =  bg<<16|col;
-	lut[1] = col<<16|bg;
-	lut[0] =  bg<<16|bg; 
+	couple_t *lut=&palette[pen&63][0];
+	lut[3] = col<<VGA_BPP|col;
+	lut[2] =  bg<<VGA_BPP|col;
+	lut[1] = col<<VGA_BPP|bg;
+	lut[0] =  bg<<VGA_BPP|bg;
 }
 
 void graph_vsync() {
@@ -39,16 +45,17 @@ void graph_vsync() {
 	}
 }
 
+
 void graph_line() {
 	if (vga_odd) return;
 	
-	uint32_t *dst = (uint32_t*) draw_buffer; // will blit 2 by 2
+	couple_t *dst = (couple_t*) draw_buffer; // will blit 2 by 2
 
 	for (int i=0;i<SCREEN_W;i++) { // column char
 		// draw a character on this line
 		uint8_t p = font_data_cached[(uint8_t) vram[vga_line / FONT_H][i]][vga_line%FONT_H];
 		uint8_t attr = vram_attr[vga_line/FONT_H][i];
-		uint32_t *lut_data = &palette[attr%64][0];
+		couple_t *lut_data = &palette[attr%64][0];
 
 		// draw a character on this line
 		switch(FONT_W) {
@@ -63,6 +70,7 @@ void graph_line() {
 				*dst++ = lut_data[(p>>0) & 0x3];
 		}
 	}
+
 }
 
 
