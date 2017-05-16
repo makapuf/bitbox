@@ -125,7 +125,7 @@ $(NAME)_$(BOARD).elf : $(GAME_C_FILES:%.c=$(BUILD_DIR)/%.o) $(KERNEL:%.c=$(BUILD
 
 # --- Helpers
 
-debug: $(NAME)_$(BOARD).bin
+debug: $(NAME)_$(BOARD).elf
 	arm-none-eabi-gdb $^ --eval-command="target extended-remote :4242"
 
 # Build the project for the given target
@@ -134,7 +134,7 @@ debug: $(NAME)_$(BOARD).bin
 dfu: $(NAME)_$(BOARD).bin
 	dfu-util -D $< --dfuse-address $(FLASH_START) -a 0
 
-stlink: $(NAME)_$(BOARD).elf
+stlink: $(NAME)_$(BOARD).bin
 	st-flash write $^ $(FLASH_START)
 
 # double colon to allow extra cleaning
