@@ -1,5 +1,4 @@
 #testkernel makefile
-NO_SDCARD=1
 NO_AUDIO=1
 
 # set kernel interface to 8 bits. 

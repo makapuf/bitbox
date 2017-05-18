@@ -86,7 +86,7 @@ void game_frame()
 {
 
 	// detect button press (ie change of state)
-	but_state = button_state() || gamepad_buttons[0] || gamepad_buttons[1]; // detect any button (or even d-pad)
+	but_state = button_state() || gamepad_buttons[0] || gamepad_buttons[1] || mouse_buttons; // detect any button (or even d-pad)
 	if (!but_last && but_state) {
 		if (game_title) 
 			new_game();
@@ -128,11 +128,22 @@ void graph_line()
 	// only draw something on even lines if we use a half-mode
 	if (vga_odd) return;
 	
-	// draw background as plain color => degrade ? 
+	// draw background as dithered gradient
 	{
-		uint8_t c=(vga_line*100/VGA_V_PIXELS);
-		uint8_t p=RGB(80+c,80+c,255);
-		memset(draw_buffer,p,VGA_H_PIXELS);
+		uint8_t c=80 + vga_line*100/VGA_V_PIXELS;
+		// dither matrix
+		uint8_t d1 = vga_line%2 ? 0 :16;
+		uint8_t d2 = vga_line%2 ? 24:8;
+		
+		uint8_t p1 = RGB(c+d1,c+d1,255);
+		uint8_t p2 = RGB(c+d2,c+d2,255);
+
+		// blit with words 8 pixels at a time
+		uint32_t w = p1<<24 | p2 <<16 | p1 <<8 | p2;
+		for (int i=0;i<VGA_H_PIXELS/8;++i) {
+			*(uint32_t*)(draw_buffer+i*8)=w;
+			*(uint32_t*)(draw_buffer+i*8+4)=w;
+		}
 	}
 
 	// draw columns as color bars
