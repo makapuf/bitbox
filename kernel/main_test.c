@@ -250,7 +250,7 @@ void message (const char *fmt, ...)
 void die(int where, int cause)
 {
     printf("ERROR : dying doing %d at  %d.\n",cause, where);
-    exit(0);
+    exit(1);
 }
 
 int main ( int argc, char** argv )
