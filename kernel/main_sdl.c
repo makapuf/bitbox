@@ -221,8 +221,7 @@ static void __attribute__ ((optimize("-O3"))) mixaudio(void * userdata, uint8_t 
     }
 #ifdef __HAIKU__
 	// On Haiku, U8 audio format is broken so we convert to signed
-	int i;
-	for (i = 0; i < len; i++)
+	for (i = 0; i < len * 2; i++)
 		stream[i] -= 128;
 #endif
 }
