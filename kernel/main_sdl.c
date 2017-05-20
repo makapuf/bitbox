@@ -677,13 +677,15 @@ FRESULT f_chdir (const char* path)
 
 FRESULT f_opendir ( DIR* dp, const TCHAR* path )
 {
+    if (path[0] == 0)
+        path = ".";
     NIX_DIR *res = opendir(path);
     if (res) {
         dp->fs = (FATFS*) res; // hides it in the fs field as a fatfs variable
         dp->dir = (unsigned char *)path;
         return FR_OK;
     } else {
-        printf("Error opening directory : %s\n",strerror(errno));
+        printf("Error opening directory %s: %s\n", path, strerror(errno));
         return FR_DISK_ERR;
     }
 }
@@ -715,7 +717,7 @@ FRESULT f_readdir ( DIR* dp, FILINFO* fno )
 
     } else {
         if (errno) {
-            printf("Error reading directory %s : %s\n",dp->dir, strerror(errno)); // not neces an erro, can be end of dir.
+            printf("Error reading directory %s: %s\n",dp->dir, strerror(errno)); // not neces an erro, can be end of dir.
             return FR_DISK_ERR;
         } else {
             fno->fname[0]='\0';
