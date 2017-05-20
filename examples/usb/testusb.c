@@ -26,20 +26,20 @@ void draw_controller(int x, int y)
 
 void update_controller (int x, int y, uint16_t buttons)
 {
-	vram[y+1][x+3] = GAMEPAD_PRESSED(0,up) ? 'U':'u';
-	vram[y+3][x+3] = GAMEPAD_PRESSED(0,down) ? 'D':'d';
-	vram[y+2][x+1] = GAMEPAD_PRESSED(0,left) ? 'L':'l';
-	vram[y+2][x+5] = GAMEPAD_PRESSED(0,right) ? 'R':'r';
+	vram[y+1][x+3] = buttons & gamepad_up ? 'U':'u';
+	vram[y+3][x+3] = buttons & gamepad_down ? 'D':'d';
+	vram[y+2][x+1] = buttons & gamepad_left ? 'L':'l';
+	vram[y+2][x+5] = buttons & gamepad_right ? 'R':'r';
 
-	vram[y+2][x+16] = GAMEPAD_PRESSED(0,A) ? 'A':'a';
-	vram[y+3][x+14] = GAMEPAD_PRESSED(0,B) ? 'B':'b';
-	vram[y+1][x+14] = GAMEPAD_PRESSED(0,X) ? 'X':'x';
-	vram[y+2][x+12] = GAMEPAD_PRESSED(0,Y) ? 'Y':'y';
+	vram[y+2][x+16] = buttons & gamepad_A ? 'A':'a';
+	vram[y+3][x+14] = buttons & gamepad_B ? 'B':'b';
+	vram[y+1][x+14] = buttons & gamepad_X ? 'X':'x';
+	vram[y+2][x+12] = buttons & gamepad_Y ? 'Y':'y';
 
-	vram[y  ][x+ 3] = GAMEPAD_PRESSED(0,L) ? 'L':'l';
-	vram[y  ][x+14] = GAMEPAD_PRESSED(0,R) ? 'R':'r';
-	vram[y+3][x+ 9] = GAMEPAD_PRESSED(0,select) ? 'S':'s';
-	vram[y+3][x+10] = GAMEPAD_PRESSED(0,start) ? 'G':'g';
+	vram[y  ][x+ 3] = buttons & gamepad_L ? 'L':'l';
+	vram[y  ][x+14] = buttons & gamepad_R ? 'R':'r';
+	vram[y+3][x+ 9] = buttons & gamepad_select ? 'S':'s';
+	vram[y+3][x+10] = buttons & gamepad_start ? 'G':'g';
 }
 
 void printhex(int x, int y, uint8_t n)
@@ -49,7 +49,60 @@ void printhex(int x, int y, uint8_t n)
 	vram[y][x+1]=HEX_Digits[n&0xf];
 }
 
-static const char *KBMOD="CSAWCSAW";
+// lowlevel USB 
+
+#ifdef USE_USB_OTG_FS 
+#include "usbh_core.h"
+extern USBH_HOST USB_FS_Host;
+extern USB_OTG_CORE_HANDLE USB_OTG_FS_Core;
+
+#ifdef USE_USB_OTG_HS
+extern USBH_HOST USB_Host;
+extern USB_OTG_CORE_HANDLE USB_OTG_Core;
+#endif 
+
+#endif 
+
+const char *host_state_str[] = {
+	"IDLE      ",	"DEV_ATTACH",	"DEV_DISCON",	"DETECT_SPD",
+	"ENUM      ",	"CLASS_REQ.",	"CLASS     ",	"CTRL_XFER ",
+	"USR_INPUT ",	"SUSPENDED ",	"ERROR     ",
+	// extra for emulation, shouldn't be used on device
+};
+
+const char *host_speeds[]={"None","Low","High","???"};
+
+void update_host_status(void)
+{
+
+	#ifdef USE_USB_OTG_HS 
+	const USB_OTG_GOTGCTL_TypeDef *gotgctl_hs = (USB_OTG_GOTGCTL_TypeDef*) \
+		&USB_OTG_Core.regs.GREGS->GOTGCTL;
+	const USB_OTG_HPRT0_TypeDef *hprt_hs = (USB_OTG_HPRT0_TypeDef*) \
+		&USB_OTG_Core.regs.HPRT0;
+
+	print_at(23,30,0,gotgctl_hs->b.asesvld ? "Yes":"No ");
+	print_at(23,31,0,hprt_hs->b.prtconnsts ? "Yes":"No ");
+	print_at(23,32,0,host_speeds[hprt_hs->b.prtspd]);
+	print_at(23,33,0,host_state_str[USB_Host.gState]);
+	#endif 
+
+	#ifdef USE_USB_OTG_FS 
+	const USB_OTG_GOTGCTL_TypeDef *gotgctl_fs = (USB_OTG_GOTGCTL_TypeDef*) \
+		&USB_OTG_FS_Core.regs.GREGS->GOTGCTL;
+	const USB_OTG_HPRT0_TypeDef *hprt_fs = (USB_OTG_HPRT0_TypeDef*) \
+		&USB_OTG_FS_Core.regs.HPRT0;
+
+	print_at(32,30,0,gotgctl_fs->b.asesvld ? "Yes":"No ");
+	print_at(32,31,0,hprt_fs->b.prtconnsts ? "Yes":"No "); 
+	print_at(32,32,0,host_speeds[hprt_fs->b.prtspd]);
+	print_at(32,33,0,host_state_str[USB_FS_Host.gState]);
+	#endif 
+
+}
+
+
+char *KBMOD="CSAWCSAW";
 
 void game_init() {
 	clear(); 
@@ -70,9 +123,16 @@ void game_init() {
 	// keyboard 
 	print_at(2,KB_Y,0,"Keyboard:");
 
+	// lowlevel
+	print_at( 2,28,0,"USB Low level:");
+	print_at(22,29,0,"[0-HS]   [1-FS]");
+	print_at( 2,30,0,"   A-session valid");
+	print_at( 2,31,0,"  Device connected");
+	print_at( 2,32,0,"      Device speed");
+	print_at( 2,33,0,"       Host status");
+
 	cx = cy = 0;
 }
-
 void game_frame() 
 {
 	static char cbak;
@@ -125,6 +185,9 @@ void game_frame()
 	for (int i=0;i<8;i++)
 		vram[KB_Y+3][5+i]=keyboard_mod[0] & (1<<i) ? KBMOD[i] : '-' ;
 
+
+	// low level stuff
+	update_host_status();
 
 }
 
