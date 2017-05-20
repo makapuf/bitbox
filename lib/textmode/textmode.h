@@ -20,7 +20,7 @@ extern char vram[SCREEN_H][SCREEN_W];
 extern uint8_t vram_attr[SCREEN_H][SCREEN_W]; // 0-63 and loops
 
 void clear();
-void set_palette(uint8_t pen, uint16_t color, uint16_t background); // for 8bit, use values <256
+void set_palette(uint8_t pen, pixel_t color, pixel_t background); // for 8bit, use values <256
 
 // Print a string. Returns the number of char actually printed
 int print_at(int column, int line, uint8_t pen, const char *msg); 

@@ -28,7 +28,7 @@ typedef uint32_t couple_t;
 
 couple_t palette[64][4]; // cache of BG<<16 | FG couples - AA,AB,BA,BB
 
-inline void set_palette(uint8_t pen,uint16_t col, uint16_t bg )
+inline void set_palette(uint8_t pen,pixel_t col, pixel_t bg )
 {
 	couple_t *lut=&palette[pen&63][0];
 	lut[3] = col<<VGA_BPP|col;
@@ -82,7 +82,7 @@ void clear()
 {
    memset(vram, 0, sizeof(vram));
    memset(vram_attr, 0, sizeof(vram_attr));
-   set_palette(0,0x7fff,0x0000); // white on black
+   set_palette(0,RGB(255,255,255),RGB(0,0,0)); // white on black
 }
 
 int print_at(int column, int line, uint8_t pen, const char *msg)
