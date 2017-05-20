@@ -84,8 +84,9 @@ that is not reported by the DMA registers.
 uint16_t LineBuffer1[1024] __attribute__((aligned (1024))); // not in CCM : DMA !
 uint16_t LineBuffer2[1024] __attribute__((aligned (1024)));
 
-pixel_t *display_buffer = (pixel_t*) LineBuffer1; // will be sent to display
-pixel_t *draw_buffer = (pixel_t*) LineBuffer2; // will be drawn (bg already drawn)
+// not a pixel_t here since it can be 8bpp 
+uint16_t *display_buffer = LineBuffer1; // will be sent to display
+uint16_t *draw_buffer = LineBuffer2; // will be drawn (bg already drawn)
 
 static inline void vga_output_black()
 {
@@ -281,20 +282,20 @@ static void prepare_pixel_DMA()
 
 void expand_drawbuffer ( void )
 {
-	#ifdef VGA_SKIPLINE
 	if (vga_odd)
-	#endif
 	{
 		// expand in place buffer from 8bits RRRGGBBL to 15bits RRRrrGGLggBBLbb
 		// cost is ~ 5 cycles per pixel. not accelerated by putting palette in CCMRAM
 		const uint32_t * restrict src = (uint32_t*)&draw_buffer[VGA_H_PIXELS/2-4];
-		uint32_t * restrict dst=(uint32_t*)&draw_buffer[VGA_H_PIXELS-4];
+		uint32_t * restrict dst=(uint32_t*)&draw_buffer[VGA_H_PIXELS-2];
 		for (int i=0;i<VGA_H_PIXELS/4;i++) {
 			uint32_t pix=*src--; // read 4 src pixels
 			*dst-- = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
 			*dst-- = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
 		}
 	}
+	draw_buffer[600]=0x7fff;
+	draw_buffer[604]=vga_line%2 ? 0xffff : 0xdef0;
 }
 
 
