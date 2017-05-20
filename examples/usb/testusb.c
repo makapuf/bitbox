@@ -11,8 +11,45 @@
 // graphical gamepad position 
 #define PAD_X 2
 #define PAD_Y 10
-#define KB_Y 20 // keyboard press positions
+#define PAD_Y2 15
+#define KB_Y 23 // keyboard press positions
+
 int cx, cy;
+
+// draw "graphical" controller frame
+void draw_controller(int x, int y)
+{
+	window(0,x, y, x+17, y+4);
+	print_at(x+2 ,y,0,"[ ]");
+	print_at(x+13,y,0,"[ ]");
+}
+
+void update_controller (int x, int y, uint16_t buttons)
+{
+	vram[y+1][x+3] = GAMEPAD_PRESSED(0,up) ? 'U':'u';
+	vram[y+3][x+3] = GAMEPAD_PRESSED(0,down) ? 'D':'d';
+	vram[y+2][x+1] = GAMEPAD_PRESSED(0,left) ? 'L':'l';
+	vram[y+2][x+5] = GAMEPAD_PRESSED(0,right) ? 'R':'r';
+
+	vram[y+2][x+16] = GAMEPAD_PRESSED(0,A) ? 'A':'a';
+	vram[y+3][x+14] = GAMEPAD_PRESSED(0,B) ? 'B':'b';
+	vram[y+1][x+14] = GAMEPAD_PRESSED(0,X) ? 'X':'x';
+	vram[y+2][x+12] = GAMEPAD_PRESSED(0,Y) ? 'Y':'y';
+
+	vram[y  ][x+ 3] = GAMEPAD_PRESSED(0,L) ? 'L':'l';
+	vram[y  ][x+14] = GAMEPAD_PRESSED(0,R) ? 'R':'r';
+	vram[y+3][x+ 9] = GAMEPAD_PRESSED(0,select) ? 'S':'s';
+	vram[y+3][x+10] = GAMEPAD_PRESSED(0,start) ? 'G':'g';
+}
+
+void printhex(int x, int y, uint8_t n)
+{
+	static const char *HEX_Digits = "0123456789ABCDEF";
+	vram[y][x]=HEX_Digits[(n>>4) & 0xF];
+	vram[y][x+1]=HEX_Digits[n&0xf];
+}
+
+static const char *KBMOD="CSAWCSAW";
 
 void game_init() {
 	clear(); 
@@ -22,22 +59,19 @@ void game_init() {
 	print_at(5,3,0,  " \x01 Hi ! Plug some usb device...");
 	print_at(2, 6, 0,"Mouse: X=   Y=   lmr");
 
-	print_at(PAD_X+2,PAD_Y-1,0, "Gamepad:");
-	// "graphical" gamepad
-	window(0,PAD_X, PAD_Y, PAD_X+17, PAD_Y+5);
-	print_at(PAD_X+2 ,PAD_Y,0,"[ ]");
-	print_at(PAD_X+13,PAD_Y,0,"[ ]");
+	print_at(2,PAD_Y-2,0, "Gamepads:");
+	draw_controller(PAD_X, PAD_Y);
+	draw_controller(PAD_X, PAD_Y2);
 
 	// analog values
-	window(0,27, 6, 27+17, 6+9);
-	print_at(28,5,0,"Analog pad:   x");
+	print_at(27,PAD_Y-2,0,"Analog pad0:   x");
+	window (0,27, PAD_Y, 27+17, PAD_Y+9);
+
+	// keyboard 
+	print_at(2,KB_Y,0,"Keyboard:");
 
 	cx = cy = 0;
 }
-
-
-static const char *HEX_Digits = "0123456789ABCDEF";
-static const char *KBMOD="CSAWCSAW";
 
 void game_frame() 
 {
@@ -45,72 +79,51 @@ void game_frame()
 	static int8_t gpx, gpy;
 
 	// mouse
-	vram[cy / 16][cx / 8] = cbak;
+	vram[cy / 8][cx / 8] = cbak;
 
 	cy += mouse_y; mouse_y=0;
-	if (cy < 0) cy = 480;
-	else if (cy >= 480) cy = 0;
+	if (cy < 0) cy = VGA_V_PIXELS;
+	else if (cy >= VGA_V_PIXELS) cy = 0;
 	
 	cx += mouse_x; mouse_x=0;
-	if (cx < 0) cx = 640;
-	else if (cx >= 640) cx = 0;
+	if (cx < 0) cx = VGA_H_PIXELS;
+	else if (cx >= VGA_H_PIXELS) cx = 0;
 
-	vram[6][11]=HEX_Digits[(cx>>4) & 0xF];
-	vram[6][12]=HEX_Digits[cx&0xf];
+	printhex(11,6,cx/8);
+	printhex(16,6,cy/8);
 
-	vram[6][16]=HEX_Digits[(cy>>4) & 0xF];
-	vram[6][17]=HEX_Digits[cy&0xf];
-
-	cbak = vram[cy / 16][cx / 8];
-	vram[cy / 16][cx / 8] = 127;
+	cbak = vram[cy / 8][cx / 8];
+	vram[cy / 8][cx / 8] = 127;
 
 	vram[6][19]=mouse_buttons & mousebut_left?'L':'l';
 	vram[6][20]=mouse_buttons & mousebut_middle?'M':'m';
 	vram[6][21]=mouse_buttons & mousebut_right?'R':'r';
 
-	vram[6][23]=HEX_Digits[(mouse_buttons>>4) & 0xF];
-	vram[6][24]=HEX_Digits[mouse_buttons&0xf];
-
+	printhex(23,6,mouse_buttons);
 
 	// gamepad buttons
-	vram[PAD_Y+1][PAD_X+3] = GAMEPAD_PRESSED(0,up) ? 'U':'u';
-	vram[PAD_Y+3][PAD_X+3] = GAMEPAD_PRESSED(0,down) ? 'D':'d';
-	vram[PAD_Y+2][PAD_X+1] = GAMEPAD_PRESSED(0,left) ? 'L':'l';
-	vram[PAD_Y+2][PAD_X+5] = GAMEPAD_PRESSED(0,right) ? 'R':'r';
+	update_controller(PAD_X, PAD_Y,gamepad_buttons[0]);
+	update_controller(PAD_X, PAD_Y2,gamepad_buttons[1]);
 
-	vram[PAD_Y+2][PAD_X+16] = GAMEPAD_PRESSED(0,A) ? 'A':'a';
-	vram[PAD_Y+3][PAD_X+14] = GAMEPAD_PRESSED(0,B) ? 'B':'b';
-	vram[PAD_Y+1][PAD_X+14] = GAMEPAD_PRESSED(0,X) ? 'X':'x';
-	vram[PAD_Y+2][PAD_X+12] = GAMEPAD_PRESSED(0,Y) ? 'Y':'y';
-
-	vram[PAD_Y  ][PAD_X+ 3] = GAMEPAD_PRESSED(0,L) ? 'L':'l';
-	vram[PAD_Y  ][PAD_X+14] = GAMEPAD_PRESSED(0,R) ? 'R':'r';
-	vram[PAD_Y+3][PAD_X+ 9] = GAMEPAD_PRESSED(0,select) ? 'S':'s';
-	vram[PAD_Y+3][PAD_X+10] = GAMEPAD_PRESSED(0,start) ? 'G':'g';
 
 	// analog gamepad
-	vram[5][40]=HEX_Digits[(gamepad_x[0]>>4) & 0xF];
-	vram[5][41]=HEX_Digits[gamepad_x[0]&0xf];
+	printhex(40,PAD_Y-2,gamepad_x[0]);
+	printhex(43,PAD_Y-2,gamepad_y[0]);
 
-	vram[5][43]=HEX_Digits[(gamepad_y[0]>>4) & 0xF];
-	vram[5][44]=HEX_Digits[gamepad_y[0]&0xf];
-
-	vram[11 + gpy / 32][36  + gpx / 16] = ' ';
+	vram[15 + gpy / 32][36  + gpx / 16] = ' ';
 
 	gpx = gamepad_x[0];
 	gpy = gamepad_y[0];
-
-	vram[11 + gpy / 32][36 + gpx / 16] = '+';
+	vram[15 + gpy / 32][36 + gpx / 16] = '+';
 
 	// KB codes 
 	for (int i=0;i<6;i++) {
-		vram[21][5+i*3]=HEX_Digits[keyboard_key[0][i]>>4];
-		vram[21][6+i*3]=HEX_Digits[keyboard_key[0][i]&0xf];
+		printhex(5+i*3,KB_Y+2,keyboard_key[0][i]);
 	}
 
 	// KB mods
 	for (int i=0;i<8;i++)
-		vram[20][5+i]=keyboard_mod[0] & (1<<i) ? KBMOD[i] : '-' ;
+		vram[KB_Y+3][5+i]=keyboard_mod[0] & (1<<i) ? KBMOD[i] : '-' ;
 
 
 }
