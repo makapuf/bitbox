@@ -11,7 +11,7 @@ int score, highscore;
 
 // barres
 int x, h1, h2; // X du premier element (les deux sont espacés de la 320) 
-uint8_t c1, c2; // couleur barres
+pixel_t c1, c2; // couleur barres
 int but_state, but_last;
 
 
@@ -22,14 +22,13 @@ int but_state, but_last;
 // All vertical values are *16
 const int JUMP_SPEED = 64;
 const int gravity=2;
-const uint8_t BGCOLOR = RGB(100,100,255);
 const int hspeed = 3; // pixels per frame
 
 const int col_width=64;
 const int col_height=100;
 
-const uint8_t score_color = YELLOW;
-const uint8_t highscore_color = RGB(150,150,0);
+const pixel_t score_color = YELLOW;
+const pixel_t highscore_color = RGB(150,150,0);
 const int score_y = 4;
 const int score_h = 4;
 
@@ -42,7 +41,7 @@ const unsigned char *oiseau_data[2]= {
 (const unsigned char *)&(const unsigned char[]){0x55,0x55,0x55,0x55,0x55,0x00,0x01,0x55,0x55,0x55,0x55,0x55,0x15,0x0f,0xc0,0x55,0x51,0x55,0x55,0x55,0x00,0x0f,0xc0,0x54,0x48,0x55,0x55,0x15,0x28,0xff,0xfc,0x54,0x48,0x55,0x55,0x15,0x2a,0xff,0xfc,0x54,0x48,0x55,0x55,0x05,0x2a,0xff,0x00,0x54,0x28,0x55,0x55,0x85,0x2a,0x3f,0x2a,0x40,0x28,0x55,0x55,0x81,0x2a,0x3f,0xaa,0x2a,0xa8,0x00,0x00,0x88,0xaa,0x80,0xaa,0x2a,0xa8,0xaa,0xaa,0x8a,0xaa,0xaa,0x02,0x40,0xa8,0xa8,0xaa,0x8a,0xaa,0xaa,0x52,0x55,0x28,0xaa,0xaa,0x8a,0xaa,0xaa,0x4a,0x55,0x28,0xaa,0xaa,0xaa,0xaa,0x2a,0xaa,0x54,0x88,0xaa,0xaa,0xa2,0xaa,0x2a,0xa8,0x54,0x88,0xaa,0xaa,0xa2,0xaa,0x42,0xa1,0x52,0x88,0xaa,0xaa,0xa2,0xaa,0x54,0x05,0x50,0xa0,0xaa,0xaa,0xa2,0x2a,0x55,0x55,0x55,0xa0,0xaa,0xaa,0xa2,0x4a,0x55,0x55,0x55,0xa1,0xaa,0xaa,0xa2,0x50,0x55,0x55,0x55,0xa1,0xaa,0xaa,0x00,0x55,0x55,0x55,0x55,0xa1,0xaa,0x2a,0x54,0x55,0x55,0x55,0x55,0xa1,0x0a,0x40,0x55,0x55,0x55,0x55,0x55,0x05,0x50,0x55,0x55,0x55,0x55,0x55,0x55},
 };
 
-const uint8_t palette[]={0,0,YELLOW,WHITE}; // 3 non transp colors
+const pixel_t palette[]={0,0,YELLOW,WHITE}; // 3 non transp colors
 
 int randint(int min, int max) {
 	return min + rand()%(max-min);
@@ -53,7 +52,7 @@ static inline int randheight()
 	return randint((VGA_V_PIXELS-oiseau_h)/4,(VGA_V_PIXELS-oiseau_h)*3/4);	
 }
 
-static inline uint8_t randcolor() {
+static inline pixel_t randcolor() {
 	return randint (0,RGB(255,255,255));
 }
 
@@ -131,29 +130,40 @@ void graph_line()
 	// draw background as dithered gradient
 	{
 		uint8_t c=80 + vga_line*100/VGA_V_PIXELS;
+		#if VGA_BPP==8
 		// dither matrix
 		uint8_t d1 = vga_line%2 ? 0 :16;
 		uint8_t d2 = vga_line%2 ? 24:8;
 		
-		uint8_t p1 = RGB(c+d1,c+d1,255);
-		uint8_t p2 = RGB(c+d2,c+d2,255);
+		pixel_t p1 = RGB(c+d1,c+d1,255);
+		pixel_t p2 = RGB(c+d2,c+d2,255);
 
 		// blit with words 8 pixels at a time
 		uint32_t w = p1<<24 | p2 <<16 | p1 <<8 | p2;
-		for (int i=0;i<VGA_H_PIXELS/8;++i) {
+		for (int i=0;i<VGA_H_PIXELS/4;++i) {
 			*(uint32_t*)(draw_buffer+i*8)=w;
 			*(uint32_t*)(draw_buffer+i*8+4)=w;
 		}
+		#else
+		pixel_t p1 = RGB(c,c,255);
+		memset(draw_buffer,p1,VGA_H_PIXELS*sizeof(pixel_t));
+		#endif 
 	}
 
 	// draw columns as color bars
 	if (vga_line<h1 || vga_line>h1+col_height)
-		memset(&draw_buffer[x<0?0:x],c1,(x>0?col_width:col_width+x)*sizeof(uint8_t)); // ne pas depasser buffer a gauche
+		memset(
+		&draw_buffer[x<0?0:x],
+		c1,
+		(x>0?col_width:col_width+x)*sizeof(pixel_t)); // ne pas depasser buffer a gauche
 	if (vga_line<h2 || vga_line>h2+col_height)
-		memset(&draw_buffer[x+VGA_H_PIXELS/2],c2,col_width*sizeof(uint8_t)); // peut depasser a droite, les buffers sont plus grands
+		memset(
+		&draw_buffer[x+VGA_H_PIXELS/2],
+		c2,
+		col_width*sizeof(pixel_t)); // peut depasser a droite, les buffers sont plus grands
 
 	// blit bird 4 color sprite
-	uint8_t *dest = &draw_buffer[(VGA_H_PIXELS-oiseau_w)/2]; 
+	pixel_t *dest = &draw_buffer[(VGA_H_PIXELS-oiseau_w)/2]; 
 	if (vga_line>=(y/16) && vga_line<(y/16)+oiseau_h) {
 		for (int i=0;i<8;i++) // bird line is 8 bytes of 4 pixels each
 		{
