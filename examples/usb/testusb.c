@@ -64,13 +64,13 @@ extern USB_OTG_CORE_HANDLE USB_OTG_Core;
 #endif 
 
 const char *host_state_str[] = {
-	"IDLE      ",	"DEV_ATTACH",	"DEV_DISCON",	"DETECT_SPD",
-	"ENUM      ",	"CLASS_REQ.",	"CLASS     ",	"CTRL_XFER ",
-	"USR_INPUT ",	"SUSPENDED ",	"ERROR     ",
+	"Idle      ",	"Dev Attach",	"Dev Discon",	"Detect Spd",
+	"Enum      ",	"Class req.",	"Class     ",	"Ctrl Xfer ",
+	"Usr Input ",	"Suspended ",	"Error     ",
 	// extra for emulation, shouldn't be used on device
 };
 
-const char *host_speeds[]={"None","Low","High","???"};
+const char *host_speeds[]={"High","Full","Low","---"};
 
 void update_host_status(void)
 {
@@ -79,9 +79,10 @@ void update_host_status(void)
 	const USB_OTG_GOTGCTL_TypeDef *gotgctl_hs = (USB_OTG_GOTGCTL_TypeDef*) \
 		&USB_OTG_Core.regs.GREGS->GOTGCTL;
 	const USB_OTG_HPRT0_TypeDef *hprt_hs = (USB_OTG_HPRT0_TypeDef*) \
-		&USB_OTG_Core.regs.HPRT0;
+		USB_OTG_Core.regs.HPRT0;
 
-	print_at(23,30,0,gotgctl_hs->b.asesvld ? "Yes":"No ");
+	//print_at(23,30,0,gotgctl_hs->b.asesvld ? "Yes":"No ");
+	print_at(23,30,0,hprt_hs->b.prtena ? "Yes":"No ");
 	print_at(23,31,0,hprt_hs->b.prtconnsts ? "Yes":"No ");
 	print_at(23,32,0,host_speeds[hprt_hs->b.prtspd]);
 	print_at(23,33,0,host_state_str[USB_Host.gState]);
@@ -93,7 +94,8 @@ void update_host_status(void)
 	const USB_OTG_HPRT0_TypeDef *hprt_fs = (USB_OTG_HPRT0_TypeDef*) \
 		&USB_OTG_FS_Core.regs.HPRT0;
 
-	print_at(32,30,0,gotgctl_fs->b.asesvld ? "Yes":"No ");
+	//print_at(32,30,0,gotgctl_fs->b.asesvld ? "Yes":"No ");
+	print_at(32,30,0,hprt_fs->b.prtena ? "Yes":"No ");
 	print_at(32,31,0,hprt_fs->b.prtconnsts ? "Yes":"No "); 
 	print_at(32,32,0,host_speeds[hprt_fs->b.prtspd]);
 	print_at(32,33,0,host_state_str[USB_FS_Host.gState]);
@@ -106,27 +108,30 @@ char *KBMOD="CSAWCSAW";
 
 void game_init() {
 	clear(); 
+	set_palette(1,RGB(255,255,160),0); // light yellow on black
+
 	
 	window(0,2,1,45,4);
-	print_at(14,2,0, " \xf9\xfa\xfb USB TEST ");
+	print_at(14,2,1, " \xf9\xfa\xfb USB TEST ");
 	print_at(5,3,0,  " \x01 Hi ! Plug some usb device...");
-	print_at(2, 6, 0,"Mouse: X=   Y=   lmr");
+	print_at(2, 6, 1,"Mouse:");
+	print_at(9, 6, 0,"X=   Y=   lmr");
 
-	print_at(2,PAD_Y-2,0, "Gamepads:");
+	print_at(2,PAD_Y-2,1, "Gamepads:");
 	draw_controller(PAD_X, PAD_Y);
 	draw_controller(PAD_X, PAD_Y2);
 
 	// analog values
-	print_at(27,PAD_Y-2,0,"Analog pad0:   x");
+	print_at(27,PAD_Y-2,1,"Analog pad0:");
 	window (0,27, PAD_Y, 27+17, PAD_Y+9);
 
 	// keyboard 
-	print_at(2,KB_Y,0,"Keyboard:");
+	print_at(2,KB_Y,1,"Keyboard:");
 
 	// lowlevel
-	print_at( 2,28,0,"USB Low level:");
+	print_at( 2,28,1,"USB Low level:");
 	print_at(22,29,0,"[0-HS]   [1-FS]");
-	print_at( 2,30,0,"   A-session valid");
+	print_at( 2,30,0,"      Port enabled");
 	print_at( 2,31,0,"  Device connected");
 	print_at( 2,32,0,"      Device speed");
 	print_at( 2,33,0,"       Host status");
