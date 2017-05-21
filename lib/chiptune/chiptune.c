@@ -15,7 +15,7 @@
  */
 #include "chiptune.h"
 
-volatile struct  oscillator osc[MAX_CHANNELS];
+volatile struct  oscillator osc[8];
 
 // This function generates one audio sample for all 8 oscillators. The returned
 // value is a 2*8bit stereo audio sample ready for putting in the audio buffer.
@@ -25,6 +25,7 @@ uint16_t gen_sample()
 {
 	int16_t acc[2]; // accumulators for each channel
 	static uint32_t noiseseed = 1;
+	int32_t values[8];
 
 	// This is a simple noise generator based on an LFSR (linear feedback shift
 	// register). It is fast and simple and works reasonably well for audio.
@@ -38,10 +39,8 @@ uint16_t gen_sample()
 	if(noiseseed & 0x00000200L) newbit ^= 1;
 	noiseseed = (noiseseed << 1) | newbit;
 
-	acc[0] = 0;
-	acc[1] = 0;
 	// Now compute the value of each oscillator and mix them
-	for(int i=0; i < MAX_CHANNELS; i++) {
+	for(int i=0; i < 8; i++) {
 		int8_t value; // [-32,31]
 
 		switch(osc[i].waveform) {
@@ -70,6 +69,7 @@ uint16_t gen_sample()
 				value = 0;
 				break;
 		}
+
 		// Compute the oscillator phase (position in the waveform) for next time
 		osc[i].phase += osc[i].freq / 4;
 
@@ -78,15 +78,22 @@ uint16_t gen_sample()
 			value |= ((1<<osc[i].bitcrush) - 1);
 		}
 
-		// Mix it in the appropriate output channel
-		acc[i & 1] += value * osc[i].volume; // rhs = [-8160,7905]
-	}
-	// Now put the two channels together in the output word
-	// acc [-32640,31620] > ret 2*[1,251]
+		// Store oscillator value pre-multiplied by volume [-8160;7905]
+		values[i] = value * osc[i].volume;
 
-	if (MAX_CHANNELS == 4)
-		return (128 + (acc[0] >> 7)) | ((128 + (acc[1] >> 7)) << 8);    // [1,251]
-	else
-		return (128 + (acc[0] >> 8)) | ((128 + (acc[1] >> 8)) << 8);    // [1,251]
+		if (i > 3)
+		{
+			osc[i - 4].phase += values[i] >> 4;
+		}
+
+	}
+	
+	// Ring-modulation of each channel with channel+4
+	// And mixing into "left" and "right" output channels
+	// And also scaling to 8 bits, while we are at it.
+	acc[0] = (values[0] + values[2]) >> 7; // [-128;124]
+	acc[1] = (values[1] + values[3]) >> 7;
+
+	return (128 + acc[0]) | ((128 + acc[1]) << 8);    // [0,252]
 }
 
