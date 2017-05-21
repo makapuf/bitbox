@@ -15,7 +15,11 @@ enum {
 	WF_TRI, // triangle /\/\,
 	WF_SAW, // sawteeth /|/|,
 	WF_PUL, // pulse (adjustable duty) |_|-,
-	WF_NOI // noise !*@?
+	WF_NOI, // noise !*@?
+
+	WF_SIN,     // sine
+	WF_ABSSIN,  // abs(sine)
+	WF_QSIN     // quarter-sine
 };
 
 // This is the definition of our oscillators. There are 8 of these (4 for left,
