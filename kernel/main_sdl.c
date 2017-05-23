@@ -552,13 +552,28 @@ static bool handle_events()
 
         // joypads
         case SDL_JOYAXISMOTION: // analog position
-            switch (sdl_event.jaxis.axis) {
-                case 0: /* X axis */
-                    gamepad_x[sdl_event.jbutton.which]=sdl_event.jaxis.value>>8;
-                    break;
-                case 1: /* Y axis*/
-                    gamepad_y[sdl_event.jbutton.which]=sdl_event.jaxis.value>>8;
-                    break;
+            if (sdl_event.jbutton.which>=gamepad_max_pads)
+                break;
+            if (sdl_event.jaxis.axis == 0) {
+                /* X axis */
+                if (sdl_event.jaxis.value >> 8 == 0) {
+                    sdl_gamepad_buttons[sdl_event.jbutton.which] &= ~(gamepad_left|gamepad_right);
+                } else if (sdl_event.jaxis.value > 0) {
+                    sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_right;
+                } else {
+                    sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_left;
+                }
+                gamepad_x[sdl_event.jbutton.which]=sdl_event.jaxis.value>>8;
+            } else {
+                /* Y axis*/
+                if (sdl_event.jaxis.value >> 8 == 0) {
+                    sdl_gamepad_buttons[sdl_event.jbutton.which] &= ~(gamepad_down|gamepad_up);
+                } else if (sdl_event.jaxis.value > 0) {
+                    sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_down;
+                } else {
+                    sdl_gamepad_buttons[sdl_event.jbutton.which] |= gamepad_up;
+                }
+                gamepad_y[sdl_event.jbutton.which]=sdl_event.jaxis.value>>8;
             }
             break;
 
@@ -595,7 +610,6 @@ static bool handle_events()
             mouse_x = sdl_event.motion.xrel;
             mouse_y = sdl_event.motion.yrel;
             break;
-
         } // end switch
     } // end of message processing
 
