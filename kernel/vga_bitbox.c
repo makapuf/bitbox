@@ -108,8 +108,8 @@ void vga_setup()
 	// initialize software state.
 	vga_line=0;	vga_frame=0;
 
-	display_buffer= (pixel_t*) LineBuffer1;
-	draw_buffer = (pixel_t*) LineBuffer2;
+	display_buffer = LineBuffer1;
+	draw_buffer    = LineBuffer2;
 
 
 	// --- GPIO ---------------------------------------------------------------------------------------
@@ -318,7 +318,7 @@ void __attribute__ ((used)) TIM5_IRQHandler() // Hsync Handler
 		#endif
 		// swap display & draw buffers, effectively draws line-1
 		{
-			pixel_t *t;
+			uint16_t *t;
 			t=display_buffer;
 			display_buffer = draw_buffer;
 			draw_buffer = t;
