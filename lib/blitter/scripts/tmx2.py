@@ -145,9 +145,11 @@ class Map :
             self.objects.sort(key=lambda x:x.tid)
 
     def load_map(self) : 
+        if not self.root.find('tileset') : return 
+
         self.tilebools={}
         self.layers = self.root.findall("layer")
-        tileset_src = self.root.find('tileset').find('image').get("source")
+        tileset_src = self.root.find('tileset').find('image').get("source") 
         self.tileset= os.path.splitext(os.path.basename(tileset_src))[0]
 
     # export first tileset as _the_ tileset
