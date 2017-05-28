@@ -111,7 +111,7 @@ void tilemap_u8_line_16(object *o) {
 
 
 
-static inline void tilemap_u16_line(object *o, const unsigned int tilesize)
+ __attribute__((always_inline)) static inline void tilemap_u16_line(object *o, const unsigned int tilesize)
 {
     // in this version, we can assume that we don't have a full
     // TODO : take care of smaller x, don't recalc all each time. case o->x <0
@@ -189,10 +189,9 @@ void tilemap_u16_line_16(object *o) {
 
 
 
-void tilemap_u8_line8(object *o)
+__attribute__((always_inline)) static inline void tilemap_u8_line8(object *o, const unsigned int tilesize) 
 {
     // use current frame, line, buffer
-    int tilesize = tilesizes[((o->b)>>4)&3];
     unsigned int tilemap_w = o->b>>20;
     unsigned int tilemap_h = (o->b >>8) & 0xfff;
 
@@ -246,6 +245,19 @@ void tilemap_u8_line8(object *o)
 
 
 
+// specialize - generic case
+void tilemap_u8_line8_any(object *o) {
+    tilemap_u8_line8(o, tilesizes[((o->b)>>4)&3]);
+}
+
+// specialize - 16pixels wide case
+void tilemap_u8_line8_8(object *o) {
+    tilemap_u8_line8(o, 8);
+}
+
+
+
+
 object *tilemap_new(const void *tileset, int w, int h, uint32_t header, const void *tilemap)
 {
     object *o = blitter_new();
@@ -278,7 +290,8 @@ object *tilemap_new(const void *tileset, int w, int h, uint32_t header, const vo
     }
 
     o->a = (uintptr_t)tileset-tilesize*tilesize; // to start at index 1 and not 0, offset now in bytes.
-    o->line = tilemap_u8_line8;
+
+    o->line = tilesize == 8 ? tilemap_u8_line8_8 : tilemap_u8_line8_any;
 
     #else // 16-bit interface
 
