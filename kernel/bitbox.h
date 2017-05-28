@@ -10,6 +10,8 @@
 // --- Main -----------------------------------------------------------------------------
 void game_init(void); // user provided
 void game_frame(void); // user provided
+// OR
+void bitbox_main(); // user provided
 
 // --- Audio ----------------------------------------------------------------------------
 // also see audio defines in kconf.h

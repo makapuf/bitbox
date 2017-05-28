@@ -867,7 +867,7 @@ int emu_loop (void *_)
     return 0;
 }
 
-int bitbox_main(void); // main bitbox code.
+void bitbox_main(void); // main bitbox code.
 
 int main ( int argc, char** argv )
 {

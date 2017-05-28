@@ -1,6 +1,6 @@
 #include "bitbox.h"
 
-__attribute__((weak)) int bitbox_main(void)
+__attribute__((weak)) void bitbox_main(void)
 {
 	game_init();
 
