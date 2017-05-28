@@ -5,6 +5,8 @@ define LZ4_IMPLEMENTATION exactly once in a .c file.
 define LZ4_STREAM to allow stream files decompression 
     NOTE : this needs tinymalloc to be implemented.
 
+compress your files with: lz4 -f -9 --content-size --no-frame-crc --no-sparse <src> <dst>
+
 */
 
 #include <stdint.h>
