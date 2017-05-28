@@ -57,7 +57,7 @@ int screen_height;
 static int slow; // parameter : run slower ?
 static int fullscreen; // shall run fullscreen
 static int quiet=1; // quiet by default now
-static int scale=2; // scale display by this in pixels
+static int scale=VGA_V_PIXELS<400 ? 2 : 1; // scale display by this in pixels
 
 // Video
 SDL_Surface* screen;
@@ -325,7 +325,7 @@ void instructions ()
 {
     printf("Invoke game with those options : \n");
     printf("  --fullscreen to run fullscreen\n");
-    printf("  --scale2x to scale display 2x\n");
+    printf("  --scale2x to scale display 2x (also --scale1x)\n");
     printf("  --slow to run game very slowly (for debug)\n");
     printf("  --verbose show helpscreen and various messages\n");
     printf("\n");
@@ -776,6 +776,8 @@ static void process_commandline( int argc, char** argv)
             quiet = 0;
         else if (!strcmp(argv[i],"--scale1x"))
             scale = 1;
+        else if (!strcmp(argv[i],"--scale2x"))
+            scale = 2;
         else {
             instructions();
             exit(0);
