@@ -76,8 +76,8 @@ void update_host_status(void)
 {
 
 	#ifdef USE_USB_OTG_HS 
-	const USB_OTG_GOTGCTL_TypeDef *gotgctl_hs = (USB_OTG_GOTGCTL_TypeDef*) \
-		&USB_OTG_Core.regs.GREGS->GOTGCTL;
+	/*const USB_OTG_GOTGCTL_TypeDef *gotgctl_hs = (USB_OTG_GOTGCTL_TypeDef*) \
+		&USB_OTG_Core.regs.GREGS->GOTGCTL;*/
 	const USB_OTG_HPRT0_TypeDef *hprt_hs = (USB_OTG_HPRT0_TypeDef*) \
 		USB_OTG_Core.regs.HPRT0;
 
@@ -89,10 +89,10 @@ void update_host_status(void)
 	#endif 
 
 	#ifdef USE_USB_OTG_FS 
-	const USB_OTG_GOTGCTL_TypeDef *gotgctl_fs = (USB_OTG_GOTGCTL_TypeDef*) \
-		&USB_OTG_FS_Core.regs.GREGS->GOTGCTL;
+	/*const USB_OTG_GOTGCTL_TypeDef *gotgctl_fs = (USB_OTG_GOTGCTL_TypeDef*) \
+		&USB_OTG_FS_Core.regs.GREGS->GOTGCTL;*/
 	const USB_OTG_HPRT0_TypeDef *hprt_fs = (USB_OTG_HPRT0_TypeDef*) \
-		&USB_OTG_FS_Core.regs.HPRT0;
+		USB_OTG_FS_Core.regs.HPRT0;
 
 	//print_at(32,30,0,gotgctl_fs->b.asesvld ? "Yes":"No ");
 	print_at(32,30,0,hprt_fs->b.prtena ? "Yes":"No ");
@@ -109,6 +109,12 @@ char *KBMOD="CSAWCSAW";
 void game_init() {
 	clear(); 
 	set_palette(1,RGB(255,255,160),0); // light yellow on black
+
+	// testing vga bits on micro
+	for (int i=0;i<8;i++) {
+		set_palette(2+i,1<<(7-i),0);
+		print_at(20+i,0,2+i,"\x7");
+	}
 
 	
 	window(0,2,1,45,4);
