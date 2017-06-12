@@ -7,9 +7,6 @@
 #define VGA_MODE 320
 #endif 
 
-#ifndef VGA_BPP
-#define VGA_BPP 8
-#endif 
 
 
 #define STM32F40_41xxx
