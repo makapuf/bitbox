@@ -448,7 +448,7 @@ static bool handle_events()
 {
     SDL_Event sdl_event;
     uint8_t key;
-    mouse_x = mouse_y=0; // not moved this frame 
+    //mouse_x = mouse_y=0; // not moved this frame 
 
     while (SDL_PollEvent(&sdl_event))
     {
@@ -592,8 +592,8 @@ static bool handle_events()
             mouse_buttons &= ~1<<(sdl_event.button.button-1);
             break;
         case SDL_MOUSEMOTION :
-            mouse_x = sdl_event.motion.xrel;
-            mouse_y = sdl_event.motion.yrel;
+            mouse_x += sdl_event.motion.xrel;
+            mouse_y += sdl_event.motion.yrel;
             break;
 
         } // end switch
@@ -878,8 +878,6 @@ int emu_loop (void *_)
     exit(0);
     return 0;
 }
-
-void bitbox_main(void); // main bitbox code.
 
 int main ( int argc, char** argv )
 {
