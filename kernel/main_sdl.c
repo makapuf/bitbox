@@ -734,6 +734,16 @@ FRESULT f_closedir (DIR* dp)
     }
 }
 
+FRESULT f_rename (const char *file_from, const char *file_to)
+{
+    if (!rename(file_from,file_to) ) {
+        return FR_OK;
+    } else {
+        printf("Error renaming %s to %s : : %s\n",file_from, file_to, strerror(errno));
+        return FR_DISK_ERR;
+    }
+}
+
 // -- misc bitbox functions 
 
 // user button
