@@ -237,6 +237,7 @@ void flash_frame()
 					strcpy(flash_message,"** Done! Please press reset **");	
 
 					FLASH->CR |= FLASH_CR_LOCK; // relock flash
+					while(1); // stop here
 				} else {
 					flash_state = state_must_read;
 					strcpy(flash_message,"Must read again.");	
