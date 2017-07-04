@@ -634,11 +634,23 @@ FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode)
         case FA_WRITE | FA_CREATE_ALWAYS : mode_host="w"; break;
 
         default :
-            return FR_DISK_ERR;
+            return FR_INVALID_PARAMETER;
     }
 
     fp->fs = (FATFS*) fopen ((const char*)path,mode_host); // now ignores mode.
-    return fp->fs ? FR_OK : FR_DISK_ERR; // XXX duh.
+    if (fp->fs) return FR_OK;
+
+    switch(errno) {
+        case ENOENT: 
+            return FR_NO_FILE;
+        case EACCES:
+            return FR_WRITE_PROTECTED;
+        case EEXIST: 
+            return FR_EXIST;
+        default: 
+            return FR_INT_ERR;
+    }
+    
 }
 
 FRESULT f_close (FIL* fp)
