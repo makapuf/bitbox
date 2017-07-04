@@ -201,6 +201,8 @@ void keyboard_poll(int device)
                 if ((keyboard_mod[device] & ~mod_last[device]) & (1<<i)) // new ones
                 {
                     e.type=evt_keyboard_press;
+                    e.kbd.mod=0;
+                    e.kbd.sym=KEY_ERR;
                     e.kbd.key=0xE0 + i; // codes are in the same order as bits                
                     event_push(e);
                 }
@@ -208,6 +210,8 @@ void keyboard_poll(int device)
                 if ((mod_last[device] & ~keyboard_mod[device]) & (1<<i)) // released ones
                 {
                     e.type=evt_keyboard_release;
+                    e.kbd.mod=0;
+                    e.kbd.sym=KEY_ERR;
                     e.kbd.key=0xE0 + i; // codes are in the same order as bits                
                     event_push(e);
                 }
