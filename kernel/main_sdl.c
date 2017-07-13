@@ -703,18 +703,43 @@ FRESULT f_opendir ( DIR* dp, const TCHAR* path )
 FRESULT f_readdir ( DIR* dp, FILINFO* fno )
 {
     errno=0;
-    char buffer[260]; // assumes max path size for FAT32
+    char buffer[512]; // assumes max path size for FAT32
 
     struct dirent *de = readdir((NIX_DIR *)dp->fs); 
 
     if (de) {
-        for (int i=0;i<13;i++)
-            fno->fname[i]=de->d_name[i];
+        if (strlen(de->d_name)<=12) {
+            // not long filename
+            for (int i=0;i<13;i++)
+                fno->fname[i]=de->d_name[i];
+            fno->lfname[0]='\0';
+        } else {
+            // first make short name
+            // copy first 6 chars
+            for (int i=0;i<6;i++)
+                fno->fname[i]=de->d_name[i];
+            fno->fname[6]='~';
+            fno->fname[7]='0'; // FIXME : multiple files
+            fno->fname[8]='.'; 
+
+            // copy extension 
+            for (int i=0;i<4;i++)
+                fno->fname[9+i]=de->d_name[strlen(de->d_name)-3+i];
+            fno->fname[14]='\0'; 
+
+            // make long name
+            if(_USE_LFN) {
+                strncpy(fno->lfname,de->d_name,_MAX_LFN);
+            } else {
+                fno->lfname[0]='\0';
+            }
+        }
+
 
         fno->fattrib = 0;
 
         // check attributes of found file
-        strncpy(buffer,(char *)dp->dir,260); // BYTE->char
+        strncpy(buffer,(char *)dp->dir,sizeof(buffer)); // BYTE->char
         strcat(buffer,"/");
         strcat(buffer,fno->fname);
 
