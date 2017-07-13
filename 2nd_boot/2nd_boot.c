@@ -10,6 +10,8 @@
  */
 
 #include <stdbool.h>
+#include <stdio.h>
+
 #include <string.h>
 #include <stdlib.h> // qsort
 // #include "system.h" // system_init
@@ -20,9 +22,11 @@
 
 enum {INIT =4, MOUNT=5, OPEN=6, READ=7}; // where we died - bootloader 2
 #define MAX_FILES 50
+#define DISPLAY_FILENAME_LEN 40
+#define FILELIST_X 4
 
 #define SCR_LINES (VGA_V_PIXELS / 16) // Total number of text-lines
-#define MSG_X 40
+#define MSG_X 4
 
 #if BOARD_PAL
   #define DISPLAY_LINES 12
@@ -82,7 +86,7 @@ extern const uint8_t font_data [256][16];
 char vram_char[SCR_LINES][80];
 
 int nb_files;
-char filenames[MAX_FILES][13]; // 8+3 +. + 1 chr0
+char filenames[MAX_FILES][_MAX_LFN]; // 8+3 +. + 1 chr0
 
 #define ICON_W 128 // read from file ?
 #define ICON_SIZE (ICON_W*ICON_W/8) // 128x128 1 bit data
@@ -137,11 +141,10 @@ void list_roms()
     DIR dir;
 
     char *fn;   /* This function is assuming non-Unicode cfg. */
-#if _USE_LFN
+
     static char lfn[_MAX_LFN + 1];   /* Buffer to store the LFN */
     fno.lfname = lfn;
     fno.lfsize = sizeof lfn;
-#endif
 
 
     res = f_opendir(&dir, ROOT_DIR);                       /* Open the root directory */
@@ -151,19 +154,13 @@ void list_roms()
             if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
             if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
             if (strcmp(fno.fname, "2ND_BOOT.BIN") == 0) continue;/* Ignore 2nd boot */
-#if _USE_LFN
-            fn = *fno.lfname ? fno.lfname : fno.fname;
-#else
-            fn = fno.fname;
-#endif
-            if (!(fno.fattrib & AM_DIR)) { // not a dir
-            	// assumes non LFN
-            	#if _USE_LFN
-            	dslkhgsldkg
-            	#endif
 
+            fn = *fno.lfname ? fno.lfname : fno.fname;
+
+            if (!(fno.fattrib & AM_DIR)) { // not a dir
             	// check extension : only keep .bin
             	if (strstr(fn,".BIN") || strstr(fn,".bin")) { // search ignoring case
+            		message("found file %s\n",fn);
                 	strcpy(filenames[nb_files],fn);
                 	nb_files +=1;
             	}
@@ -180,7 +177,7 @@ void list_roms()
     }
 
     // sort it
-    qsort(filenames, nb_files, 13, cmp);
+    qsort(filenames, nb_files, _MAX_LFN, cmp);
 
 }
 
@@ -258,9 +255,9 @@ void game_init() {
 
 int selected,old_selected=-1;
 int offset=0; // display offset (scrolling)
-int x =5,y=10 , dir_x=1, dir_y=1;
+int x =5,y=10 , dir_x=1, dir_y=1; // guy bouncing 
 char old_val=' ';
-char icon_name[13];
+char icon_name[_MAX_LFN];
 bool last_button=false; // button last status
 int frame_pressed; // frame when button was pressed
 
@@ -329,6 +326,11 @@ void game_frame()
 	{
 		strcpy(icon_name, filenames[selected]);
 		char *c = strchr(icon_name,'.');
+		if (!c) {
+			default_icon();
+			return;
+		}
+
 		strcpy(c,".pbm");
 		int r=read_icon(icon_name);
 		if (r!=FR_OK)
@@ -360,17 +362,19 @@ void game_frame()
 	{
 		int l;
 		char *s=filenames[offset+i];
-		for (l=0;s[l]!='.';l++)
-			vram_char[i+LIST_Y][10+l]=s[l];
-		for (;l<13;l++)
-			vram_char[i+LIST_Y][10+l]=' ';
+
+		for (l=0;l<DISPLAY_FILENAME_LEN && s[l]!='.';l++)
+			vram_char[i+LIST_Y][FILELIST_X+l]=s[l];
+
+		for (;l<DISPLAY_FILENAME_LEN;l++)
+			vram_char[i+LIST_Y][FILELIST_X+l]=' ';
 		// cursor
-		vram_char[LIST_Y+i][8]=(i==selected)?0x10:' ';
-		vram_char[LIST_Y+i][25]=(i==selected)?0x11:' ';
+		vram_char[LIST_Y+i][FILELIST_X-2]=(i==selected)?0x10:' ';
+		vram_char[LIST_Y+i][FILELIST_X+DISPLAY_FILENAME_LEN]=(i==selected)?0x11:' ';
 
 		// scrollbar
 		char c = (i>=scroll_offset && i<scroll_offset+scroll_height) ? '\xb1' : '\xb3';
-		vram_char[LIST_Y+i][27] = c;
+		vram_char[LIST_Y+i][FILELIST_X+DISPLAY_FILENAME_LEN+2] = c;
 	}
 
 
