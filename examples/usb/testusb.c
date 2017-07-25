@@ -70,6 +70,23 @@ const char *host_state_str[] = {
 	// extra for emulation, shouldn't be used on device
 };
 
+const char *host_ctrl_state_str[]={
+  "Idle           ",
+  "Setup          ",
+  "Setup Wait     ",
+  "Data In        ",
+  "Data In Wait   ",
+  "Data Out       ",
+  "Data Out Wait  ",
+  "Status In      ",
+  "Status In_wait ",
+  "Status Out     ",
+  "Status Out Wait",
+  "Error          ",
+  "Stalled        ",
+  "Complete       ",
+};
+
 const char *host_speeds[]={"High","Full","Low","---"};
 
 void update_host_status(void)
@@ -86,6 +103,7 @@ void update_host_status(void)
 	print_at(23,31,0,hprt_hs->b.prtconnsts ? "Yes":"No ");
 	print_at(23,32,0,host_speeds[hprt_hs->b.prtspd]);
 	print_at(23,33,0,host_state_str[USB_Host.gState]);
+	print_at(23,34,0,host_ctrl_state_str[USB_Host.Control.state]);
 	#endif 
 
 	#ifdef USE_USB_OTG_FS 
@@ -99,6 +117,7 @@ void update_host_status(void)
 	print_at(32,31,0,hprt_fs->b.prtconnsts ? "Yes":"No "); 
 	print_at(32,32,0,host_speeds[hprt_fs->b.prtspd]);
 	print_at(32,33,0,host_state_str[USB_FS_Host.gState]);
+	print_at(32,34,0,host_ctrl_state_str[USB_FS_Host.Control.state]);
 	#endif 
 
 }
