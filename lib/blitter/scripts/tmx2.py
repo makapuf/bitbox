@@ -88,6 +88,7 @@ class Map :
     def __init__(self, tmxfile, dir=None) : 
         self.file = tmxfile
         self.name = os.path.basename(tmxfile.rsplit('.',1)[0])
+        self.layers=None
 
         self.root = ET.parse(tmxfile).getroot()
 
