@@ -94,7 +94,7 @@ volatile uint8_t keyboard_key[2][KBR_MAX_NBR_PRESSED]; // using raw USB key code
 
 
 #if VGA_MODE != NONE
-extern uint16_t palette_flash[256];
+extern uint16_t vga_palette[256];
 
 void __attribute__((weak)) graph_vsync() {} // default empty
 
@@ -108,8 +108,8 @@ void expand_buffer ( void )
         uint32_t * restrict dst=(uint32_t*)&draw_buffer[VGA_H_PIXELS-2];
         for (int i=0;i<VGA_H_PIXELS/4;i++) {
             uint32_t pix=*src--; // read 4 src pixels
-            *dst-- = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
-            *dst-- = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
+            *dst-- = vga_palette[pix>>24]<<16         | vga_palette[(pix>>16) &0xff]; // write 2 pixels
+            *dst-- = vga_palette[(pix>>8) & 0xff]<<16 | vga_palette[pix &0xff]; // write 2 pixels
         }
     }
 }

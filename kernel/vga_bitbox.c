@@ -43,7 +43,7 @@ mode as defined in kconf.h values
 	typedef uint16_t pixel_t;
 #endif
 
-extern const uint16_t palette_flash[256]; // microX palette in bitbox pixels
+extern const uint16_t vga_palette[256]; // microX palette in bitbox pixels
 
 #ifdef PROFILE
 // from http://forums.arm.com/index.php?/topic/13949-cycle-count-in-cortex-m3/
@@ -290,8 +290,8 @@ void expand_drawbuffer ( void )
 		uint32_t * restrict dst=(uint32_t*)&draw_buffer[VGA_H_PIXELS-2];
 		for (int i=0;i<VGA_H_PIXELS/4;i++) {
 			uint32_t pix=*src--; // read 4 src pixels
-			*dst-- = palette_flash[pix>>24]<<16         | palette_flash[(pix>>16) &0xff]; // write 2 pixels
-			*dst-- = palette_flash[(pix>>8) & 0xff]<<16 | palette_flash[pix &0xff]; // write 2 pixels
+			*dst-- = vga_palette[pix>>24]<<16         | vga_palette[(pix>>16) &0xff]; // write 2 pixels
+			*dst-- = vga_palette[(pix>>8) & 0xff]<<16 | vga_palette[pix &0xff]; // write 2 pixels
 		}
 	}
 	draw_buffer[600]=0x7fff;
