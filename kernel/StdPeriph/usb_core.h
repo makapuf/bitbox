@@ -214,6 +214,12 @@ typedef struct USB_OTG_handle
   USB_OTG_CORE_CFGS    cfg;
   USB_OTG_CORE_REGS    regs;
   HCD_DEV     host;
+
+  #ifdef USB_DEBUG
+  uint16_t nbpackets_in, nbpackets_out;
+  uint32_t nbbytes_in,   nbbytes_out;
+  #endif
+
 }
 USB_OTG_CORE_HANDLE , *PUSB_OTG_CORE_HANDLE;
 
@@ -254,7 +260,6 @@ void         USB_OTG_DriveVbus       (USB_OTG_CORE_HANDLE *pdev, uint8_t state);
 void         USB_OTG_InitFSLSPClkSel (USB_OTG_CORE_HANDLE *pdev ,uint8_t freq);
 uint8_t      USB_OTG_IsEvenFrame     (USB_OTG_CORE_HANDLE *pdev) ;
 #endif
-
 
 
 #endif  /* __USB_CORE_H__ */

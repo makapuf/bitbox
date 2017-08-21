@@ -49,6 +49,16 @@ void printhex(int x, int y, uint8_t n)
 	vram[y][x+1]=HEX_Digits[n&0xf];
 }
 
+void printhex16(int x, int y, uint16_t n)
+{
+	static const char *HEX_Digits = "0123456789ABCDEF";
+	for (int i=0;i<4;i++) {
+		vram[y][x+3-i]=HEX_Digits[(n>>(4*i)) & 0xF];
+	}
+}
+
+
+
 // lowlevel USB 
 
 #ifdef USE_USB_OTG_FS 
@@ -104,6 +114,12 @@ void update_host_status(void)
 	print_at(23,32,0,host_speeds[hprt_hs->b.prtspd]);
 	print_at(23,33,0,host_state_str[USB_Host.gState]);
 	print_at(23,34,0,host_ctrl_state_str[USB_Host.Control.state]);
+
+	printhex16(23,35,USB_OTG_Core.nbpackets_in);
+	printhex16(28,35,USB_OTG_Core.nbpackets_out);
+	printhex16(23,36,USB_OTG_Core.nbbytes_in);
+	printhex16(28,36,USB_OTG_Core.nbbytes_out);
+
 	#endif 
 
 	#ifdef USE_USB_OTG_FS 
@@ -113,11 +129,17 @@ void update_host_status(void)
 		USB_OTG_FS_Core.regs.HPRT0;
 
 	//print_at(32,30,0,gotgctl_fs->b.asesvld ? "Yes":"No ");
-	print_at(32,30,0,hprt_fs->b.prtena ? "Yes":"No ");
-	print_at(32,31,0,hprt_fs->b.prtconnsts ? "Yes":"No "); 
-	print_at(32,32,0,host_speeds[hprt_fs->b.prtspd]);
-	print_at(32,33,0,host_state_str[USB_FS_Host.gState]);
-	print_at(32,34,0,host_ctrl_state_str[USB_FS_Host.Control.state]);
+	print_at(33,30,0,hprt_fs->b.prtena ? "Yes":"No ");
+	print_at(33,31,0,hprt_fs->b.prtconnsts ? "Yes":"No "); 
+	print_at(33,32,0,host_speeds[hprt_fs->b.prtspd]);
+	print_at(33,33,0,host_state_str[USB_FS_Host.gState]);
+	print_at(33,34,0,host_ctrl_state_str[USB_FS_Host.Control.state]);
+
+	printhex16(33,35,USB_OTG_FS_Core.nbpackets_in);
+	printhex16(38,35,USB_OTG_FS_Core.nbpackets_out);
+	printhex16(33,36,USB_OTG_FS_Core.nbbytes_in);
+	printhex16(38,36,USB_OTG_FS_Core.nbbytes_out);
+
 	#endif 
 
 }
@@ -160,6 +182,10 @@ void game_init() {
 	print_at( 2,31,0,"  Device connected");
 	print_at( 2,32,0,"      Device speed");
 	print_at( 2,33,0,"       Host status");
+	print_at( 2,34,0,"   Host Ctrl State");
+	print_at( 2,35,0,"  Transfers In/Out");
+	print_at( 2,36,0,"  Data Size In/Out");
+
 
 	cx = cy = 0;
 }

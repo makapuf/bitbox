@@ -95,6 +95,11 @@ USB_OTG_STS USB_OTG_WritePacket(USB_OTG_CORE_HANDLE *pdev,uint8_t *src, uint8_t 
         USB_OTG_WRITE_REG32( fifo, *((__packed uint32_t *)src) );
     }
 
+  #ifdef USB_DEBUG
+  pdev->nbpackets_out +=1;
+  pdev->nbbytes_out += len;
+  #endif
+
   }
   return USB_OTG_OK;
 }
@@ -110,6 +115,11 @@ void *USB_OTG_ReadPacket(USB_OTG_CORE_HANDLE *pdev, uint8_t *dest, uint16_t len)
   for (int i = 0; i < count32b; i++, dest += 4 ) {
       *(__packed uint32_t *)dest = USB_OTG_READ_REG32(fifo);
   }
+
+  #ifdef USB_DEBUG
+  pdev->nbpackets_in +=1;
+  pdev->nbbytes_in += len;
+  #endif
 
   return ((void *)dest);
 }
@@ -228,6 +238,14 @@ USB_OTG_STS USB_OTG_CoreInit(USB_OTG_CORE_HANDLE *pdev)
     ahbcfg.b.dmaenable = 1;
     USB_OTG_WRITE_REG32(&pdev->regs.GREGS->GAHBCFG, ahbcfg.d32);
   }
+
+
+  #ifdef USB_DEBUG
+  pdev->nbpackets_in =0;
+  pdev->nbpackets_out =0;
+  pdev->nbbytes_in =0;
+  pdev->nbbytes_out =0;
+  #endif
 
   return status;
 }
