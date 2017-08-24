@@ -168,6 +168,8 @@ void CRYP_IRQHandler() __attribute__((weak,alias("Default_Handler")));
 void HASH_RNG_IRQHandler() __attribute__((weak,alias("Default_Handler")));
 void FPU_IRQHandler() __attribute__((weak,alias("Default_Handler")));
 
+const uint32_t bitbox_icon __attribute__((weak)) = 0; // default, empty icon.
+
 __attribute__ ((section(".isr_vector"))) const void *InterruptVectors[]=
 {
 	(stack+sizeof(stack)),
@@ -177,7 +179,7 @@ __attribute__ ((section(".isr_vector"))) const void *InterruptVectors[]=
 	MemManage_Handler,
 	BusFault_Handler,
 	UsageFault_Handler,
-	0,
+	&bitbox_icon,		// this entry is overloaded with bitbox icon reference when compiled in
 	0,
 	0,
 	0,

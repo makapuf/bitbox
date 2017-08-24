@@ -88,12 +88,12 @@ char vram_char[SCR_LINES][80];
 int nb_files;
 char filenames[MAX_FILES][_MAX_LFN]; // 8+3 +. + 1 chr0
 
-#define ICON_W 128 // read from file ?
-#define ICON_SIZE (ICON_W*ICON_W/8) // 128x128 1 bit data
+#define ICON_W 64 
+
+extern const uint16_t bitbox_icon[2+16+ICON_W*ICON_W/4];
 
 int icon_x, icon_y;
-uint8_t icon_data[ICON_SIZE]; // 2KB b&w 128x128 data
-// pixel on(i,j) = data[i*16+j/8]&(1<<(7-j%8)))
+uint16_t icon_data[sizeof(bitbox_icon)/2-2]; // remove 2 u16 of header
 FIL file;
 
 void print_at(int column, int line, const char *msg)
@@ -153,7 +153,15 @@ void list_roms()
             res = f_readdir(&dir, &fno);                   /* Read a directory item */
             if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
             if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
-            if (strcmp(fno.fname, "2ND_BOOT.BIN") == 0) continue;/* Ignore 2nd boot */
+
+            // to lowercase
+            for (int i=0;i<12;i++) {
+            	char *c=&fno.fname[i];
+            	if ('A' <= *c && *c <= 'Z') 
+            		*c |= 0x40;
+            }
+
+            if (strcmp(fno.fname, "2nd_boot.bin") == 0) continue; /* Ignore 2nd boot */
 
             fn = *fno.lfname ? fno.lfname : fno.fname;
 
@@ -181,49 +189,51 @@ void list_roms()
 
 }
 
-// read icon PBM data to memory
+// read icon data to memory 
+/* icon data address in flash is located at 5th interrupt vector.
+
+	u32 header (not put to icon_data)
+	u16 colors[16]
+	u4  pixel_data[64x64]
+
+	*/
 int read_icon(const char *filename)
 {
-	char c;
 	FRESULT res;
 	UINT b_read;
+	uint32_t w;
 
 	res = f_open (&file, filename, FA_READ);
 	if (res != FR_OK)
 		return res;
 
+	// find start offset of icon
+	res = f_lseek(&file,7*4 );
+	if (res != FR_OK) return res;
+
+	res = f_read (&file, &w, sizeof(w), &b_read);
+	if (res != FR_OK) return res;
+	message("Icon offset is : %x : %d\n", w, w- 0x08004000);
+	if (w==0) return 1000; // no icon, will display default one
+
+	res = f_lseek(&file, w - 0x08004000); // Loadable files are linked to start at 0x08004000
+	if (res != FR_OK) return res;
+
 	// header
-	for (int i=0;i<3;i++) {
-		res = f_read (&file, &c, 1, &b_read);
-		if (res != FR_OK)
-			return res;
-		if (c!="P4\n"[i])
-			return 1000; // bad header
-	}
+	res = f_read (&file, &w, sizeof(w), &b_read);
+	if (res != FR_OK) return res;
+	message("Icon header was 0x%x\n",w);
+	if (w != 0x01c0b17b) return 999; // bad header
 
-	// skip one non-comment line
-	int lines=0;
-	int cmt=0;
-	do {
-		res = f_read (&file, &c, 1,&b_read); // read first line char
-		cmt = (c=='#'); // asserts no empty line
-		while (c!='\n')
-			f_read (&file, &c, 1, &b_read);
-			// XXX check size 128
-		if (!cmt) lines += 1; // in a comment ?
-	} while (lines < 1 || cmt); // skip lines
-
-	res=f_read(&file,icon_data,ICON_SIZE,&b_read);
+	res = f_read(&file, &icon_data, sizeof(icon_data), &b_read);
+	
 	f_close(&file);
 	return res;
 }
 
-void default_icon( void )
+void set_default_icon( void )
 {
-	const uint8_t *p = bitbox_pbm;
-	for (int i=0;i<3;i++)
-		while(*p++ != '\n'); // skip line
-	memcpy(icon_data, p, sizeof(icon_data));
+	memcpy(icon_data, bitbox_icon+2, sizeof(icon_data)); // +4 : skip header
 }
 
 char *HEX_Digits;
@@ -236,7 +246,7 @@ void game_init() {
 
 	icon_x = 400;
 	icon_y= VGA_V_PIXELS / 2 - 80;
-	default_icon();
+	set_default_icon();
 
     // init FatFS
 	memset(&fs32, 0, sizeof(FATFS));
@@ -245,7 +255,6 @@ void game_init() {
 		print_at(5,SCR_LINES / 2,"Cannot mount disk");
 		die(MOUNT,r);
 	}
-
 
 	list_roms();
 	if (!nb_files)
@@ -324,17 +333,9 @@ void game_frame()
 
 	if (old_selected != selected) // only if there ARE files to display
 	{
-		strcpy(icon_name, filenames[selected]);
-		char *c = strchr(icon_name,'.');
-		if (!c) {
-			default_icon();
-			return;
-		}
-
-		strcpy(c,".pbm");
-		int r=read_icon(icon_name);
+		int r=read_icon(filenames[selected]);
 		if (r!=FR_OK)
-			default_icon();
+			set_default_icon();
 	}
 
 	// Start flashing ?
@@ -418,19 +419,20 @@ void graph_line()
 		*dst++ = lut_data[(c>>0) & 0x3];
 	}
 
-	// overdraw icon, 16 bytes data for 128 lines. align icon by 2 pixels.
-	if (vga_line>icon_y && vga_line<icon_y+128)
+	// overdraw icon, 16 bytes data for 64 lines. align icon by 2 pixels.
+	if (vga_line>icon_y && vga_line<icon_y+ICON_W)
 	{
-		dst = (uint32_t*) &draw_buffer[icon_x & ~1]; // align 2 pixels
-		uint8_t *src = (uint8_t *)&icon_data[(vga_line-icon_y)*16];
+		uint16_t *dst16 = &draw_buffer[icon_x & ~1]; // align 2 pixels
+		const uint16_t *palette = icon_data;
+		uint16_t *src = &icon_data[16+(vga_line-icon_y)*16]; 
 
-		for (int i=0;i<16;i++) // 16*8=128
+		for (int i=0;i<16;i++) // one line =64pixels=16 * 4pixels per u16
 		{
-			// draw a byte worth of pixels
-			*dst++ = lut_data[(~*src>>6) & 0x3];
-			*dst++ = lut_data[(~*src>>4) & 0x3];
-			*dst++ = lut_data[(~*src>>2) & 0x3];
-			*dst++ = lut_data[(~*src>>0) & 0x3];
+			// draw a halfword worth of pixels
+			*dst16++ = palette[*src>>12 & 0xf];
+			*dst16++ = palette[*src>> 8 & 0xf];
+			*dst16++ = palette[*src>> 4 & 0xf];
+			*dst16++ = palette[*src>> 0 & 0xf];
 
 			src++; // next byte
 		}
