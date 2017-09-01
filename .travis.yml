@@ -18,6 +18,7 @@ install:
   - pip list
   - python -c "from PIL import Image"
 script:
+  - which python
   - "make && make test"
 
 after_script:
