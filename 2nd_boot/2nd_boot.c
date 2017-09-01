@@ -18,7 +18,7 @@
 #include "bitbox.h"
 #include "fatfs/ff.h"
 #include "flashit.h"
-#include "build/binaries.h"
+
 
 enum {INIT =4, MOUNT=5, OPEN=6, READ=7}; // where we died - bootloader 2
 #define MAX_FILES 50
