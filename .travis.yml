@@ -13,7 +13,8 @@ install:
   # check it worked  
   - arm-none-eabi-gcc --version 
   - gcc --version
-#  - python -c "from PIL import Image"
+  - virtualenv -p /usr/bin/python2.7 --system-site-packages env
+  - python -c "from PIL import Image"
 script:
   - "make && make test"
 
