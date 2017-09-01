@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python
 """outputs a tileset file, a tilemap file binaries and objects from a tmx file
     header file is output on the standard output, includes
         tile names (property "name" of the tile)
