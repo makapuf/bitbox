@@ -1,5 +1,6 @@
 /* This is bitbox emulated configuration options.
  */
+#pragma once
 #include <stdint.h>
 
 #ifndef VGA_MODE
