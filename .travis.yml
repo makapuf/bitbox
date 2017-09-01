@@ -3,7 +3,7 @@ sudo: required
 dist: trusty
 
 language: c 
-
+python: 2.7
 install: 
   - sudo apt-get -qq update
   - sudo apt-get -qq install gcc-arm-none-eabi libsdl1.2-dev 
