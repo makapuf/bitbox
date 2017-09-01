@@ -13,4 +13,4 @@ icon.c: icon.png
 	python $(BITBOX)/lib/blitter/scripts/mk_ico.py $^ > $@
 
 clean::
-	rm icon.c
+	rm -f icon.c
