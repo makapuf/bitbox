@@ -13,6 +13,7 @@ install:
   - gcc --version
   
   - python -V
+  - which python
   - pip install Pillow
   - pip list
   - python -c "from PIL import Image"
