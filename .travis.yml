@@ -15,7 +15,6 @@ install:
   - gcc --version
   - pip install Pillow
   - which python
-  - ls /usr/lib/python2.7/dist-packages/PIL
   - python -c "import sys ; print sys.path"
   - python -c "help('modules')"
   - python -c "from PIL import Image"
