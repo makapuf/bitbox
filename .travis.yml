@@ -1,24 +1,17 @@
-# use distro trusty
-sudo: required
-dist: trusty
-
 language: c 
-python: 2.7
-install: 
-  - sudo apt-get -qq update
-  - sudo apt-get -qq install gcc-arm-none-eabi libsdl1.2-dev 
 
+addons:
+  apt:
+    packages:
+    - gcc-arm-none-eabi 
+    - libsdl1.2-dev
+    - python-imaging
+install: 
   # check it worked  
   - arm-none-eabi-gcc --version 
   - gcc --version
-  
-  - python -V
-  - which python
-  - pip install Pillow
-  - pip list
   - python -c "from PIL import Image"
 script:
-  - which python
   - "make && make test"
 
 after_script:
