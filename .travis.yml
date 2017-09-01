@@ -11,6 +11,7 @@ install:
   - arm-none-eabi-gcc --version 
   - gcc --version
   - python -c "from PIL import Image"
+  - echo $TRAVIS_BUILD_DIR
 script:
   - "make && make test"
 
