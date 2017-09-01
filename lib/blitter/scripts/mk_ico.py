@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """make a 64x64 16c icon as C source for a bitbox title from a graphical file.
 This will export a bitbox_icon that can be linked into your game.
 
