@@ -14,7 +14,8 @@ install:
   - arm-none-eabi-gcc --version 
   - gcc --version
   - which python
-  - ls /usr/lib/python2.7/dist-packages/
+  - ls /usr/lib/python2.7/dist-packages/PIL
+  - python -c "import sys ; print sys.path"
   - python -c "help('modules')"
   - python -c "from PIL import Image"
 script:
