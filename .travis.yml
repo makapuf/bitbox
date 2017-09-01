@@ -8,17 +8,14 @@ addons:
     - libnewlib-arm-none-eabi
     - libnewlib-dev
     - libsdl1.2-dev
-    - python-imaging
+    - python-pil
 install: 
   # check it worked  
   - arm-none-eabi-gcc --version 
   - gcc --version
-  - virtualenv -p /usr/bin/python2.7 --system-site-packages env
   - python -c "from PIL import Image"
 script:
   - "make && make test"
-
-after_script:
 
 env:
   - BITBOX=$TRAVIS_BUILD_DIR
