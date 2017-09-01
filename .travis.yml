@@ -8,11 +8,12 @@ addons:
     - libnewlib-arm-none-eabi
     - libnewlib-dev
     - libsdl1.2-dev
-    - python-imaging
+    - 
 install: 
   # check it worked  
   - arm-none-eabi-gcc --version 
   - gcc --version
+  - pip install pillow
   - which python
   - ls /usr/lib/python2.7/dist-packages/PIL
   - python -c "import sys ; print sys.path"
