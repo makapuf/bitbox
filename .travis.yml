@@ -13,6 +13,7 @@ install:
   # check it worked  
   - arm-none-eabi-gcc --version 
   - gcc --version
+  - python -c "help('modules')"
   - python -c "from PIL import Image"
 script:
   - "make && make test"
