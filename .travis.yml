@@ -3,15 +3,16 @@ sudo: required
 dist: trusty
 
 language: c 
-before_script:
+
+install: 
   - sudo apt-get -qq update
   - sudo apt-get -qq install gcc-arm-none-eabi libsdl1.2-dev 
 
   # check it worked  
   - arm-none-eabi-gcc --version 
   - gcc --version
-
-install: 
+  
+  - python -v
   - pip install Pillow
   - pip list
   - python -c "from PIL import Image"
