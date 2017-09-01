@@ -5,6 +5,8 @@ addons:
   apt:
     packages:
     - gcc-arm-none-eabi 
+    - libnewlib-arm-none-eabi
+    - libnewlib-dev
     - libsdl1.2-dev
     - python-imaging
 install: 
@@ -12,11 +14,10 @@ install:
   - arm-none-eabi-gcc --version 
   - gcc --version
 #  - python -c "from PIL import Image"
-  - echo $TRAVIS_BUILD_DIR
 script:
   - "make && make test"
 
 after_script:
 
 env:
-  - BITBOX=/home/travis/build/makapuf/bitbox
+  - BITBOX=$TRAVIS_BUILD_DIR
