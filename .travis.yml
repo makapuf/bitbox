@@ -12,7 +12,7 @@ install:
   - arm-none-eabi-gcc --version 
   - gcc --version
   
-  - python -v
+  - python -V
   - pip install Pillow
   - pip list
   - python -c "from PIL import Image"
