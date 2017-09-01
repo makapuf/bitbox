@@ -6,13 +6,15 @@ language: c
 before_script:
   - sudo apt-get -qq update
   - sudo apt-get -qq install gcc-arm-none-eabi libsdl1.2-dev 
-  - pip install Pillow
+
   # check it worked  
   - arm-none-eabi-gcc --version 
   - gcc --version
-  - pip list 
+
+install: 
+  - pip install Pillow
+  - pip list
   - python -c "from PIL import Image"
-  
 script:
   - "make && make test"
 
