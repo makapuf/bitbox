@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python
 """
     exports a spritesheet file from a tsx file
     header file is output on the standard output.
