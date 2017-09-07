@@ -19,14 +19,24 @@
 #include "fatfs/ff.h"
 #include "flashit.h"
 
+char *HEX_Digits="0123456789ABCDEF";
+
 
 enum {INIT =4, MOUNT=5, OPEN=6, READ=7}; // where we died - bootloader 2
 #define MAX_FILES 50
-#define DISPLAY_FILENAME_LEN 40
+#define DISPLAY_FILENAME_LEN 35
 #define FILELIST_X 4
 
 #define SCR_LINES (VGA_V_PIXELS / 16) // Total number of text-lines
 #define MSG_X 4
+
+#define TEXT_X 45
+#define TEXT_Y 10
+
+#define ICON_W 64 
+#define ICON_X 450
+#define ICON_Y 80
+
 
 #if BOARD_PAL
   #define DISPLAY_LINES 12
@@ -88,9 +98,7 @@ char vram_char[SCR_LINES][80];
 int nb_files;
 char filenames[MAX_FILES][_MAX_LFN]; // 8+3 +. + 1 chr0
 
-#define ICON_W 64 
-
-extern const uint16_t bitbox_icon[2+16+ICON_W*ICON_W/4];
+extern const uint16_t bitbox_icon[2+16+ICON_W*ICON_W/4+64];
 
 int icon_x, icon_y;
 uint16_t icon_data[sizeof(bitbox_icon)/2-2]; // remove 2 u16 of header
@@ -225,7 +233,7 @@ int read_icon(const char *filename)
 	message("Icon header was 0x%x\n",w);
 	if (w != 0x01c0b17b) return 999; // bad header
 
-	res = f_read(&file, &icon_data, sizeof(icon_data), &b_read);
+	res = f_read(&file, &icon_data, sizeof(icon_data), &b_read);	
 	
 	f_close(&file);
 	return res;
@@ -244,8 +252,9 @@ void game_init() {
 	window(2,HEAD_Y,78,HEAD_Y+2);
 	print_at(5,HEAD_Y+1, " BITBOX bootloader \x01 Hi ! Here are the current files");
 
-	icon_x = 400;
-	icon_y= VGA_V_PIXELS / 2 - 80;
+	icon_x = ICON_X;
+	icon_y = ICON_Y;
+
 	set_default_icon();
 
     // init FatFS
@@ -259,6 +268,8 @@ void game_init() {
 	list_roms();
 	if (!nb_files)
 		print_at(MSG_X, MSG_Y, "There are no .bin files on the SD card.");
+
+	print_at(0,SCR_LINES-1,"    Use Gamepad (A or Start to flash) or button (short=next, long=flash)");
 }
 
 
@@ -269,6 +280,22 @@ char old_val=' ';
 char icon_name[_MAX_LFN];
 bool last_button=false; // button last status
 int frame_pressed; // frame when button was pressed
+
+
+const char* messages[] = {
+	[state_idle] 		  = "Awaiting orders ...   ",
+	[state_done] 		  = "Done! Now please reset",
+
+	[state_error_erasing] = "Error erasing sector  ", 
+	[state_error_reading] = "Error reading data    ", 
+	[state_error_writing] = "Error writing sector  ", 
+	[state_overflow]      = "Error flash overflow  ",
+	[state_unlock_error]  = "Error unlocking Flash ",
+ 
+ 	[state_erasing]       = "Erasing sector ..     ", 
+ 	[state_must_read]     = "Reading sector ..     ",  
+	[state_writing]       = "Writing sector ..     ", 
+};
 
 void game_frame()
 {
@@ -336,20 +363,27 @@ void game_frame()
 		int r=read_icon(filenames[selected]);
 		if (r!=FR_OK)
 			set_default_icon();
+		// display description
+		for (int i=0; i<4;i++) {
+			// not print_at : not a string, more a char array..
+			memcpy(&vram_char[TEXT_Y+i][TEXT_X],(char *)&icon_data[sizeof(icon_data)/2-64+16*i],32);
+		}
 	}
 
 	// Start flashing ?
 	if ((GAMEPAD_PRESSED(0,start) || GAMEPAD_PRESSED(0,A)))
 	{
 		char *filename = filenames[offset+selected];
-		if ( flash_done() ) {
-			print_at(MSG_X,MSG_Y,"Goldorak GO ! Flashing ");
-			print_at(MSG_X+24,MSG_Y,filename);
+		if ( flash_state == state_idle || flash_state == state_done) {
+			
+			print_at(MSG_X,MSG_Y-1,"Goldorak GO ! Flashing ");
+			print_at(MSG_X+24,MSG_Y-1,filename);
+
 			if (f_open(&file,filename,FA_READ)==FR_OK)
 			{
 				flash_start_write(&file);
 			} else {
-				print_at(MSG_X,MSG_Y,"Error reading ");
+				print_at(MSG_X,MSG_Y,"Error opening:");
 				print_at(MSG_X+14,MSG_Y,filename);
 			}
 		}
@@ -381,16 +415,51 @@ void game_frame()
 
 	old_selected=selected;
 
-	memset(&vram_char[MSG_Y+1][MSG_X],' ',30);
-	strcpy(&vram_char[MSG_Y+1][MSG_X],flash_message);
 	flash_frame(); // at the end to let it finish
+	
+	// handle flash result
+
+	memset(&vram_char[MSG_Y][MSG_X],' ',40);	
+	print_at(MSG_X,MSG_Y,messages[flash_state]); 
+
+	// print extra info
+	switch(flash_state) {
+
+		// output sector / bytes
+		case state_writing : 
+		case state_erasing : 
+		case state_must_read : 
+			vram_char[MSG_Y][MSG_X+30] = HEX_Digits[current_sector&0xf]; 
+			break;
+
+		// output errno
+		case state_error_writing :
+		case state_error_reading : 
+		case state_error_erasing : 
+			vram_char[MSG_Y][MSG_X+29] = HEX_Digits[current_sector>>8 &0xf]; 
+			vram_char[MSG_Y][MSG_X+30] = HEX_Digits[current_sector&0xf]; 
+			set_led(vga_frame & 0x20);
+			break;
+
+		// done : draw a sign
+		case state_done : 
+			window(MSG_X-2,MSG_Y-1,MSG_X+40,MSG_Y+1);
+			break;
+
+		// nothing else to do
+		case state_unlock_error :
+		case state_overflow : 
+		case state_idle : 
+			break;
+	}
+
+
+
 }
 
 
 
 extern const uint16_t bg_data[256];
-
-void graph_frame() {}
 
 void graph_line()
 {

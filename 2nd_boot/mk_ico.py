@@ -7,7 +7,9 @@ file format of icons :
 	u32 header
 	u16 colors[16]
 	u4  pixel_data[64x64]
-seen as a u32[]
+	char  message[4][32] 
+
+seen as a u16[]
 """
 
 from PIL import Image
@@ -28,7 +30,7 @@ def u16color(r,g,b) :
 
 print '// Bitbox Game icon C file.'
 print '#include <stdint.h>'
-print 'const uint16_t bitbox_icon[2+16+64*64/4] = {'
+print 'const uint16_t bitbox_icon[2+16+64*64/4+128] = {'
 print '    // - Header'
 print '    0xB17B,0x01C0,  '
 pal_it = iter(img.getpalette()[:48]) # iterator over 16 rgb triples
@@ -46,4 +48,16 @@ for y in range(64):
 	for x in range(0,64,4):
 		print "0x%x%x%x%x,"%(pixels[x,y],pixels[x+1,y],pixels[x+2,y],pixels[x+3,y]),
 	print
+
+# write text 
+comment = img.info.get('Comment','')+'\n\n\n\n' # ensure at least 4 lines
+for line in comment.split('\n')[:4] :
+	ln = (line+' '*(32-len(line)))[:32]
+	i = iter(ln)
+	print '    //',ln
+	print '   ',
+	for a,b in zip(i,i) : 
+		print "0x%x,"%(ord(b)<<8|ord(a)),
+	print 
+
 print '};'

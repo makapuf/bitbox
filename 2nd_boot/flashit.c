@@ -7,25 +7,32 @@
 #include "bitbox.h" // vga_line, frame
 #include "flashit.h"
 
+
+volatile enum State flash_state=state_idle;
+volatile int current_sector;
+volatile int errno;
+
+
 #ifdef EMULATOR
 
 // flash stubs
 int frame_started; // simulate a flash delay
-void flash_init() {frame_started=0;}
-int flash_done() {
-	return !frame_started || vga_frame-frame_started > 3*60;
+void flash_init() {
+	frame_started=vga_frame;
 }
 
-char flash_message[32];
 int flash_start_write(FIL *file) {
 	frame_started = vga_frame;
-	strcpy(flash_message,"Faking flashing.");
+	flash_state = state_writing;
 	return 0;
 }
 
 void flash_frame() {
-	if (frame_started && vga_frame-frame_started>3*60)
-		strcpy(flash_message,"** Done! Please press reset **");
+	if (frame_started && vga_frame-frame_started>3*60) {
+		flash_state = state_done;
+	} else {
+		current_sector = (vga_frame-frame_started)/18;
+	}
 }
 
 #else
@@ -75,22 +82,11 @@ struct Sector sectors[]= {
 
 #define NB_SECTORS (sizeof(sectors)/sizeof(Sector))
 
-enum State {
-	state_error, 
-	state_erasing, 
-	state_must_read, 
-	state_writing, 
-	state_idle
-};
 
-char flash_message[32];
-char *HEX_Digits="0123456789ABCDEF";
 
-// private
-static volatile enum State flash_state=state_idle;
-static FIL *file_to_write;
-static int current_sector;
 static PROGSIZE *src, *dst;
+
+static FIL *file_to_write;
 static unsigned int bytes_to_write; // bytes to write on this buffer.
 static int eof;
 
@@ -101,20 +97,9 @@ void flash_init()
     FLASH->CR &= CR_PSIZE_MASK;
     FLASH->CR |= FLASH_PSIZE_WORD;
     file_to_write=0;
-    strcpy(flash_message,"Awaiting orders ...");
+    flash_state = state_idle;
 
 	// verify BOR / voltage ? 
-}
-
-int flash_done()
-{
-	return flash_state==state_idle;
-}
-
-static void display_byte(int r)
-{
-	flash_message[16] = HEX_Digits[(r>>4) & 0xf ];
-	flash_message[17] = HEX_Digits[r & 0xf];
 }
 
 int flash_start_write(FIL *file) 
@@ -134,12 +119,10 @@ int flash_start_write(FIL *file)
 
 	// verify unlocked
 	if (FLASH->CR & (1<<31)) {
-		strcpy(flash_message, "Cannot unlock flash");
-		flash_state = state_error;
+		flash_state = state_unlock_error;
 	}
 
 	// launch it
-	strcpy(flash_message,"Starting flashing ...");
 	flash_state = state_must_read;
 	return 1;
 }
@@ -157,9 +140,8 @@ void flash_frame()
 
 			r = f_read(file_to_write,buffer,BUFFERSIZE,&bytes_to_write); // bytes read  = to write
 			if ( r != FR_OK ) {
-				strcpy(flash_message,"ERROR Reading :     ");
-				display_byte(r);
-				flash_state = state_error;
+				errno = r;
+				flash_state = state_error_reading;
 				return;
 			}
 
@@ -170,17 +152,13 @@ void flash_frame()
 	   			current_sector++;
 	   			if (sectors[current_sector].sector_id==0xffff)
 	   			{
-	   				strcpy(flash_message,"ERROR : FLASH overflow");
+	   				flash_state = state_overflow;
 	   				return;
 	   			}
 
 			    FLASH->CR &= SECTOR_MASK;
 			    FLASH->CR |= FLASH_CR_SER | sectors[current_sector].sector_id;
 	    		FLASH->CR |= FLASH_CR_STRT;
-
-	   			// update display
-				strcpy(flash_message,"Erasing sector : ");
-				display_byte(current_sector);
 			}
 			
 			// after : erasing state (either already finished = not needed) or busy erasing
@@ -196,15 +174,10 @@ void flash_frame()
 			    FLASH->CR &= (~FLASH_CR_SER);
 	    		FLASH->CR &= SECTOR_MASK;
 				// nb bytes and source already set by read action
-				strcpy(flash_message,"Writing sector:");
-				display_byte(current_sector);
-
 				flash_state = state_writing;
 			} else { // error
-				strcpy(flash_message,"ERROR Erasing :     ");
-				display_byte(r);
-
-				flash_state = state_error;
+				errno=r;
+				flash_state = state_error_erasing;
 			} 
 			break;
 
@@ -220,10 +193,8 @@ void flash_frame()
 					*(__IO uint32_t*)dst++ = *src++; 
 					bytes_to_write -= sizeof(PROGSIZE); 
 				} else if (r&0xf0) { // Error ?
-					strcpy(flash_message,"Error Writing:0x    ");
-					display_byte(r);
-
-					flash_state = state_error;
+					errno = r;
+					flash_state = state_error_writing;
 				} // busy ? wait a bit.
 			}
 			FLASH->CR &= (~FLASH_CR_PG); // disable programming
@@ -232,25 +203,23 @@ void flash_frame()
 			if (bytes_to_write==0) 
 			{
 				if (eof) {
-					flash_state = state_idle;
+					flash_state = state_done;
 					file_to_write = 0;
-					strcpy(flash_message,"** Done! Please press reset **");	
-
 					FLASH->CR |= FLASH_CR_LOCK; // relock flash
-					while(1); // stop here
 				} else {
 					flash_state = state_must_read;
-					strcpy(flash_message,"Must read again.");	
 				}
 			}
 
 			break;
 
-		case state_error : 
-			set_led(vga_frame & 0x20);
-			break;
-
+		case state_error_writing : 
+		case state_error_reading : 
+		case state_error_erasing : 
+		case state_overflow : 
 		case state_idle : 
+		case state_done : 
+		case state_unlock_error:
 			break;
 		
 	} // switch

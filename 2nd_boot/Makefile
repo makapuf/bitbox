@@ -19,7 +19,7 @@ bg.c: bg.png
 	python mk_bg.py $< > $@
 
 default_icon.c: icon.png
-	$(BITBOX)/lib/blitter/scripts/mk_ico.py $^ > $@
+	$(BITBOX)/2nd_boot/mk_ico.py $^ > $@
 
 clean:: 
 	rm default_icon.c

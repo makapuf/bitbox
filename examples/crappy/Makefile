@@ -10,7 +10,7 @@ GAME_C_FILES = crappy.c icon.c
 include $(BITBOX)/kernel/bitbox.mk
 
 icon.c: icon.png
-	python $(BITBOX)/lib/blitter/scripts/mk_ico.py $^ > $@
+	python $(BITBOX)/2nd_boot/mk_ico.py $^ > $@
 
 clean::
 	rm -f icon.c

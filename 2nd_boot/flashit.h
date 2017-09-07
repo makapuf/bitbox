@@ -14,6 +14,21 @@
 */
 #include "fatfs/ff.h"
 
+enum State {
+	state_idle,
+	state_done,
+
+	state_error_erasing,
+	state_error_reading,
+	state_error_writing,
+	state_overflow,
+	state_unlock_error,
+
+	state_erasing,
+	state_must_read,
+	state_writing,
+};
+
 void flash_init(); 
 
 // starts a new flash write. Preceding must be finished. returns 0 if failed, 1 if OK
@@ -28,8 +43,9 @@ int flash_done();
 */
 
 void flash_frame();
-
-extern char flash_message[32];
+volatile extern enum State flash_state;
+volatile extern int current_sector;
+volatile extern int errno;
 
 #ifdef EMULATOR
 #define ROOT_DIR "."
