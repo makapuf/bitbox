@@ -244,7 +244,6 @@ void set_default_icon( void )
 	memcpy(icon_data, bitbox_icon+2, sizeof(icon_data)); // +4 : skip header
 }
 
-char *HEX_Digits;
 
 void game_init() {
 	flash_init();
