@@ -18,7 +18,7 @@ import sys
 
 DEBUG=False
 
-img = Image.open(sys.argv[1]).convert('P',palette=Image.ADAPTIVE, colors=16).crop((0,0,64,64))
+img = Image.open(sys.argv[1]).convert('RGBA').convert('P',palette=Image.ADAPTIVE, colors=16).crop((0,0,64,64))
 
 if DEBUG : img.save('_debug.png')
 
