@@ -22,5 +22,5 @@
 
 #python
 *.pyc
-2ndboot/example_icon.c
+2ndboot/default_icon.c
 examples/crappy/icon.c
