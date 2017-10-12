@@ -10,16 +10,16 @@
 #include <stdint.h>
 
 
-#ifndef MAX_CHANNELS
-#define MAX_CHANNELS 8
-#endif
-
 // These are our possible waveforms. Any other value plays silence.
 enum {
 	WF_TRI, // triangle /\/\,
 	WF_SAW, // sawteeth /|/|,
 	WF_PUL, // pulse (adjustable duty) |_|-,
-	WF_NOI // noise !*@?
+	WF_NOI, // noise !*@?
+
+	WF_SIN,     // sine
+	WF_ABSSIN,  // abs(sine)
+	WF_QSIN     // quarter-sine
 };
 
 // This is the definition of our oscillators. There are 8 of these (4 for left,
@@ -47,6 +47,6 @@ struct oscillator {
 // the parameters more often than that.
 
 
-extern volatile struct oscillator osc[MAX_CHANNELS];
+extern volatile struct oscillator osc[8];
 
 uint16_t gen_sample();

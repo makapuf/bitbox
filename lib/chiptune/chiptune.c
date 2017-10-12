@@ -15,7 +15,30 @@
  */
 #include "chiptune.h"
 
-volatile struct  oscillator osc[MAX_CHANNELS];
+volatile struct  oscillator osc[8];
+
+static uint8_t quicksin(int32_t x)
+{
+	// Magic from http://www.coranac.com/2009/07/sines/
+
+	// S(x) = x * ( (3<<p) - (x*x>>r) ) >> s
+	// n : Q-pos for quarter circle             13
+	// A : Q-pos for output                     5
+	// p : Q-pos for parentheses intermediate   15
+	// r = 2n-p
+	// s = A-1-p-n
+
+	static const int qN = 14, qA= 7, qP= 15, qR= 2*qN-qP, qS= qN+qP+1-qA;
+
+	x= x<<(30-qN);			// shift to full s32 range (Q13->Q30)
+
+	if( (x^(x<<1)) < 0)		// test for quadrant 1 or 2
+		x= (1<<31) - x;
+
+	x= x>>(30-qN);
+
+	return x * ( (3<<qP) - (x*x>>qR) ) >> qS;
+}
 
 // This function generates one audio sample for all 8 oscillators. The returned
 // value is a 2*8bit stereo audio sample ready for putting in the audio buffer.
@@ -25,6 +48,7 @@ uint16_t gen_sample()
 {
 	int16_t acc[2]; // accumulators for each channel
 	static uint32_t noiseseed = 1;
+	int32_t values[8];
 
 	// This is a simple noise generator based on an LFSR (linear feedback shift
 	// register). It is fast and simple and works reasonably well for audio.
@@ -38,38 +62,57 @@ uint16_t gen_sample()
 	if(noiseseed & 0x00000200L) newbit ^= 1;
 	noiseseed = (noiseseed << 1) | newbit;
 
-	acc[0] = 0;
-	acc[1] = 0;
 	// Now compute the value of each oscillator and mix them
-	for(int i=0; i < MAX_CHANNELS; i++) {
-		int8_t value; // [-32,31]
+	for(int i=0; i < 8; i++) {
+		int8_t value; // [-128,127]
 
 		switch(osc[i].waveform) {
 			case WF_TRI:
 				// Triangle: the part before 0x8000 raises, then it goes back
 				// down.
 				if(osc[i].phase < 0x8000) {
-					value = -32 + (osc[i].phase >> 9);
+					value = -128 + (osc[i].phase >> 7);
 				} else {
-					value = 31 - ((osc[i].phase - 0x8000) >> 9);
+					value = 127 - ((osc[i].phase - 0x8000) >> 7);
 				}
 				break;
 			case WF_SAW:
 				// Sawtooth: always raising.
-				value = -32 + (osc[i].phase >> 10);
+				value = -128 + (osc[i].phase >> 8);
 				break;
 			case WF_PUL:
 				// Pulse: max value until we reach "duty", then min value.
-				value = (osc[i].phase > osc[i].duty)? -32 : 31;
+				value = (osc[i].phase > osc[i].duty)? -128 : 127;
 				break;
 			case WF_NOI:
 				// Noise: from the generator. Only the low order bits are used.
-				value = (noiseseed & 63) - 32;
+				value = (noiseseed & 255) - 128;
 				break;
+
+			case WF_SIN:
+				if (osc[i].phase < osc[i].duty || osc[i].phase > 0xFFFF-osc[i].duty)
+					value = quicksin(osc[i].phase);
+				else
+					value = 0;
+				break;
+			case WF_ABSSIN:
+				if (osc[i].phase < osc[i].duty)
+					value = quicksin(osc[i].phase);
+				else
+					value = quicksin(0xFFFF-osc[i].phase);
+				break;
+			case WF_QSIN:
+				if (osc[i].phase & 0x4000)
+					value = 0;
+				else
+					value = quicksin(osc[i].phase);
+				break;
+
 			default:
 				value = 0;
 				break;
 		}
+
 		// Compute the oscillator phase (position in the waveform) for next time
 		osc[i].phase += osc[i].freq / 4;
 
@@ -78,15 +121,23 @@ uint16_t gen_sample()
 			value |= ((1<<osc[i].bitcrush) - 1);
 		}
 
-		// Mix it in the appropriate output channel
-		acc[i & 1] += value * osc[i].volume; // rhs = [-8160,7905]
-	}
-	// Now put the two channels together in the output word
-	// acc [-32640,31620] > ret 2*[1,251]
+		// Store oscillator value pre-multiplied by volume [-32640;32385]
+		values[i] = value * osc[i].volume;
 
-	if (MAX_CHANNELS == 4)
-		return (128 + (acc[0] >> 7)) | ((128 + (acc[1] >> 7)) << 8);    // [1,251]
-	else
-		return (128 + (acc[0] >> 8)) | ((128 + (acc[1] >> 8)) << 8);    // [1,251]
+		// Phase-modulate oscillators 0-3 with 4-7
+		if (i > 3)
+		{
+			osc[i - 4].phase += values[i] >> 4;
+		}
+
+	}
+	
+	// Ring-modulation of each channel with channel+4
+	// And mixing into "left" and "right" output channels
+	// And also scaling to 8 bits, while we are at it.
+	acc[0] = ((int32_t)values[0] + (int32_t)values[2]) >> 9; // [-128;127]
+	acc[1] = ((int32_t)values[1] + (int32_t)values[3]) >> 9;
+
+	return (128 + acc[0]) | ((128 + acc[1]) << 8);    // [0,255]
 }
 

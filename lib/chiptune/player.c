@@ -1,6 +1,6 @@
 /* Simple soundengine for the BitBox
  * Copyright 2015, Makapuf <makapuf2@gmail.com>
- * Copyright 2014, Adrien Destugues <pulkomandy@pulkomandy.tk>
+ * Copyright 2014-2017, Adrien Destugues <pulkomandy@pulkomandy.tk>
  * Copyright 2007, Linus Akesson
  * Based on the "Hardware Chiptune" project
  *
@@ -41,7 +41,7 @@ const uint16_t chip_freqtable[] = {
 	0x17ad, 0x1916, 0x1a94, 0x1c28, 0x1dd5, 0x1f9b, 0x217c, 0x237a, 0x2596,
 	0x27d3, 0x2a31, 0x2cb3, 0x2f5b, 0x322c, 0x3528, 0x3851, 0x3bab, 0x3f37,
 	0x42f9, 0x46f5, 0x4b2d, 0x4fa6, 0x5462, 0x5967, 0x5eb7, 0x6459, 0x6a51,
-	0x70a3, 0x7756, 0x7e6f
+	0x70a3, 0x7756, 0x7e6f, 0
 };
 
 const int8_t chip_sinetable[] = {
