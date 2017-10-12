@@ -44,7 +44,7 @@ enum {INIT =4, MOUNT=5, OPEN=6, READ=7}; // where we died - bootloader 2
   #define MSG_Y 13
   #define LIST_Y 4
 #else
-  #define DISPLAY_LINES 19
+  #define DISPLAY_LINES 15
   #define HEAD_Y 2
   #define MSG_Y 25
   #define LIST_Y 6
@@ -336,6 +336,7 @@ void game_frame()
 			gamepad_buttons[0] |= gamepad_A;
 		}
 	}
+
 	last_button=button_state();
 
 
@@ -443,6 +444,7 @@ void game_frame()
 		// done : draw a sign
 		case state_done : 
 			window(MSG_X-2,MSG_Y-1,MSG_X+40,MSG_Y+1);
+			while(1); // stop here
 			break;
 
 		// nothing else to do
@@ -451,7 +453,6 @@ void game_frame()
 		case state_idle : 
 			break;
 	}
-
 
 
 }
