@@ -31,6 +31,8 @@ mode as defined in kconf.h values
 #include "kconf.h"
 #include "stm32f4xx.h" // ports, timers, profile
 
+#define DRAW_MARGIN 64
+
 // --- local
 #define TIMER_CYCL (SYSCLK/VGA_VFREQ/APB1_DIV)
 #define SYNC_END (VGA_H_SYNC*TIMER_CYCL/(VGA_H_PIXELS+VGA_H_SYNC+VGA_H_FRONTPORCH+VGA_H_BACKPORCH))
@@ -85,8 +87,8 @@ uint16_t LineBuffer1[1024] __attribute__((aligned (1024))); // not in CCM : DMA 
 uint16_t LineBuffer2[1024] __attribute__((aligned (1024)));
 
 // not a pixel_t here since it can be 8bpp 
-uint16_t *display_buffer = LineBuffer1; // will be sent to display
-uint16_t *draw_buffer = LineBuffer2; // will be drawn (bg already drawn)
+uint16_t *display_buffer = &LineBuffer1[DRAW_MARGIN]; // will be sent to display
+uint16_t *draw_buffer = &LineBuffer2[DRAW_MARGIN]; // will be drawn (bg already drawn)
 
 static inline void vga_output_black()
 {
@@ -279,7 +281,7 @@ static void prepare_pixel_DMA()
 
 }
 
-
+//__attribute__((optimize("unroll-loops")))
 void expand_drawbuffer ( void )
 {
 	if (vga_odd)

@@ -50,7 +50,7 @@ int screen_height;
 
 #define LINE_BUFFER 1024
 #ifndef LINE_MARGIN
-#define LINE_MARGIN 32 
+#define LINE_MARGIN 64 
 #endif
 
 // options
@@ -179,7 +179,6 @@ static void __attribute__ ((optimize("-O3"))) refresh_screen (SDL_Surface *scr)
                 dst += scr->pitch/sizeof(uint32_t); // we already drew the line after, skip it
                 break;
         } 
-
 
         // swap lines buffers to simulate double line buffering
         draw_buffer = ( draw_buffer == &mybuffer1[LINE_MARGIN] ) ? &mybuffer2[LINE_MARGIN] : &mybuffer1[LINE_MARGIN];
