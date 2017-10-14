@@ -376,7 +376,7 @@ def png2spr(infiles, outfile, palette_type, size) :
     encode_spr(srcs,palette_type, hitbox, outfile)
    
 
-def tsx2sprN(tsxfile,  palette) : 
+def tsx2sprN(tsxfile,  palette, outdir) : 
     "one tsx to N sprite files."
     print >>sys.stderr, "generating sprite files from %s"%tsxfile
     ts=ET.parse(tsxfile).getroot()
@@ -389,9 +389,9 @@ def tsx2sprN(tsxfile,  palette) :
     frames=cut_image(Image.open(imgsrc).convert('RGBA'),ts_w, ts_h)
 
     for typename, frames_id, hitbox in read_tsx_states(ts) :
-        filename = name+'_'+typename+'.spr'
+        filename = os.path.join(outdir, name+'_'+typename+'.spr')
         print >>sys.stderr, 'exporting', filename
-        encode_spr(filename,[frames[i] for i in frames_id], palette, hitbox, filename)
+        encode_spr([frames[i] for i in frames_id], palette, hitbox, filename)
 
 # --- Main : commandline parsing
 
@@ -433,5 +433,5 @@ if __name__=='__main__' :
         if len(args.file_in) != 1 : 
             usage("can process only one input tsx file")
         # disallow format, size
-        if args.output : usage("cannot specify output for tsx files")
-        tsx2sprN(args.file_in[0],args.palette)
+        if not os.path.isdir(args.output) : usage("output must be a directory for tsx files")
+        tsx2sprN(args.file_in[0],args.palette, args.output)
