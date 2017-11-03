@@ -1,11 +1,11 @@
 #!/usr/bin/python2
 # extract a common palette from N files
-# save it to palette.png / stdout
+# save it to palette.png + encode it to stdout
 
 import sys
 from PIL import Image
 
-DEBUG = False
+DEBUG = True
 
 def stack_image(images) : 
     "stack vertically, expanding as needed"
@@ -19,25 +19,34 @@ def stack_image(images) :
     return newimg
 
 if __name__=='__main__' :
-    srcs = [Image.open(filein).convert('RGB') for filein in sys.argv[1:]] # removing alpha here
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file_in', nargs='+', help="Input files to extract palette from")
+    parser.add_argument("--file_out",help="Output file name.", default='palette.png')
+    parser.add_argument('--colors',type=int, help="number of colors in palette",default=255)
+    args = parser.parse_args()
+
+    srcs = [Image.open(filein).convert('RGB') for filein in args.file_in] # removing alpha here
     src  = stack_image(srcs)
     
     # set to 256c image
-    #src_pal=src.convert('P',colors=256,palette=Image.ADAPTIVE)
-    src_pal=src.quantize(colors=255,method=0)
+    src_pal=src.quantize(colors=args.colors,method=2)
     if DEBUG: src_pal.save('_debug.png') # after quantization
     
     # save small palette image 
-    src_pal=src_pal.crop((0,0,16,16))
-
-    src_pal.putdata(range(256))
-    src_pal.save('palette.png')
+    src_pal=src_pal.crop((0,0,16,(args.colors+15)/16))
+    src_pal.putdata(range(args.colors))
+    src_pal.save(args.file_out)
 
     # export to palette.c
     px = src_pal.convert('RGB').load()
     print "#include <stdint.h>"
-    print "const uint16_t vga_palette[256]= {"
-    for i in range(16) : 
-        s = ''.join('0x%04x,'%((px[j,i][0]>>3)<<10 | (px[j,i][1]>>3)<<5 | px[j,i][2]>>3)  for j in range(16))
-        print '    '+s
-    print '};'
+    print "const uint16_t vga_palette[%d]= {"%args.colors,
+
+    for i in range(args.colors) : 
+        if i%16==0 : sys.stdout.write('\n    ')
+        c = px[i%16,i/16]
+        sys.stdout.write('0x%04x,'%((c[0]>>3)<<10 | (c[1]>>3)<<5 | c[2]>>3))
+
+    print '\n};'
