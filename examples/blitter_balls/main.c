@@ -49,14 +49,14 @@ void game_init()
 	for (int i=0;i<NB_small;i++) {
 		vx[i]=ini_vx[i%9];
 		vy[i]=ini_vy[i%7];
-		ball[i] = sprite_new((uint32_t *)&SPRITE, 0,ini_y[i%8], i);
+		ball[i] = sprite3_new((uint32_t *)&SPRITE, 0,ini_y[i%8], i);
 		ball[i]->x = i*(VGA_H_PIXELS-ball[i]->w)/(NB_small+1); // fix X after the fact
 	}
 
 	for (int i=NB_small;i<NB;i++) {
 		vx[i]=ini_vx[i%9];
 		vy[i]=ini_vy[i%7]+10;
-		ball[i] = sprite_new((uint32_t *)&SPRITE_BIG, 0,200+ini_y[i%8], 0);
+		ball[i] = sprite3_new((uint32_t *)&SPRITE_BIG, 0,200+ini_y[i%8], 0);
 		ball[i]->x = (i-NB_small)*(VGA_H_PIXELS-ball[i]->w)/(NB_big+1); // fix X after the fact
 	}
 }
