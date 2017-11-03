@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <string.h>
 #include <errno.h>
 
 // emulated interfaces
@@ -635,6 +636,13 @@ FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode)
         default :
             return FR_INVALID_PARAMETER;
     }
+
+    // fill size field
+    struct stat st;
+    if (stat(path, &st) == 0)
+        fp->fsize= st.st_size;
+    else 
+        fp->fsize=-1;
 
     fp->fs = (FATFS*) fopen ((const char*)path,mode_host); // now ignores mode.
     if (fp->fs) return FR_OK;
