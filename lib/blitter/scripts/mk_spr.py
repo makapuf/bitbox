@@ -198,13 +198,13 @@ class Encoder :
                 code = CODE_SKIP
                 data = ''
             else : 
+                code = CODE_DATA
+                data = bl
                 if len(bl)>MIN_MATCH and bl in s : 
-                    code=CODE_REF
-                    idx = len(s)-s.index(bl)
-                    data= chr (idx>>8) + chr(idx & 0xff)
-                else : 
-                    code = CODE_DATA
-                    data = bl
+                    idx = len(s)-s.rindex(bl)
+                    if idx < 65536 : 
+                        code= CODE_REF
+                        data= chr (idx>>8) + chr(idx & 0xff)
 
             # blit header
             s += chr(code<<6 | ((1<<5) if eol else 0) | min(n,31) )
@@ -229,6 +229,7 @@ class Encoder :
     def write_header(self,of) : 
         w,h = self.src.size
         of.write(struct.pack('HHHBB',0xb17b,w,self.frm_h,len(self.idframes),self.datacode)) # this is the number of frame references
+        print >>sys.stderr,'hitbox:',self.hitbox
         of.write(struct.pack('4H',*self.hitbox))
         array.array('I', [self.frame_index[id] for id in self.idframes]).tofile(of)
 
@@ -256,22 +257,22 @@ class Encoder_u16 (Encoder) :
 
 class Encoder_u8 (Encoder)  : 
     datacode = DATA_u8
-    def __init__(self, frames, palette_type) : 
+    def __init__(self, frames, palette_type, hitbox) : 
         if palette_type=='MICRO' : 
             self.palette=gen_micro_pal()
         else : 
             self.palette=Image.open(palette)
-        Encoder.__init__(self,frames)
+        Encoder.__init__(self,frames,hitbox)
 
-    def encode(src, palette) : 
+    def encode(self) : 
         # convert to this 8bpp palette, keeping transparency 
-        img=quantize_alpha(src,palette)
+        img=quantize_alpha(self.src,self.palette)
         if DEBUG: img.save('_debug.png')
         data = list(img.getdata())
         transparent= img.info['transparency']
         cut_lines
         
-        return data,palette
+        return data,self.palette
 
 class Encoder_cpl (Encoder) : 
     datacode = DATA_cpl
