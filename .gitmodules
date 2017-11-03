@@ -1,0 +1,3 @@
+[submodule "sdk"]
+	path = sdk
+	url = https://github.com/makapuf/bitbox_sdk.git

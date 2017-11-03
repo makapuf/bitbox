@@ -1,9 +1,13 @@
-BASE_DEMOS = examples/crappy examples/kernel examples/sdio examples/usb 
-LIB_DEMOS = lib/framebuffer  lib/textmode lib/blitter/balls lib/blitter/video lib/chiptune lib/sampler lib/serial 
-PROJECTS = 1st_boot 2nd_boot $(BASE_DEMOS) $(LIB_DEMOS)
+EXAMPLES = crappy kernel sdio usb \
+	framebuffer textmode blitter_balls blitter_video \
+	chiptune mod sampler \
+	serial events
+PROJECTS = 1st_boot 2nd_boot $(EXAMPLES:%=examples/%) 
 
 ALLCLEAN = $(patsubst %,%-clean,$(PROJECTS))
 ALLTEST = $(patsubst %,%-test,$(TESTABLE))
+
+export BITBOX=$(PWD)/sdk
 
 .PHONY: $(PROJECTS) 
 .PHONY: $(ALLCLEAN)

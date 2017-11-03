@@ -8,6 +8,7 @@ NO_AUDIO=1
 # comment to build to flash. This will load boot2 as a normal program in flash 
 # BUT obviously cannot program flash anymore
 LINKER_RAM=1
+$(warning $(BITBOX))
 
 include $(BITBOX)/kernel/bitbox.mk
 
@@ -19,7 +20,7 @@ bg.c: bg.png
 	python mk_bg.py $< > $@
 
 default_icon.c: icon.png
-	$(BITBOX)/2nd_boot/mk_ico.py $^ > $@
+	$(BITBOX)/kernel/mk_ico.py $^ > $@
 
 clean:: 
 	rm default_icon.c
