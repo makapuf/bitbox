@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 '''
 Embeds binaries to C code. 
 Outputs to stdout as a header file.
@@ -13,7 +14,9 @@ LINELEN = 120 # line len in the file
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('files', nargs='+', metavar='file',help='filenames to embed. optionnally set filename:cname to use another symbol')
-parser.add_argument('--prefix', default="data_", help='prefix for file names in C')
+parser.add_argument('--prefix', default="data_", help='prefix for file names symbols in C')
+parser.add_argument('-r','--remove', default="", nargs="+",help='extension to remove from names')
+
 args=parser.parse_args()
 
 # known extensions types ? 
@@ -42,7 +45,10 @@ for file in args.files :
     if ':' in file : 
         file,quoted = file.split(':',1)
     else : 
-        # only keep basename, quote special chars
+        for ext in args.remove : 
+            file = file[:file.find(ext)]
+
+        # only keep basename, quote special chars        
         quoted = re.sub(r'(^[^a-zA-Z])|[^0-9a-zA-Z_]','_',os.path.basename(file))
 
     # get file size
