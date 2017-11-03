@@ -25,7 +25,7 @@ DATA_u8  = 1
 DATA_cpl = 2
 
 DEBUG = False
-TYPECOLOR = True # replace blits by a color for their type
+TYPECOLOR = False # replace blits by a color for their type
 
 class Sprite : 
     def __init__(self, f) : 
@@ -123,11 +123,14 @@ class Sprite :
                 elif bc == CODE_REF : 
                     # read back data index as u16
                     idx = struct.unpack('<H',self.f.read(2))
-
-                    pixels = [self.palette[0][0]]*bl
+                    if self.datacode == DATA_cpl : 
+                        pixels = [self.palette[0][0]]*bl
+                    else : 
+                        pixels = [(255,0,255,255)]*bl
+                    if TYPECOLOR : color = (0,255,0,255)  
                     for i,color in enumerate(pixels) : 
-                        if TYPECOLOR : color = (0,255,0,255)  
                         data[x+i,y+frame_id*self.height] = color
+
 
                 if beol :   
                     y+=1
