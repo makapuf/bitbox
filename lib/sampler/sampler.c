@@ -110,7 +110,7 @@ void game_snd_buffer(uint16_t *buffer, int len)
 	// MIX voices into buffer.
 	uint8_t *buffer8 = (uint8_t*)buffer;
 
-	for (int i=0;i<=len*2;i++)
+	for (int i=0;i<len*2;i++)
 		buffer8[i]=128;
 
 	for (int vi=0;vi<MAX_VOICES;vi++) 	
@@ -124,7 +124,7 @@ void game_snd_buffer(uint16_t *buffer, int len)
 		if (len<nb) nb=len; 
 
 		// mixing available data to buffer
-		for (int i=0;i<=nb;v->data_pos+=v->speed,i++) {
+		for (int i=0;i<nb;v->data_pos+=v->speed,i++) {
 			// FIXME use assembly / SIMD instrs !
 
 			int8_t smp = v->data[v->data_pos>>8]; // XXX linear interp
