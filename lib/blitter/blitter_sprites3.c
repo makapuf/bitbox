@@ -60,6 +60,7 @@ struct object *sprite3_new(const void *data, int x, int y, int z)
 
     o->w = h->width;
     o->h = h->height;
+    o->nb_frames = h->frames;
     
     o->a = (uintptr_t)&h->data;   // skip frame indices
     if (h->datacode == DATACODE_c8) {
@@ -125,7 +126,6 @@ static void sprite3_frame(struct object *o, int start_line)
                 o->c += 2; 
                 break;
         }
-
     }
 
     // select if clip or noclip (choice made each line)
@@ -148,6 +148,7 @@ static void sprite3_line_noclip (struct object *o)
     uint8_t * restrict src = (uint8_t *)o->c; 
     pixel_t * restrict dst = &draw_buffer[o->x]; 
     uint8_t header;
+    uint16_t backref;
 
     do {
         header = *src; 
@@ -156,26 +157,28 @@ static void sprite3_line_noclip (struct object *o)
 
         switch (header >> 6) {
             case BLIT_SKIP:
-                //message("skip %d\n",nb);
                 dst += nb;
                 break;
             case BLIT_COPY: 
-                //message("literal %d\n",nb);
                 memcpy(dst,src,nb*sizeof(pixel_t));
                 dst+=nb;
                 src+=nb*sizeof(pixel_t);
                 break;
-            case BLIT_BACK : // back reference as nb u16 :4, backref:10
-                message("backref %d cpls\n",nb>>3);
-                memcpy(dst,src - ((header&3)<<8 | *src)-2,(nb>>3)*2);
-                dst += (nb>>3)*2; 
-                src += 1;
+            case BLIT_BACK : // back reference as u16
+                backref = src[0] << 8 | src[1];
+/*
+                message(
+                    "at %d print backref sz %d ref %d\n",
+                    src-(uint8_t*)o->data,nb,backref
+                    );
+*/
+                memcpy(dst,src-backref,nb*sizeof(pixel_t));
+                src += 2; // always u16
+                dst += nb;
                 break;
-            case BLIT_FILL : // fill w / u16
-                // message("fill %d pixels\n",nb);
-                for (int i=0;i<nb;i++) {                    
+            case BLIT_FILL : 
+                for (int i=0;i<nb;i++)
                     *dst++=*(pixel_t*)src; 
-                }
                 src+=sizeof(pixel_t);
                 break;
         }
@@ -197,22 +200,17 @@ static void sprite3_line_clip (struct object *o)
         uint8_t header = *src++; 
         const int nb = header & 63; // or nb bytes
         switch (header >> 6) {
-            case 0 : // skip
-                //message("skip %d\n",nb);
+            case BLIT_SKIP : // skip
                 dst += nb;
                 break;
-            case 1 : // literal
+            case BLIT_COPY : // literal
                 if (dst>(uint8_t*)&draw_buffer[-32]) {
-                    message("draw litteral %d\n",dst-(uint8_t *) draw_buffer );
                     memcpy(dst,src,nb);
                 }
-                else
-                    message("skipped litteral %d \n",dst-(uint8_t *)draw_buffer );
-
                 dst+=nb;
                 src+=nb;
                 break;
-            case 2 : // back reference as nb u16 :4, backref:10
+            case BLIT_BACK : // back reference as nb u16 :4, backref:10
                 message("backref %d cpls\n",nb>>3);
                 if (dst>(uint8_t*)&draw_buffer[-32]) {
                     const int delta = ((header&3)<<8 | *src)-2;
@@ -220,22 +218,17 @@ static void sprite3_line_clip (struct object *o)
                     memcpy(dst,src - delta, nnb);
                     dst += (nb>>3)*2; 
                     src += 1;
-                } else {
-                    message("skip back\n");
                 }
-
                 dst += (nb>>3)*2; 
                 src += 1;
                 break;
-            case 3 : // fill w / u16
-                message("fill %d cpls\n",nb);
-                if (dst>(uint8_t*)&draw_buffer[-32]) 
+            case BLIT_FILL : // fill w / u16
+                if (dst>(uint8_t*)&draw_buffer[-32]) {
                     for (int i=0;i<nb;i++) {                    
                         *dst++=src[0];
                         *dst++=src[1]; 
                     }
-                else {
-                    message ("skip fill\n");
+                } else {
                     dst += 2*nb;
                 }
                 src+=2;

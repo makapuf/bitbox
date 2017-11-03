@@ -16,9 +16,11 @@ typedef struct object
 	void *data; // this will be the source data
 	void (*frame)(struct object *o, int line);
 	void (*line) (struct object *o);
+	uint8_t nb_frames;
+	int16_t z;
 
 	// live data (typically in RAM, stable per frame)
-	int32_t x,y,z,ry; // ry is real Y, while y is wanted y, which will be activated next frame.
+	int32_t x,y,ry; // ry is real Y, while y is wanted y, which will be activated next frame.
 	uint32_t w,h,fr; // h is one frame height, not full height, frame is frame id
 
 	uintptr_t a,b,c,d; // various 32b used for each blitter as extra parameters or internally
@@ -27,8 +29,6 @@ typedef struct object
 	struct object *activelist_next;
 } object;
 
-
-void fast_fill(uint16_t x1, uint16_t x2, uint16_t c); // utility: fast fill with 16 bits pixels
 
 void blitter_init(void);
 object *blitter_new(void);
