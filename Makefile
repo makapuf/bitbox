@@ -1,6 +1,6 @@
 EXAMPLES = crappy kernel sdio usb \
 	framebuffer textmode blitter_balls blitter_video \
-	chiptune mod sampler \
+	chiptune mod sampler bytebeat\
 	serial events
 PROJECTS = 1st_boot 2nd_boot $(EXAMPLES:%=examples/%) 
 
