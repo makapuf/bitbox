@@ -2,91 +2,106 @@
 #include <bitbox.h>
 #include "lib/blitter/blitter.h"
 
-#if BITBOX_KERNEL != 0010 
-#error must be compiled with kernel version v0.10 
-#endif 
-
 #include "bg.h"
 
-#define SPRITE ball_small_spr
-#define SPRITE_BIG ball_spr
+extern const char ball_small_spr[];
+extern const char bg_tset[];
+extern const char bg_map[];
 
-extern const char SPRITE[];
-extern const char SPRITE_BIG[];
+#if NB_big!=0
+extern const char ball_spr[];
+#endif
 
+/* todo :
+tests :
+generate a droite et delete a gauche (genre de scroll) - pas de leaks
+test bump beyond screen left& right - clipping
+*/
 
-// x and y  should be volatile since the vga thread must see the changes to x and y 
-// which are runnin in the main thread 
-#define NB_small 40
-#define NB_big 3
+//#define NB_small 40 - defined in makefile
+//#define NB_big 3
+
 #define NB (NB_small+NB_big)
 #define MOVE_BALLS 1
 #define ROTATE_BALLS 1
-#define TILED_BG 0
+#define TILED_BG 1
 
-object *ball[NB], *bg, *square;
+object ball[NB], bg;
+
 int vx[NB],vy[NB];
 const int ini_vy [8]= {-4, 3, 1,-6, 4,-7, 3,-5};
 const int ini_vx [9]= {-2, 7, 1, 2, 4,-4, 3, 1 ,3};
 const int ini_vz [8]= {-3,-5,-2,-2,-2, 3, 4, 5};
 const int ini_y  [8]= {0,-50,100,-100,0,260,140,30};
 
-uint32_t bgline(int l)
+void game_init()
 {
-	return ((l/128)&1 ? RGB(100,100,100) : RGB(140,140,140))*0x10001;
-}
-
-void game_init() 
-{
-	blitter_init();
-
-	if (TILED_BG)
-		bg= tilemap_new (bg_tset, 64*16, 65535,bg_header,bg_tmap);
-	else
-		//bg= rect_new (0,0,VGA_H_PIXELS, VGA_H_PIXELS*3,200, RGB(100,100,100));
-		bg=linegen_new(bgline);
+	if (TILED_BG) {
+		tilemap_insert (&bg, &bg_tset[4], 0, 0,TMAP_HEADER(64,64,TSET_16,TMAP_U8),&bg_map[8]);
+		bg.h=65535; // special : looped
+	} else {
+		rect_insert(&bg, 0,0,VGA_H_PIXELS, VGA_H_PIXELS*3,200, RGB(100,100,100));
+	}
 
 	for (int i=0;i<NB_small;i++) {
 		vx[i]=ini_vx[i%9];
 		vy[i]=ini_vy[i%7];
-		ball[i] = sprite3_new((uint32_t *)&SPRITE, 0,ini_y[i%8], i);
-		ball[i]->x = i*(VGA_H_PIXELS-ball[i]->w)/(NB_small+1); // fix X after the fact
+		sprite3_load(&ball[i], &ball_small_spr, 0,ini_y[i%8], i);
+		ball[i].x = i*(VGA_H_PIXELS-ball[i].w)/(NB_small+1); // fix X after the fact
+		if (i%4==0) sprite3_set_solid(&ball[i],RGB(255,0,0));
+		if (i%8==1) sprite3_set_solid(&ball[i],RGB(255,255,0));
+		if (i%8==0) sprite3_toggle2X(&ball[i]);
 	}
-
+#if NB_big != 0
 	for (int i=NB_small;i<NB;i++) {
 		vx[i]=ini_vx[i%9];
 		vy[i]=ini_vy[i%7]+10;
-		ball[i] = sprite3_new((uint32_t *)&SPRITE_BIG, 0,200+ini_y[i%8], 0);
-		ball[i]->x = (i-NB_small)*(VGA_H_PIXELS-ball[i]->w)/(NB_big+1); // fix X after the fact
+		sprite3_load(&ball[i], &ball_spr, 0,200+ini_y[i%8], 0);
+		ball[i].x = (i-NB_small)*(VGA_H_PIXELS-ball[i].w)/(NB_big+1); // fix X after the fact
+		if (i==NB_small+2) {
+			sprite3_toggle2X(&ball[i]); // huge one
+			ball[i].y = 0; // ensure does not touch bottom
+		}
 	}
+#endif
 }
 
 
 void game_frame()
 {
 	if (MOVE_BALLS)	{
-	    for (int i=0;i<NB;i++) {	
+	    for (int i=0;i<NB;i++) {
 
-		    if (ball[i]->x + vx[i] >= (VGA_H_PIXELS-ball[i]->w) || ball[i]->x <0 )
+		    if (ball[i].x + vx[i] >= (VGA_H_PIXELS-ball[i].w) || ball[i].x <0 )
 		      	vx[i] = -vx[i];
-		    
-		    if ((ball[i]->y + vy[i]) > VGA_V_PIXELS-(int32_t)ball[i]->h )
+
+		    if ((ball[i].y + vy[i]) > VGA_V_PIXELS-(int32_t)ball[i].h )
 		    	vy[i] = -vy[i]+1;
 
 
-		    ball[i]->x += vx[i];
-		    ball[i]->y += vy[i];
+		    ball[i].x += vx[i];
+		    ball[i].y += vy[i];
 		    vy[i]+=1;
 	    }
 	}
 
 	if (ROTATE_BALLS) {
-		for (int i=0;i<NB;i++) {	
-			ball[i]->fr = (vga_frame*ini_vz[i%8]/4)%8;
+		for (int i=0;i<NB;i++) {
+			ball[i].fr = (vga_frame*ini_vz[i%8]/4)%8;
 		}
 	}
-    
-    uint32_t x = ((vga_frame%64)-32);
-    bg->y = -x*x;
-} 
 
+    uint32_t x = ((vga_frame%64)-32);
+    bg.y = -x*x;
+}
+
+
+
+void bitbox_main(void)
+{
+	game_init();
+	while (1) {
+		game_frame();
+		wait_vsync(1);
+	}
+}
