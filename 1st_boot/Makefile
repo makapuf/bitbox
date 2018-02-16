@@ -15,7 +15,7 @@ CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 
-DEFINES = -DARM_MATH_CM4  -DUSE_STDPERIPH_DRIVER -DUSE_SD_SENSE
+DEFINES = -DARM_MATH_CM4  -DUSE_STDPERIPH_DRIVER
 SOURCE_DIR=.
 
 OBJS = $(C_FILES:%.c=$(BUILD_DIR)/%.o) $(S_FILES:%.s=$(BUILD_DIR)/%.o) 

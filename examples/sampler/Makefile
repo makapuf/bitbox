@@ -1,5 +1,5 @@
 NAME = test_sampler
-
+BITBOX = ../../sdk
 # 80x25 text
 DEFINES += VGAMODE=640 FONT_W=8 FONT_H=16
 

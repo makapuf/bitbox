@@ -1,4 +1,5 @@
 NAME=bitbox-mod
+BITBOX=../../sdk
 GAME_C_FILES = main.c lib/mod/mod32.c
 include $(BITBOX)/kernel/bitbox.mk
 NO_USB=1

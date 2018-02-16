@@ -1,4 +1,3 @@
-#testkernel makefile
 NAME = test_blitter
 
 BITBOX:=$(realpath ../../sdk/)
@@ -23,7 +22,7 @@ main.c: bg.h
 bg.tset: bg.png
 	$(BITBOX)/lib/blitter/scripts/mk_tset.py -s16 $^
 
-bg.map bg.h: bg.tmx bg.png # FIXME use mk_tmap mk_tset
+bg.map bg.h: bg.tmx bg.png
 	$(BITBOX)/lib/blitter/scripts/mk_tmap.py bg.tmx > bg.h
 
 %.spr : %/????.png
@@ -32,4 +31,3 @@ bg.map bg.h: bg.tmx bg.png # FIXME use mk_tmap mk_tset
 clean_assets: clean
 	rm -f bg.h bd_data.h
 	rm -f *.spr *.spr.png
-	rm -f *.map *.tset
