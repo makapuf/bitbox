@@ -2,7 +2,8 @@
 #include <bitbox.h>
 #include "lib/blitter/blitter.h"
 
-#include "bg.h"
+#define DATA_IMPLEMENTATION
+#include "data.h"
 
 extern const char ball_small_spr[];
 extern const char bg_tset[];
@@ -37,16 +38,19 @@ const int ini_y  [8]= {0,-50,100,-100,0,260,140,30};
 void game_init()
 {
 	if (TILED_BG) {
-		tilemap_insert (&bg, &bg_tset[4], 0, 0,TMAP_HEADER(64,64,TSET_16,TMAP_U8),&bg_map[8]);
+		tilemap_init (&bg, &data_bg_tset[4], 0, 0,TMAP_HEADER(64,64,TSET_16,TMAP_U8),&data_bg_map[8]);
 		bg.h=65535; // special : looped
 	} else {
-		rect_insert(&bg, 0,0,VGA_H_PIXELS, VGA_H_PIXELS*3,200, RGB(100,100,100));
+		rect_init(&bg, VGA_H_PIXELS, VGA_H_PIXELS*3, RGB(100,100,100));
 	}
+	blitter_insert(&bg, 0,0,200);
 
 	for (int i=0;i<NB_small;i++) {
 		vx[i]=ini_vx[i%9];
 		vy[i]=ini_vy[i%7];
-		sprite3_load(&ball[i], &ball_small_spr, 0,ini_y[i%8], i);
+		sprite3_load(&ball[i], &data_ball_small_spr);
+		blitter_insert(&ball[i], 0,ini_y[i%8], i);
+
 		ball[i].x = i*(VGA_H_PIXELS-ball[i].w)/(NB_small+1); // fix X after the fact
 		if (i%4==0) sprite3_set_solid(&ball[i],RGB(255,0,0));
 		if (i%8==1) sprite3_set_solid(&ball[i],RGB(255,255,0));
@@ -56,7 +60,8 @@ void game_init()
 	for (int i=NB_small;i<NB;i++) {
 		vx[i]=ini_vx[i%9];
 		vy[i]=ini_vy[i%7]+10;
-		sprite3_load(&ball[i], &ball_spr, 0,200+ini_y[i%8], 0);
+		sprite3_load(&ball[i], &data_ball_spr);
+		blitter_insert(&ball[i], 0,200+ini_y[i%8], 0);
 		ball[i].x = (i-NB_small)*(VGA_H_PIXELS-ball[i].w)/(NB_big+1); // fix X after the fact
 		if (i==NB_small+2) {
 			sprite3_toggle2X(&ball[i]); // huge one

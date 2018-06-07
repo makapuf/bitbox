@@ -3,6 +3,9 @@
 
 #include "bitbox.h" // gamepad
 
+#define SND_IMPLEMENTATION
+#include "data.h"
+
 #include "lib/textmode/textmode.h"
 #include "lib/sampler/sampler.h"
 
@@ -17,27 +20,9 @@ const char *instrs[8] = {
   "Check the source to see how to integrate sounds in your games."
 };
 
-extern const int8_t snd_diam_raw[], 
-    snd_bitbox_rules_raw[], 
-    snd_pouet_raw[], 
-    snd_guitar_raw[],
-    snd_sax_raw[], 
-    snd_monster_raw[], 
-    snd_warplevel_raw[],
-    snd_piano_note_raw[];
-
-extern const unsigned int snd_diam_raw_len, 
-    snd_bitbox_rules_raw_len, 
-    snd_pouet_raw_len, 
-    snd_guitar_raw_len,
-    snd_sax_raw_len, 
-    snd_monster_raw_len, 
-    snd_warplevel_raw_len, 
-    snd_piano_note_raw_len;
 
 extern const struct NoteEvent track_piano[];
 extern const int track_piano_len;
-
 
 void game_init() {
     const int tempo=80;
@@ -56,13 +41,13 @@ void game_init() {
 
         snd_piano_note_raw, 
         piano_loop,
-        snd_piano_note_raw_len,
+        sizeof(snd_piano_note_raw),
         44100);
 }
 
 #define ifplay(but,sndname, speed) \
     if((gamepad_buttons[0] & ~last_buts) & gamepad_##but) \
-        play_sample(snd_##sndname##_raw, snd_##sndname##_raw_len,speed,-1, 40,40); // no loop
+        play_sample(snd_##sndname##_raw, sizeof(snd_##sndname##_raw),speed,-1, 40,40); // no loop
 
 void game_frame() {
     static uint16_t last_buts;

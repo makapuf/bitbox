@@ -1,7 +1,5 @@
 NAME = test_blitter
 
-BITBOX:=$(realpath ../../sdk/)
-
 LIBS:= blitter blitter_tmap blitter_sprites3
 GAME_C_FILES = main.c $(LIBS:%=$(BITBOX)/lib/blitter/%.c)
 
@@ -17,7 +15,10 @@ endif
 NO_USB=1
 
 include $(BITBOX)/kernel/bitbox.mk
-main.c: bg.h
+main.c: data.h
+
+data.h : $(GAME_BINARY_FILES)
+	$(BITBOX)/lib/resources/embed.py $^ > $@
 
 bg.tset: bg.png
 	$(BITBOX)/lib/blitter/scripts/mk_tset.py -s16 $^

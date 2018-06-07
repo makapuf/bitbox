@@ -68,11 +68,13 @@ void game_init()
 	f_lseek(&video_file,0);
 
 	if (buffer_load[0]<=320)
-    	btc4_2x_insert(&btc, buffer_disp,0,0,0);
+    	btc4_2x_init(&btc, buffer_disp);
     else
-    	btc4_insert(&btc, buffer_disp,0,0,0);
+    	btc4_init(&btc, buffer_disp);
+    blitter_insert(&btc, 0,0,0);
 
-    rect_insert(&black, 0, 0, 640, 10,0, RGB(0,0,0)); // black bg after
+    rect_init(&black,640, 10,RGB(0,0,0)); // black bg after
+    blitter_insert(&black,0,0,0);
 }
 
 volatile int t_tot; // for all frames
